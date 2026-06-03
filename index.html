@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Панель управления лидами v3.100</title>
+    <title>Панель управления лидами v3.103</title>
     <script type="importmap">
         { "imports": { "firebase/app": "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js", "firebase/firestore": "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js" } }
     </script>
@@ -87,10 +87,16 @@
         body.dark .analytics-table th { background: #475569; }
         .dds-table td:last-child { border-left: 2px solid var(--border); }
         .dds-table textarea { width: 100%; padding: 2px; border: 1px solid #ccc; border-radius: 3px; font-size: 11px; resize: vertical; min-height: 30px; background: var(--card-bg); color: var(--text); }
-        .reserves-table, .recruits-table { width: 100%; border-collapse: collapse; font-size: 11px; background: var(--card-bg); border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); min-width: 450px; }
-        .reserves-table th, .reserves-table td, .recruits-table th, .recruits-table td { padding: 5px 7px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
-        .reserves-table th, .recruits-table th { background: #f8fafc; font-weight: 600; color: var(--text); }
+        .db-table-wrapper { max-height: 50vh; overflow-y: auto; border-radius: 8px; border: 1px solid var(--border); }
+        .reserves-table, .recruits-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        .reserves-table th, .reserves-table td, .recruits-table th, .recruits-table td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: middle; }
+        .reserves-table th, .recruits-table th { background: #f8fafc; font-weight: 600; color: var(--text); position: sticky; top: 0; z-index: 2; white-space: nowrap; }
         body.dark .reserves-table th, body.dark .recruits-table th { background: #475569; }
+        .debt-table-wrapper { max-height: 50vh; overflow-y: auto; border-radius: 8px; border: 1px solid var(--border); }
+        .debt-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        .debt-table th, .debt-table td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: center; vertical-align: middle; }
+        .debt-table th { background: #f8fafc; font-weight: 600; color: var(--text); position: sticky; top: 0; z-index: 2; }
+        body.dark .debt-table th { background: #475569; }
         .sub-tabs { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
         .sub-tab { padding: 5px 10px; background: #e2e8f0; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 12px; color: #1e293b; }
         body.dark .sub-tab { background: #475569; color: #f1f5f9; }
@@ -276,7 +282,6 @@
             <button id="stats-lead-all-time" style="padding:3px 6px; background:#f1f5f9; border:1px solid var(--border); border-radius:4px; cursor:pointer; color:var(--text);">Всё время</button>
             <button id="add-saved-stats-row-btn-lead" class="add-saved-row-btn" title="Закрепить текущий период" style="display:none;">+</button>
         </div></div>
-        <!-- Блок текущей динамической строки (под фильтрами, над таблицей) -->
         <div id="current-stats-row" class="current-stats-row"></div>
         <div class="analytics-block">
             <table class="analytics-table" id="overall-stats-table">
@@ -318,8 +323,8 @@
 
     <div class="content" id="payouts-panel" style="display:none;">
         <h3>💰 Задолженность <span id="total-debt-amount"></span></h3>
-        <div class="analytics-block" id="debt-block">
-            <table class="analytics-table" id="debt-table">
+        <div class="analytics-block debt-table-wrapper" id="debt-block">
+            <table class="debt-table" id="debt-table">
                 <thead><tr><th>Заявка</th><th>Дата подписания</th><th>Осн. сумма</th><th>Выпл. осн.</th><th>Дата / Срок осн.</th><th>Бонус</th><th>Выпл. бонус</th><th>Дата / Срок бонус</th></tr></thead>
                 <tbody></tbody>
             </table>
@@ -344,17 +349,21 @@
         </div>
         <div id="reserves-panel" style="overflow-x: auto;">
             <div style="margin-bottom: 6px;"><button id="add-reserve-row">➕ Добавить заявку</button></div>
-            <table class="reserves-table" id="reserves-table">
-                <thead><tr><th>Заявка</th><th>Действия</th><th>Дата заявки</th><th>Причина</th></tr></thead>
-                <tbody></tbody>
-            </table>
+            <div class="db-table-wrapper">
+                <table class="reserves-table" id="reserves-table">
+                    <thead><tr><th style="width:50%;">Заявка</th><th style="width:15%;">Действия</th><th style="width:15%;">Дата заявки</th><th style="width:20%;">Причина</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
         </div>
         <div id="recruits-panel" style="display:none; overflow-x: auto;">
             <div style="margin-bottom: 6px;"><button id="add-recruit-row">➕ Добавить заявку</button></div>
-            <table class="recruits-table" id="recruits-table">
-                <thead><tr><th>Заявка</th><th>Действия</th><th>Отписал</th></tr></thead>
-                <tbody></tbody>
-            </table>
+            <div class="db-table-wrapper">
+                <table class="recruits-table" id="recruits-table">
+                    <thead><tr><th style="width:60%;">Заявка</th><th style="width:20%;">Действия</th><th style="width:20%;">Отписал</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -421,7 +430,6 @@
         let calendarYear = new Date().getFullYear();
         let calendarMonth = new Date().getMonth();
 
-        // Скрытые столбцы
         let hiddenColumns = JSON.parse(localStorage.getItem('hiddenColumns') || '[]');
 
         const saved = localStorage.getItem('crm-autosave');
@@ -551,12 +559,6 @@
             await deleteDoc(doc(savedStatsRef, id));
             savedStatsRows = savedStatsRows.filter(r => r.id !== id);
         }
-        async function updateAllSavedRowsOrder() {
-            for (let i = 0; i < savedStatsRows.length; i++) {
-                savedStatsRows[i].order = i;
-                if (savedStatsRows[i].id) await setDoc(doc(savedStatsRef, savedStatsRows[i].id), savedStatsRows[i]);
-            }
-        }
 
         async function saveColumn(name, phones) { columnsCache[name] = phones; await setDoc(doc(columnsRef, name), { phones }); }
         async function saveOrder(order) { if (order.id) { await setDoc(doc(ordersRef, order.id), order); } else { const ref = await addDoc(ordersRef, order); order.id = ref.id; } }
@@ -629,6 +631,14 @@
                 const ordSnap = await getDocs(q);
                 ordersCache = []; ordSnap.forEach(docSnap => { ordersCache.push({ id: docSnap.id, ...docSnap.data() }); });
                 await migrateOrders();
+
+                const ddsSnap = await getDocs(ddsRef);
+                ddsCache = []; ddsSnap.forEach(d => ddsCache.push({id: d.id, ...d.data()}));
+                const resSnap = await getDocs(reservesRef);
+                reservesCache = []; resSnap.forEach(d => reservesCache.push({id: d.id, ...d.data()}));
+                const recSnap = await getDocs(recruitsRef);
+                recruitsCache = []; recSnap.forEach(d => recruitsCache.push({id: d.id, ...d.data()}));
+
                 const potSnap = await getDocs(potentialRef);
                 potentialCache = [];
                 potSnap.forEach(docSnap => {
@@ -939,7 +949,6 @@
             const thead = document.getElementById('overall-header-row');
             const tbody = document.getElementById('overall-stats-tbody');
 
-            // Формируем заголовки с кнопками скрытия
             let headerHtml = '';
             colKeys.forEach(key => {
                 if (key === 'actions') {
@@ -950,7 +959,6 @@
             });
             thead.innerHTML = headerHtml;
 
-            // Скрываем столбцы, которые в списке hiddenColumns
             colKeys.forEach(key => {
                 const th = thead.querySelector(`.col-${key}`);
                 if (th) {
@@ -958,7 +966,6 @@
                     else th.classList.remove('hidden-col');
                 }
             });
-            // Скрываем соответствующие td в tbody
             tbody.querySelectorAll('tr').forEach(row => {
                 colKeys.forEach(key => {
                     const cells = row.querySelectorAll(`.col-${key}`);
@@ -969,7 +976,6 @@
                 });
             });
 
-            // Показываем кнопку "Показать все столбцы", если есть скрытые
             const showAllBtn = document.getElementById('show-all-cols-btn');
             if (hiddenColumns.length > 0) {
                 showAllBtn.style.display = 'inline-block';
@@ -989,7 +995,6 @@
             const mainLabel = formatDateRange(mainRange.from, mainRange.to) || 'Весь период';
             const mainStats = calcStats(mainRange, mode);
 
-            // Отображаем динамическую строку над таблицей
             const currentRow = document.getElementById('current-stats-row');
             currentRow.innerHTML = `<span class="stat-item"><strong>${mainLabel}</strong></span>` +
                 (!hiddenColumns.includes('leads') ? `<span class="stat-item">Лидов: ${mainStats.totalLeads}</span>` : '') +
@@ -1011,7 +1016,6 @@
                 renderOverallStats();
             });
 
-            // Закреплённые строки
             const filteredSavedRows = savedStatsRows.filter(r => r.mode === mode);
             for (let i = 0; i < filteredSavedRows.length; i++) {
                 const saved = filteredSavedRows[i];
@@ -1052,7 +1056,6 @@
                 tbody.appendChild(row);
             }
 
-            // Применяем скрытие столбцов к новым строкам
             tbody.querySelectorAll('tr').forEach(row => {
                 colKeys.forEach(key => {
                     const cells = row.querySelectorAll(`.col-${key}`);
@@ -1063,14 +1066,12 @@
                 });
             });
 
-            // Обновляем кнопку "Показать все столбцы"
             if (hiddenColumns.length > 0) {
                 document.getElementById('show-all-cols-btn').style.display = 'inline-block';
             } else {
                 document.getElementById('show-all-cols-btn').style.display = 'none';
             }
 
-            // Обработчики для кнопок скрытия столбцов
             thead.querySelectorAll('.hide-col-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -1084,7 +1085,6 @@
             });
         }
 
-        // Кнопка "Показать все столбцы"
         document.getElementById('show-all-cols-btn').addEventListener('click', () => {
             hiddenColumns = [];
             localStorage.setItem('hiddenColumns', JSON.stringify(hiddenColumns));
@@ -1169,9 +1169,6 @@
         bindQuickFilter('stats', renderOverallStats); bindQuickFilter('stats-lead', renderOverallStats); bindQuickFilter('managers', renderManagersStats); bindQuickFilter('managers-lead', renderManagersStats);
 
         // ========== ВЫПЛАТЫ ==========
-        async function loadDDS() { if (!ddsCache.length) { const snap = await getDocs(ddsRef); ddsCache = []; snap.forEach(d => ddsCache.push({id:d.id,...d.data()})); } }
-        async function loadReserves() { if (!reservesCache.length) { const snap = await getDocs(reservesRef); reservesCache = []; snap.forEach(d => reservesCache.push({id:d.id,...d.data()})); } }
-        async function loadRecruits() { if (!recruitsCache.length) { const snap = await getDocs(recruitsRef); recruitsCache = []; snap.forEach(d => recruitsCache.push({id:d.id,...d.data()})); } }
         function renderDDS() { const tbody = document.querySelector('#dds-table tbody'); const footer = document.getElementById('dds-footer'); tbody.innerHTML = ''; let total = 0; ddsCache.forEach(item => { const val = parseAmount(item.total); total += val; const row = document.createElement('tr'); row.innerHTML = `<td><input type="text" class="dds-partner" value="${escapeHtml(item.partner||'')}" data-id="${item.id}" /></td><td><input type="text" class="dds-sum" value="${escapeHtml(item.sum||'')}" data-id="${item.id}" /></td><td><input type="text" class="dds-contracts" value="${escapeHtml(item.contracts||'')}" data-id="${item.id}" /></td><td><input type="date" class="dds-date" value="${item.date||''}" data-id="${item.id}" /></td><td><textarea class="dds-method" data-id="${item.id}">${escapeHtml(item.method||'')}</textarea></td><td style="border-left:2px solid var(--border);"><input type="text" class="dds-total" value="${escapeHtml(item.total||'')}" data-id="${item.id}" /></td><td><button class="delete-dds-btn" data-id="${item.id}">✕</button></td>`; tbody.appendChild(row); }); footer.innerHTML = `<tr><td colspan="5" style="text-align:right; font-weight:bold;">Сумма итого:</td><td style="border-left:2px solid var(--border); font-weight:bold;">${total.toLocaleString('ru-RU')} ₽</td><td></td></tr>`; tbody.onclick = (e) => { if (e.target.classList.contains('delete-dds-btn')) { const id = e.target.dataset.id; showConfirm('Удалить строку?', async () => { await deleteDDS(id); ddsCache = ddsCache.filter(i => i.id !== id); renderDDS(); }); } }; tbody.onchange = async (e) => { const id = e.target.dataset.id; if (!id) return; const item = ddsCache.find(i => i.id === id); if (!item) return; item.partner = tbody.querySelector(`.dds-partner[data-id="${id}"]`)?.value || ''; item.sum = tbody.querySelector(`.dds-sum[data-id="${id}"]`)?.value || ''; item.contracts = tbody.querySelector(`.dds-contracts[data-id="${id}"]`)?.value || ''; item.date = tbody.querySelector(`.dds-date[data-id="${id}"]`)?.value || ''; item.method = tbody.querySelector(`.dds-method[data-id="${id}"]`)?.value || ''; item.total = tbody.querySelector(`.dds-total[data-id="${id}"]`)?.value || ''; await saveDDS(item); renderDDS(); }; }
         document.getElementById('add-dds-row').addEventListener('click', async () => { const item = { partner: '', sum: '', contracts: '', date: '', method: '', total: '' }; await saveDDS(item); ddsCache.push(item); renderDDS(); });
         function renderDebt() { const tbody = document.querySelector('#debt-table tbody'); const totalSpan = document.getElementById('total-debt-amount'); tbody.innerHTML = ''; const contracts = ordersCache.filter(o => o.success === 'Да' && o.contractDate); let totalDebt = 0; const today = new Date(); today.setHours(0,0,0,0); contracts.forEach(o => { const cp = contractPayoutsCache[o.id] || {}; if (!cp.mainPaid) totalDebt += parseAmount(o.mainAmount); if (parseAmount(o.bonusAmount) > 0 && !cp.bonusPaid) totalDebt += parseAmount(o.bonusAmount); }); totalSpan.textContent = totalDebt > 0 ? `(${totalDebt.toLocaleString('ru-RU')} ₽)` : ''; contracts.forEach(order => { const cp = contractPayoutsCache[order.id] || {}; const mainAmount = parseAmount(order.mainAmount); const bonusAmount = parseAmount(order.bonusAmount); const cDate = new Date(order.contractDate + 'T00:00:00'); const getDays = (paidDate) => paidDate ? Math.ceil((new Date(paidDate+'T00:00:00') - cDate) / (1000*60*60*24)) : Math.ceil((today - cDate) / (1000*60*60*24)); const mainStatus = cp.mainPaid ? `<input type="date" class="debt-paid-date" data-id="${order.id}" data-type="main" value="${cp.mainPaidDate||''}" style="width:100px;" /> <span>(${getDays(cp.mainPaidDate)} дн.)</span>` : `Не выпл., ${getDays(cp.mainPaidDate)} дн.`; const bonusStatus = bonusAmount > 0 ? (cp.bonusPaid ? `<input type="date" class="debt-paid-date" data-id="${order.id}" data-type="bonus" value="${cp.bonusPaidDate||''}" style="width:100px;" /> <span>(${getDays(cp.bonusPaidDate)} дн.)</span>` : `Не выпл., ${getDays(cp.bonusPaidDate)} дн.`) : ''; const row = document.createElement('tr'); row.innerHTML = `<td style="text-align:left;">${escapeHtml(order.text||'')}</td><td>${order.contractDate}</td><td>${mainAmount.toLocaleString('ru-RU')} ₽</td><td><input type="checkbox" class="debt-paid-cb" data-id="${order.id}" data-type="main" ${cp.mainPaid?'checked':''} /></td><td>${mainStatus}</td><td>${bonusAmount > 0 ? bonusAmount.toLocaleString('ru-RU')+' ₽' : '—'}</td><td>${bonusAmount > 0 ? `<input type="checkbox" class="debt-paid-cb" data-id="${order.id}" data-type="bonus" ${cp.bonusPaid?'checked':''} />` : ''}</td><td>${bonusStatus}</td>`; tbody.appendChild(row); }); tbody.onclick = async (e) => { if (e.target.classList.contains('debt-paid-cb')) { const id = e.target.dataset.id; const type = e.target.dataset.type; const checked = e.target.checked; const cp = contractPayoutsCache[id] || {}; const todayStr = new Date().toISOString().slice(0,10); if (type==='main') { cp.mainPaid = checked; if (checked) cp.mainPaidDate = cp.mainPaidDate || todayStr; else delete cp.mainPaidDate; } else { cp.bonusPaid = checked; if (checked) cp.bonusPaidDate = cp.bonusPaidDate || todayStr; else delete cp.bonusPaidDate; } await saveContractPayout(id, cp); renderDebt(); } }; tbody.onchange = async (e) => { if (e.target.classList.contains('debt-paid-date')) { const id = e.target.dataset.id; const type = e.target.dataset.type; const cp = contractPayoutsCache[id] || {}; if (type==='main') cp.mainPaidDate = e.target.value || ''; else cp.bonusPaidDate = e.target.value || ''; await saveContractPayout(id, cp); } }; }
@@ -1194,10 +1191,10 @@
         }
 
         // Экспорт / Импорт
-        window.exportData = async () => { await loadDDS(); await loadReserves(); await loadRecruits(); const data = { columns: columnsCache, orders: ordersCache, potentialOrders: potentialCache, dds: ddsCache, contractPayouts: contractPayoutsCache, reserves: reservesCache, recruits: recruitsCache, managers: managersList, savedStatsRows, screenshots: screenshotsCache }; const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'}); const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='full_backup.json'; a.click(); };
+        window.exportData = async () => { const data = { columns: columnsCache, orders: ordersCache, potentialOrders: potentialCache, dds: ddsCache, contractPayouts: contractPayoutsCache, reserves: reservesCache, recruits: recruitsCache, managers: managersList, savedStatsRows, screenshots: screenshotsCache }; const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'}); const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='full_backup.json'; a.click(); };
         window.exportOrders = () => { const blob = new Blob([JSON.stringify(ordersCache,null,2)],{type:'application/json'}); const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='orders_export.json'; a.click(); };
-        window.exportPayouts = async () => { await loadDDS(); const data = { dds: ddsCache, contractPayouts: contractPayoutsCache }; const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'}); const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='payouts_export.json'; a.click(); };
-        window.exportDB = async () => { await loadReserves(); await loadRecruits(); const data = { reserves: reservesCache, recruits: recruitsCache }; const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'}); const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='db_export.json'; a.click(); };
+        window.exportPayouts = async () => { const data = { dds: ddsCache, contractPayouts: contractPayoutsCache }; const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'}); const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='payouts_export.json'; a.click(); };
+        window.exportDB = async () => { const data = { reserves: reservesCache, recruits: recruitsCache }; const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'}); const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='db_export.json'; a.click(); };
         window.importData = () => {
             const input = document.createElement('input'); input.type='file'; input.accept='.json';
             input.onchange = async (e) => { const file = e.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = async (re) => { try { const imported = JSON.parse(re.target.result); if(!imported?.columns||!imported?.orders) { alert('Неверный формат файла.'); return; } const batch = []; (await getDocs(columnsRef)).forEach(d => batch.push(deleteDoc(doc(columnsRef, d.id)))); (await getDocs(ordersRef)).forEach(d => batch.push(deleteDoc(doc(ordersRef, d.id)))); (await getDocs(potentialRef)).forEach(d => batch.push(deleteDoc(doc(potentialRef, d.id)))); (await getDocs(contractPayoutsRef)).forEach(d => batch.push(deleteDoc(doc(contractPayoutsRef, d.id)))); (await getDocs(ddsRef)).forEach(d => batch.push(deleteDoc(doc(ddsRef, d.id)))); (await getDocs(reservesRef)).forEach(d => batch.push(deleteDoc(doc(reservesRef, d.id)))); (await getDocs(recruitsRef)).forEach(d => batch.push(deleteDoc(doc(recruitsRef, d.id)))); (await getDocs(savedStatsRef)).forEach(d => batch.push(deleteDoc(doc(savedStatsRef, d.id)))); (await getDocs(screenshotsRef)).forEach(d => batch.push(deleteDoc(doc(screenshotsRef, d.id)))); await Promise.all(batch); for(const [name, phones] of Object.entries(imported.columns)) await setDoc(doc(columnsRef, name), { phones }); for(const order of imported.orders) await addDoc(ordersRef, order); for(const po of imported.potentialOrders||[]) await setDoc(doc(potentialRef, po.phone), po); if(imported.contractPayouts) for(const [id, data] of Object.entries(imported.contractPayouts)) await setDoc(doc(contractPayoutsRef, id), data); if(imported.dds) for(const item of imported.dds) await addDoc(ddsRef, item); if(imported.reserves) for(const item of imported.reserves) await addDoc(reservesRef, item); if(imported.recruits) for(const item of imported.recruits) await addDoc(recruitsRef, item); if(imported.managers) { managersList = imported.managers; await setDoc(doc(managersRef, 'list'), { list: managersList }); } if(imported.savedStatsRows) { for(const r of imported.savedStatsRows) await addDoc(savedStatsRef, r); } if(imported.screenshots) { for(const s of imported.screenshots) await addDoc(screenshotsRef, s); } alert('Импорт выполнен.'); location.reload(); } catch(ex) { alert('Ошибка импорта.'); } }; reader.readAsText(file); }; input.click(); };
@@ -1207,7 +1204,7 @@
         const contentElements = document.querySelectorAll('.content');
         const settingsDropdown = document.getElementById('settings-dropdown');
         const settingsToggleBtn = document.getElementById('settings-toggle-btn');
-        tabElements.forEach(tab => tab.addEventListener('click', async () => { tabElements.forEach(t => t.classList.remove('active')); tab.classList.add('active'); contentElements.forEach(c => c.style.display = 'none'); const panel = document.getElementById(tab.dataset.tab + '-panel'); if (panel) panel.style.display = 'block'; if (tab.dataset.tab === 'analytics') { renderOverallStats(); renderManagersStats(); renderScreenshots(); } else if (tab.dataset.tab === 'payouts') { await loadDDS(); renderDebt(); renderDDS(); } else if (tab.dataset.tab === 'db') { await loadReserves(); await loadRecruits(); renderReserves(); renderRecruits(); } }));
+        tabElements.forEach(tab => tab.addEventListener('click', async () => { tabElements.forEach(t => t.classList.remove('active')); tab.classList.add('active'); contentElements.forEach(c => c.style.display = 'none'); const panel = document.getElementById(tab.dataset.tab + '-panel'); if (panel) panel.style.display = 'block'; if (tab.dataset.tab === 'analytics') { renderOverallStats(); renderManagersStats(); renderScreenshots(); } else if (tab.dataset.tab === 'payouts') { renderDebt(); renderDDS(); } else if (tab.dataset.tab === 'db') { renderReserves(); renderRecruits(); } }));
         settingsToggleBtn.addEventListener('click', () => settingsDropdown.style.display = settingsDropdown.style.display === 'block' ? 'none' : 'block');
         window.addEventListener('click', (e) => { if (!e.target.matches('.settings-toggle')) settingsDropdown.style.display = 'none'; });
 
