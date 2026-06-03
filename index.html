@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Панель управления лидами v3.97</title>
+    <title>Панель управления лидами v3.100</title>
     <script type="importmap">
         { "imports": { "firebase/app": "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js", "firebase/firestore": "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js" } }
     </script>
@@ -38,6 +38,7 @@
         .settings-dropdown-content button { display: block; width: 100%; padding: 4px 8px; background: transparent; border: none; cursor: pointer; text-align: left; font-size: 11px; color: var(--text); }
         .settings-dropdown-content button:hover { background: #f1f5f9; }
         body.dark .settings-dropdown-content button:hover { background: #475569; }
+
         .columns-container { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-start; }
         .column { background: var(--card-bg); border-radius: 8px; padding: 5px; min-width: 200px; max-width: 250px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); display: flex; flex-direction: column; gap: 2px; }
         .column-header { display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 12px; color: var(--text); }
@@ -130,6 +131,15 @@
         .screen-fullview img { max-width: 90vw; max-height: 90vh; object-fit: contain; display: block; }
         .screen-fullview .screen-close-btn { position: fixed; top: 20px; right: 30px; background: rgba(255,255,255,0.3); color: white; border: none; border-radius: 50%; width: 36px; height: 36px; font-size: 20px; line-height: 36px; text-align: center; cursor: pointer; z-index: 10001; }
         .screen-fullview .screen-open-new { position: fixed; top: 20px; right: 80px; background: var(--primary); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; z-index: 10001; }
+        .draggable-row { cursor: grab; }
+        .draggable-row.dragging { opacity: 0.5; }
+        .current-stats-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding: 6px 10px; background: var(--card-bg); border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); font-size: 12px; }
+        .current-stats-row .stat-item { flex: 1; text-align: center; }
+        .current-stats-row button { padding: 2px 8px; background: var(--primary); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; white-space: nowrap; }
+        .hide-col-btn { margin-left: 4px; background: none; border: none; color: #ef4444; cursor: pointer; font-weight: bold; font-size: 12px; padding: 0 4px; }
+        .hidden-col { display: none; }
+        .show-all-cols-btn { margin-top: 6px; padding: 3px 10px; background: #f1f5f9; border: 1px solid var(--border); border-radius: 4px; cursor: pointer; font-size: 11px; color: var(--text); }
+        body.dark .show-all-cols-btn { background: #475569; }
     </style>
 </head>
 <body>
@@ -255,7 +265,7 @@
             <button id="stats-this-month" style="padding:3px 6px; background:#f1f5f9; border:1px solid var(--border); border-radius:4px; cursor:pointer; color:var(--text);">Этот месяц</button>
             <button id="stats-last-month" style="padding:3px 6px; background:#f1f5f9; border:1px solid var(--border); border-radius:4px; cursor:pointer; color:var(--text);">Прошлый месяц</button>
             <button id="stats-all-time" style="padding:3px 6px; background:#f1f5f9; border:1px solid var(--border); border-radius:4px; cursor:pointer; color:var(--text);">Всё время</button>
-            <button id="add-saved-stats-row-btn" class="add-saved-row-btn" title="Закрепить текущий период">+</button>
+            <button id="add-saved-stats-row-btn" class="add-saved-row-btn" title="Закрепить текущий период" style="display:none;">+</button>
         </div></div>
         <div id="overall-leadDate-panel" style="display:none;"><div class="analytics-filters">
             <div class="filter-group"><label>Дата с:</label><input type="date" id="stats-lead-date-from" /></div>
@@ -264,13 +274,16 @@
             <button id="stats-lead-this-month" style="padding:3px 6px; background:#f1f5f9; border:1px solid var(--border); border-radius:4px; cursor:pointer; color:var(--text);">Этот месяц</button>
             <button id="stats-lead-last-month" style="padding:3px 6px; background:#f1f5f9; border:1px solid var(--border); border-radius:4px; cursor:pointer; color:var(--text);">Прошлый месяц</button>
             <button id="stats-lead-all-time" style="padding:3px 6px; background:#f1f5f9; border:1px solid var(--border); border-radius:4px; cursor:pointer; color:var(--text);">Всё время</button>
-            <button id="add-saved-stats-row-btn-lead" class="add-saved-row-btn" title="Закрепить текущий период">+</button>
+            <button id="add-saved-stats-row-btn-lead" class="add-saved-row-btn" title="Закрепить текущий период" style="display:none;">+</button>
         </div></div>
+        <!-- Блок текущей динамической строки (под фильтрами, над таблицей) -->
+        <div id="current-stats-row" class="current-stats-row"></div>
         <div class="analytics-block">
             <table class="analytics-table" id="overall-stats-table">
                 <thead><tr id="overall-header-row"></tr></thead>
-                <tbody></tbody>
+                <tbody id="overall-stats-tbody"></tbody>
             </table>
+            <button class="show-all-cols-btn" id="show-all-cols-btn" style="display:none;">Показать все столбцы</button>
         </div>
         <h3 style="margin: 20px 0 6px;">👥 Менеджеры</h3>
         <div class="sub-tabs" id="managers-sub-tabs">
@@ -408,6 +421,9 @@
         let calendarYear = new Date().getFullYear();
         let calendarMonth = new Date().getMonth();
 
+        // Скрытые столбцы
+        let hiddenColumns = JSON.parse(localStorage.getItem('hiddenColumns') || '[]');
+
         const saved = localStorage.getItem('crm-autosave');
         if (saved) {
             try {
@@ -535,6 +551,12 @@
             await deleteDoc(doc(savedStatsRef, id));
             savedStatsRows = savedStatsRows.filter(r => r.id !== id);
         }
+        async function updateAllSavedRowsOrder() {
+            for (let i = 0; i < savedStatsRows.length; i++) {
+                savedStatsRows[i].order = i;
+                if (savedStatsRows[i].id) await setDoc(doc(savedStatsRef, savedStatsRows[i].id), savedStatsRows[i]);
+            }
+        }
 
         async function saveColumn(name, phones) { columnsCache[name] = phones; await setDoc(doc(columnsRef, name), { phones }); }
         async function saveOrder(order) { if (order.id) { await setDoc(doc(ordersRef, order.id), order); } else { const ref = await addDoc(ordersRef, order); order.id = ref.id; } }
@@ -598,6 +620,7 @@
             try {
                 await loadManagers();
                 await loadSavedStatsRows();
+                savedStatsRows.sort((a, b) => (a.order || 0) - (b.order || 0));
                 await loadScreenshots();
                 const colsSnap = await getDocs(columnsRef);
                 colsSnap.forEach(docSnap => { columnsCache[docSnap.id] = docSnap.data().phones || []; });
@@ -903,49 +926,223 @@
         function bindQuickFilter(prefix, renderFn) { document.getElementById(`${prefix}-this-week`).addEventListener('click', () => { const now = new Date(); const day = now.getDay(); const mon = new Date(now); mon.setDate(now.getDate() - (day === 0 ? 6 : day - 1)); document.getElementById(`${prefix}-date-from`).value = mon.toISOString().slice(0,10); document.getElementById(`${prefix}-date-to`).value = now.toISOString().slice(0,10); renderFn(); }); document.getElementById(`${prefix}-this-month`).addEventListener('click', () => { setMonthBounds(`${prefix}-date-from`, `${prefix}-date-to`, 0); renderFn(); }); document.getElementById(`${prefix}-last-month`).addEventListener('click', () => { setMonthBounds(`${prefix}-date-from`, `${prefix}-date-to`, -1); renderFn(); }); document.getElementById(`${prefix}-all-time`).addEventListener('click', () => { document.getElementById(`${prefix}-date-from`).value = ''; document.getElementById(`${prefix}-date-to`).value = ''; renderFn(); }); [`${prefix}-date-from`, `${prefix}-date-to`].forEach(id => document.getElementById(id).addEventListener('change', renderFn)); }
         bindQuickFilter('order-filter', renderOrders); ['order-filter-contract'].forEach(id => document.getElementById(id).addEventListener('change', renderOrders)); document.getElementById('order-filter-text').addEventListener('input', renderOrders);
 
-        // ========== АНАЛИТИКА ==========
+        // ========== АНАЛИТИКА (с возможностью скрывать столбцы) ==========
+        const colKeys = ['period','leads','orders','cvOL','contracts','cvCO','sum','avgDur','avgCheck','actions'];
+        const colNames = {
+            period: 'Период', leads: 'Кол-во лидов', orders: 'Кол-во заявок',
+            cvOL: 'CV (заявки/лиды)', contracts: 'Кол-во контрактов', cvCO: 'CV (контракты/заявки)',
+            sum: 'Сумма контрактов (₽)', avgDur: 'Ср. срок контракта (дней)', avgCheck: 'Ср. чек (₽)',
+            actions: ''
+        };
+
         function renderOverallStats() {
             const thead = document.getElementById('overall-header-row');
-            const tbody = document.querySelector('#overall-stats-table tbody');
-            thead.innerHTML = `<th>Период</th><th>Кол-во лидов</th><th>Кол-во заявок</th><th>CV (заявки/лиды)</th><th>Кол-во контрактов</th><th>CV (контракты/заявки)</th><th>Сумма контрактов (₽)</th><th>Ср. срок контракта (дней)</th><th>Ср. чек (₽)</th><th></th>`;
+            const tbody = document.getElementById('overall-stats-tbody');
+
+            // Формируем заголовки с кнопками скрытия
+            let headerHtml = '';
+            colKeys.forEach(key => {
+                if (key === 'actions') {
+                    headerHtml += '<th></th>';
+                } else {
+                    headerHtml += `<th class="col-${key}">${colNames[key]} <button class="hide-col-btn" data-col="${key}">–</button></th>`;
+                }
+            });
+            thead.innerHTML = headerHtml;
+
+            // Скрываем столбцы, которые в списке hiddenColumns
+            colKeys.forEach(key => {
+                const th = thead.querySelector(`.col-${key}`);
+                if (th) {
+                    if (hiddenColumns.includes(key)) th.classList.add('hidden-col');
+                    else th.classList.remove('hidden-col');
+                }
+            });
+            // Скрываем соответствующие td в tbody
+            tbody.querySelectorAll('tr').forEach(row => {
+                colKeys.forEach(key => {
+                    const cells = row.querySelectorAll(`.col-${key}`);
+                    cells.forEach(cell => {
+                        if (hiddenColumns.includes(key)) cell.classList.add('hidden-col');
+                        else cell.classList.remove('hidden-col');
+                    });
+                });
+            });
+
+            // Показываем кнопку "Показать все столбцы", если есть скрытые
+            const showAllBtn = document.getElementById('show-all-cols-btn');
+            if (hiddenColumns.length > 0) {
+                showAllBtn.style.display = 'inline-block';
+            } else {
+                showAllBtn.style.display = 'none';
+            }
+
             tbody.innerHTML = '';
+
             const mode = document.querySelector('#overall-sub-tabs .sub-tab.active')?.dataset.mode || 'contractDate';
             let mainRange;
-            if (mode === 'contractDate') { mainRange = { from: document.getElementById('stats-date-from').value || null, to: document.getElementById('stats-date-to').value || null }; }
-            else { mainRange = { from: document.getElementById('stats-lead-date-from').value || null, to: document.getElementById('stats-lead-date-to').value || null }; }
+            if (mode === 'contractDate') {
+                mainRange = { from: document.getElementById('stats-date-from').value || null, to: document.getElementById('stats-date-to').value || null };
+            } else {
+                mainRange = { from: document.getElementById('stats-lead-date-from').value || null, to: document.getElementById('stats-lead-date-to').value || null };
+            }
             const mainLabel = formatDateRange(mainRange.from, mainRange.to) || 'Весь период';
             const mainStats = calcStats(mainRange, mode);
-            tbody.appendChild(createStatsRow(mainLabel, mainStats, true));
-            for (const saved of savedStatsRows) {
+
+            // Отображаем динамическую строку над таблицей
+            const currentRow = document.getElementById('current-stats-row');
+            currentRow.innerHTML = `<span class="stat-item"><strong>${mainLabel}</strong></span>` +
+                (!hiddenColumns.includes('leads') ? `<span class="stat-item">Лидов: ${mainStats.totalLeads}</span>` : '') +
+                (!hiddenColumns.includes('orders') ? `<span class="stat-item">Заявок: ${mainStats.totalOrders}</span>` : '') +
+                (!hiddenColumns.includes('cvOL') ? `<span class="stat-item">CV: ${mainStats.cvOL}%</span>` : '') +
+                (!hiddenColumns.includes('contracts') ? `<span class="stat-item">Контрактов: ${mainStats.contractCount}</span>` : '') +
+                (!hiddenColumns.includes('cvCO') ? `<span class="stat-item">CV2: ${mainStats.cvCO}%</span>` : '') +
+                (!hiddenColumns.includes('sum') ? `<span class="stat-item">Сумма: ${mainStats.contractSum.toLocaleString('ru-RU')} ₽</span>` : '') +
+                (!hiddenColumns.includes('avgDur') ? `<span class="stat-item">Ср. срок: ${mainStats.avgDur}</span>` : '') +
+                (!hiddenColumns.includes('avgCheck') ? `<span class="stat-item">Ср. чек: ${mainStats.avgCheck}</span>` : '') +
+                `<button id="add-current-stats-btn">+</button>`;
+
+            document.getElementById('add-current-stats-btn').addEventListener('click', async () => {
+                const dateFrom = mode === 'contractDate' ? document.getElementById('stats-date-from').value : document.getElementById('stats-lead-date-from').value;
+                const dateTo = mode === 'contractDate' ? document.getElementById('stats-date-to').value : document.getElementById('stats-lead-date-to').value;
+                const newRow = { mode, dateFrom, dateTo, order: savedStatsRows.filter(r => r.mode === mode).length };
+                await saveSavedStatsRow(newRow);
+                savedStatsRows.push(newRow);
+                renderOverallStats();
+            });
+
+            // Закреплённые строки
+            const filteredSavedRows = savedStatsRows.filter(r => r.mode === mode);
+            for (let i = 0; i < filteredSavedRows.length; i++) {
+                const saved = filteredSavedRows[i];
                 const range = { from: saved.dateFrom || null, to: saved.dateTo || null };
                 const label = formatDateRange(saved.dateFrom, saved.dateTo) || 'Весь период';
-                tbody.appendChild(createStatsRow(label, calcStats(range, saved.mode), false, saved.id));
+                const stats = calcStats(range, saved.mode);
+                const row = createStatsRow(label, stats, false, saved.id);
+                row.classList.add('draggable-row');
+                row.draggable = true;
+                row.dataset.index = i;
+                row.dataset.id = saved.id;
+                row.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', JSON.stringify({ index: i, mode: saved.mode }));
+                    row.classList.add('dragging');
+                });
+                row.addEventListener('dragend', () => { row.classList.remove('dragging'); });
+                row.addEventListener('dragover', (e) => { e.preventDefault(); });
+                row.addEventListener('drop', async (e) => {
+                    e.preventDefault();
+                    const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+                    if (data.mode !== mode) return;
+                    const fromIndex = data.index;
+                    const toIndex = parseInt(row.dataset.index);
+                    if (fromIndex !== toIndex && !isNaN(fromIndex) && !isNaN(toIndex)) {
+                        const modeRows = savedStatsRows.filter(r => r.mode === mode);
+                        const moved = modeRows.splice(fromIndex, 1)[0];
+                        modeRows.splice(toIndex, 0, moved);
+                        const otherRows = savedStatsRows.filter(r => r.mode !== mode);
+                        savedStatsRows.length = 0;
+                        savedStatsRows.push(...otherRows, ...modeRows);
+                        for (let j = 0; j < modeRows.length; j++) {
+                            modeRows[j].order = j;
+                            if (modeRows[j].id) await setDoc(doc(savedStatsRef, modeRows[j].id), modeRows[j]);
+                        }
+                        renderOverallStats();
+                    }
+                });
+                tbody.appendChild(row);
             }
+
+            // Применяем скрытие столбцов к новым строкам
+            tbody.querySelectorAll('tr').forEach(row => {
+                colKeys.forEach(key => {
+                    const cells = row.querySelectorAll(`.col-${key}`);
+                    cells.forEach(cell => {
+                        if (hiddenColumns.includes(key)) cell.classList.add('hidden-col');
+                        else cell.classList.remove('hidden-col');
+                    });
+                });
+            });
+
+            // Обновляем кнопку "Показать все столбцы"
+            if (hiddenColumns.length > 0) {
+                document.getElementById('show-all-cols-btn').style.display = 'inline-block';
+            } else {
+                document.getElementById('show-all-cols-btn').style.display = 'none';
+            }
+
+            // Обработчики для кнопок скрытия столбцов
+            thead.querySelectorAll('.hide-col-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const col = btn.dataset.col;
+                    if (!hiddenColumns.includes(col)) {
+                        hiddenColumns.push(col);
+                    }
+                    localStorage.setItem('hiddenColumns', JSON.stringify(hiddenColumns));
+                    renderOverallStats();
+                });
+            });
         }
+
+        // Кнопка "Показать все столбцы"
+        document.getElementById('show-all-cols-btn').addEventListener('click', () => {
+            hiddenColumns = [];
+            localStorage.setItem('hiddenColumns', JSON.stringify(hiddenColumns));
+            renderOverallStats();
+        });
+
         function calcStats(range, mode) {
             let totalLeads = 0;
             for (const phones of Object.values(columnsCache)) totalLeads += phones.filter(l => isDateInRange(l.dateAdded, range)).length;
-            const totalOrders = ordersCache.filter(o => isDateInRange(o.dateAdded, range)).length;
+            const filteredOrders = ordersCache.filter(o => isDateInRange(o.dateAdded, range));
+            const totalOrders = filteredOrders.length;
             let contractCount = 0, contractSum = 0, totalDuration = 0, durationCount = 0;
-            const contractFilter = mode === 'contractDate' ? (o) => isDateInRange(o.contractDate, range) : () => true;
+            const contractFilter = mode === 'contractDate'
+                ? (o) => o.contractDate && isDateInRange(o.contractDate, range)
+                : (o) => o.contractDate && isDateInRange(o.dateAdded, range);
             for (const o of ordersCache) {
-                if (o.success === 'Да' && o.contractDate && contractFilter(o)) {
-                    contractCount++; contractSum += parseAmount(o.mainAmount) + parseAmount(o.bonusAmount);
-                    if (o.dateAdded && o.contractDate) { totalDuration += Math.ceil((new Date(o.contractDate+'T00:00:00') - new Date(o.dateAdded)) / (1000*60*60*24)); durationCount++; }
+                if (o.success === 'Да' && contractFilter(o)) {
+                    contractCount++;
+                    contractSum += parseAmount(o.mainAmount) + parseAmount(o.bonusAmount);
+                    if (o.dateAdded && o.contractDate) {
+                        const diff = Math.ceil((new Date(o.contractDate+'T00:00:00') - new Date(o.dateAdded)) / (1000*60*60*24));
+                        totalDuration += diff; durationCount++;
+                    }
                 }
             }
-            return { totalLeads, totalOrders, cvOL: totalLeads ? ((totalOrders/totalLeads)*100).toFixed(1) : '0.0', contractCount, cvCO: totalOrders ? ((contractCount/totalOrders)*100).toFixed(1) : '0.0', contractSum, avgDur: durationCount ? Math.round(totalDuration/durationCount) : '—', avgCheck: contractCount ? Math.round(contractSum/contractCount).toLocaleString('ru-RU')+' ₽' : '0 ₽' };
+            const cvOL = totalLeads ? ((totalOrders/totalLeads)*100).toFixed(1) : '0.0';
+            const cvCO = totalOrders ? ((contractCount/totalOrders)*100).toFixed(1) : '0.0';
+            const avgDur = durationCount ? Math.round(totalDuration/durationCount) : '—';
+            const avgCheck = contractCount ? Math.round(contractSum/contractCount).toLocaleString('ru-RU')+' ₽' : '0 ₽';
+            return { totalLeads, totalOrders, cvOL, contractCount, cvCO, contractSum, avgDur, avgCheck };
         }
+
         function createStatsRow(label, stats, isMain = false, savedId = null) {
             const row = document.createElement('tr');
-            row.innerHTML = `<td>${label}</td><td>${stats.totalLeads}</td><td>${stats.totalOrders}</td><td>${stats.cvOL}%</td><td>${stats.contractCount}</td><td>${stats.cvCO}%</td><td>${stats.contractSum.toLocaleString('ru-RU')} ₽</td><td>${stats.avgDur}</td><td>${stats.avgCheck}</td>` + (isMain ? '<td></td>' : `<td><button class="delete-saved-row-btn" data-id="${savedId}">✕</button></td>`);
+            row.innerHTML = `<td class="col-period">${label}</td>` +
+                `<td class="col-leads">${stats.totalLeads}</td>` +
+                `<td class="col-orders">${stats.totalOrders}</td>` +
+                `<td class="col-cvOL">${stats.cvOL}%</td>` +
+                `<td class="col-contracts">${stats.contractCount}</td>` +
+                `<td class="col-cvCO">${stats.cvCO}%</td>` +
+                `<td class="col-sum">${stats.contractSum.toLocaleString('ru-RU')} ₽</td>` +
+                `<td class="col-avgDur">${stats.avgDur}</td>` +
+                `<td class="col-avgCheck">${stats.avgCheck}</td>` +
+                (isMain ? '<td class="col-actions"></td>' : `<td class="col-actions"><button class="delete-saved-row-btn" data-id="${savedId}">✕</button></td>`);
             return row;
         }
+
         function isDateInRange(dateStr, range) { if (!dateStr) return false; const d = dateStr.substring(0,10); if (range.from && d < range.from) return false; if (range.to && d > range.to) return false; return true; }
 
-        document.getElementById('add-saved-stats-row-btn').addEventListener('click', async () => { const mode = 'contractDate'; const newRow = { mode, dateFrom: document.getElementById('stats-date-from').value, dateTo: document.getElementById('stats-date-to').value }; await saveSavedStatsRow(newRow); savedStatsRows.push(newRow); renderOverallStats(); });
-        document.getElementById('add-saved-stats-row-btn-lead').addEventListener('click', async () => { const mode = 'leadDate'; const newRow = { mode, dateFrom: document.getElementById('stats-lead-date-from').value, dateTo: document.getElementById('stats-lead-date-to').value }; await saveSavedStatsRow(newRow); savedStatsRows.push(newRow); renderOverallStats(); });
-        document.getElementById('overall-stats-table').addEventListener('click', async (e) => { if (e.target.classList.contains('delete-saved-row-btn')) { await deleteSavedStatsRow(e.target.dataset.id); renderOverallStats(); } });
+        document.getElementById('overall-stats-table').addEventListener('click', async (e) => {
+            if (e.target.classList.contains('delete-saved-row-btn')) {
+                const id = e.target.dataset.id;
+                showConfirm('Удалить эту строку?', async () => {
+                    await deleteSavedStatsRow(id);
+                    renderOverallStats();
+                });
+            }
+        });
 
         function renderManagersStats() {
             const mode = document.querySelector('#managers-sub-tabs .sub-tab.active')?.dataset.mode || 'contractDate';
@@ -957,9 +1154,14 @@
                 const leadsCount = leads.filter(l => isDateInRange(l.dateAdded, range)).length;
                 const managerOrders = ordersCache.filter(o => o.manager === manager && isDateInRange(o.dateAdded, range));
                 const ordersCount = managerOrders.length;
-                const contracts = mode === 'contractDate' ? ordersCache.filter(o => o.success==='Да' && o.manager===manager && o.contractDate && isDateInRange(o.contractDate, range)) : managerOrders.filter(o => o.success==='Да' && o.contractDate);
+                const contractFilter = mode === 'contractDate'
+                    ? (o) => o.contractDate && isDateInRange(o.contractDate, range)
+                    : (o) => o.contractDate && isDateInRange(o.dateAdded, range);
+                const contracts = ordersCache.filter(o => o.success==='Да' && o.manager===manager && contractFilter(o));
                 let sum = 0; contracts.forEach(o => sum += parseAmount(o.mainAmount) + parseAmount(o.bonusAmount));
-                tbody.innerHTML += `<tr><td>${escapeHtml(manager)}</td><td>${leadsCount}</td><td>${ordersCount}</td><td>${leadsCount ? ((ordersCount/leadsCount)*100).toFixed(1) : '0.0'}%</td><td>${contracts.length}</td><td>${ordersCount ? ((contracts.length/ordersCount)*100).toFixed(1) : '0.0'}%</td><td>${sum.toLocaleString('ru-RU')} ₽</td></tr>`;
+                const cvOL = leadsCount ? ((ordersCount/leadsCount)*100).toFixed(1) : '0.0';
+                const cvCO = ordersCount ? ((contracts.length/ordersCount)*100).toFixed(1) : '0.0';
+                tbody.innerHTML += `<tr><td>${escapeHtml(manager)}</td><td>${leadsCount}</td><td>${ordersCount}</td><td>${cvOL}%</td><td>${contracts.length}</td><td>${cvCO}%</td><td>${sum.toLocaleString('ru-RU')} ₽</td></tr>`;
             });
         }
         document.querySelectorAll('#overall-sub-tabs .sub-tab').forEach(tab => tab.addEventListener('click', function() { document.querySelectorAll('#overall-sub-tabs .sub-tab').forEach(t => t.classList.remove('active')); this.classList.add('active'); document.getElementById('overall-contractDate-panel').style.display = this.dataset.mode==='contractDate'?'block':'none'; document.getElementById('overall-leadDate-panel').style.display = this.dataset.mode==='leadDate'?'block':'none'; renderOverallStats(); }));
