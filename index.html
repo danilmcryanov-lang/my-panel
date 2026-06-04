@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Панель управления лидами v3.103</title>
+    <title>Панель управления лидами v3.108</title>
     <script type="importmap">
         { "imports": { "firebase/app": "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js", "firebase/firestore": "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js" } }
     </script>
@@ -86,12 +86,30 @@
         .analytics-table th { background: #f8fafc; color: var(--text); }
         body.dark .analytics-table th { background: #475569; }
         .dds-table td:last-child { border-left: 2px solid var(--border); }
-        .dds-table textarea { width: 100%; padding: 2px; border: 1px solid #ccc; border-radius: 3px; font-size: 11px; resize: vertical; min-height: 30px; background: var(--card-bg); color: var(--text); }
+        .dds-table td { position: relative; }
+        .dds-table .editable-dds { cursor: pointer; min-height: 18px; padding: 2px 4px; border-radius: 3px; display: block; }
+        .dds-table .editable-dds:hover { background: #f1f5f9; }
+        body.dark .dds-table .editable-dds:hover { background: #475569; }
+        .dds-table textarea, .dds-table input { width: 100%; padding: 2px; border: 1px solid #ccc; border-radius: 3px; font-size: 11px; background: var(--card-bg); color: var(--text); }
+        .dds-table textarea { resize: vertical; min-height: 30px; }
+        .add-dds-block { margin-top: 12px; background: var(--card-bg); padding: 10px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+        .add-dds-row { display: flex; gap: 6px; flex-wrap: wrap; }
+        .add-dds-row input, .add-dds-row textarea { padding: 4px 6px; border-radius: 4px; border: 1px solid var(--border); font-size: 11px; background: var(--card-bg); color: var(--text); flex: 1 1 120px; min-width: 80px; }
+        .add-dds-row textarea { resize: vertical; min-height: 30px; flex: 1 1 150px; }
+        .add-dds-row button { padding: 4px 10px; background: var(--primary); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 500; font-size: 12px; white-space: nowrap; flex: 0 0 auto; }
         .db-table-wrapper { max-height: 50vh; overflow-y: auto; border-radius: 8px; border: 1px solid var(--border); }
         .reserves-table, .recruits-table { width: 100%; border-collapse: collapse; font-size: 11px; }
         .reserves-table th, .reserves-table td, .recruits-table th, .recruits-table td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: middle; }
         .reserves-table th, .recruits-table th { background: #f8fafc; font-weight: 600; color: var(--text); position: sticky; top: 0; z-index: 2; white-space: nowrap; }
         body.dark .reserves-table th, body.dark .recruits-table th { background: #475569; }
+        .reserves-table .editable-text, .recruits-table .editable-text { cursor: pointer; min-height: 18px; padding: 2px 4px; border-radius: 3px; white-space: pre-wrap; display: inline-block; }
+        .reserves-table .editable-text:hover, .recruits-table .editable-text:hover { background: #f1f5f9; }
+        body.dark .reserves-table .editable-text:hover, body.dark .recruits-table .editable-text:hover { background: #475569; }
+        .add-db-block { margin-bottom: 12px; background: var(--card-bg); padding: 10px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+        .add-db-block textarea { width: 100%; min-height: 60px; font-size: 12px; padding: 5px; border-radius: 4px; border: 1px solid var(--border); resize: vertical; background: var(--card-bg); color: var(--text); }
+        .add-db-block button { margin-top: 5px; padding: 4px 8px; background: var(--primary); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 500; font-size: 12px; }
+        .add-db-block .date-row { margin-bottom: 5px; }
+        .add-db-block .date-row label { font-size: 12px; font-weight: 500; margin-right: 4px; }
         .debt-table-wrapper { max-height: 50vh; overflow-y: auto; border-radius: 8px; border: 1px solid var(--border); }
         .debt-table { width: 100%; border-collapse: collapse; font-size: 11px; }
         .debt-table th, .debt-table td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: center; vertical-align: middle; }
@@ -338,7 +356,17 @@
                 <tbody></tbody>
                 <tfoot id="dds-footer"></tfoot>
             </table>
-            <button id="add-dds-row" style="margin-top:6px; padding:3px 8px;">➕ Добавить строку</button>
+        </div>
+        <div class="add-dds-block">
+            <div class="add-dds-row">
+                <input type="text" id="dds-partner-input" placeholder="Партнер" />
+                <input type="text" id="dds-sum-input" placeholder="Сумма (₽)" />
+                <input type="text" id="dds-contracts-input" placeholder="Контракты" />
+                <input type="date" id="dds-date-input-new" />
+                <textarea id="dds-method-input" placeholder="Как принимал"></textarea>
+                <input type="text" id="dds-total-input" placeholder="Итого вышло (₽)" />
+                <button id="add-dds-row-btn">➕ Добавить</button>
+            </div>
         </div>
     </div>
 
@@ -348,7 +376,11 @@
             <div class="sub-tab" data-db="recruits">Рекруты <span id="recruits-count"></span></div>
         </div>
         <div id="reserves-panel" style="overflow-x: auto;">
-            <div style="margin-bottom: 6px;"><button id="add-reserve-row">➕ Добавить заявку</button></div>
+            <div class="add-db-block">
+                <div class="date-row"><label>Дата заявки:</label><input type="date" id="reserves-date-input" /></div>
+                <textarea id="new-reserves-input" placeholder="Вставьте заявку или несколько (разделяйте пустой строкой)"></textarea>
+                <button id="add-reserves-btn">➕ Добавить заявки</button>
+            </div>
             <div class="db-table-wrapper">
                 <table class="reserves-table" id="reserves-table">
                     <thead><tr><th style="width:50%;">Заявка</th><th style="width:15%;">Действия</th><th style="width:15%;">Дата заявки</th><th style="width:20%;">Причина</th></tr></thead>
@@ -357,7 +389,10 @@
             </div>
         </div>
         <div id="recruits-panel" style="display:none; overflow-x: auto;">
-            <div style="margin-bottom: 6px;"><button id="add-recruit-row">➕ Добавить заявку</button></div>
+            <div class="add-db-block">
+                <textarea id="new-recruits-input" placeholder="Вставьте заявку или несколько (разделяйте пустой строкой)"></textarea>
+                <button id="add-recruits-btn">➕ Добавить заявки</button>
+            </div>
             <div class="db-table-wrapper">
                 <table class="recruits-table" id="recruits-table">
                     <thead><tr><th style="width:60%;">Заявка</th><th style="width:20%;">Действия</th><th style="width:20%;">Отписал</th></tr></thead>
@@ -652,6 +687,8 @@
                 const today = new Date().toISOString().slice(0, 10);
                 document.getElementById('filter-date-from').value = today; document.getElementById('filter-date-to').value = today;
                 document.getElementById('order-date-input').value = today; document.getElementById('order-filter-date-from').value = today; document.getElementById('order-filter-date-to').value = today;
+                document.getElementById('reserves-date-input').value = today;
+                document.getElementById('dds-date-input-new').value = today;
                 const bounds = getMonthBounds(new Date().getFullYear(), new Date().getMonth() + 1);
                 document.getElementById('stats-date-from').value = bounds.firstDay; document.getElementById('stats-date-to').value = bounds.lastDay;
                 document.getElementById('managers-date-from').value = bounds.firstDay; document.getElementById('managers-date-to').value = bounds.lastDay;
@@ -1168,16 +1205,250 @@
         document.querySelectorAll('#managers-sub-tabs .sub-tab').forEach(tab => tab.addEventListener('click', function() { document.querySelectorAll('#managers-sub-tabs .sub-tab').forEach(t => t.classList.remove('active')); this.classList.add('active'); document.getElementById('managers-contractDate-panel').style.display = this.dataset.mode==='contractDate'?'block':'none'; document.getElementById('managers-leadDate-panel').style.display = this.dataset.mode==='leadDate'?'block':'none'; renderManagersStats(); }));
         bindQuickFilter('stats', renderOverallStats); bindQuickFilter('stats-lead', renderOverallStats); bindQuickFilter('managers', renderManagersStats); bindQuickFilter('managers-lead', renderManagersStats);
 
-        // ========== ВЫПЛАТЫ ==========
-        function renderDDS() { const tbody = document.querySelector('#dds-table tbody'); const footer = document.getElementById('dds-footer'); tbody.innerHTML = ''; let total = 0; ddsCache.forEach(item => { const val = parseAmount(item.total); total += val; const row = document.createElement('tr'); row.innerHTML = `<td><input type="text" class="dds-partner" value="${escapeHtml(item.partner||'')}" data-id="${item.id}" /></td><td><input type="text" class="dds-sum" value="${escapeHtml(item.sum||'')}" data-id="${item.id}" /></td><td><input type="text" class="dds-contracts" value="${escapeHtml(item.contracts||'')}" data-id="${item.id}" /></td><td><input type="date" class="dds-date" value="${item.date||''}" data-id="${item.id}" /></td><td><textarea class="dds-method" data-id="${item.id}">${escapeHtml(item.method||'')}</textarea></td><td style="border-left:2px solid var(--border);"><input type="text" class="dds-total" value="${escapeHtml(item.total||'')}" data-id="${item.id}" /></td><td><button class="delete-dds-btn" data-id="${item.id}">✕</button></td>`; tbody.appendChild(row); }); footer.innerHTML = `<tr><td colspan="5" style="text-align:right; font-weight:bold;">Сумма итого:</td><td style="border-left:2px solid var(--border); font-weight:bold;">${total.toLocaleString('ru-RU')} ₽</td><td></td></tr>`; tbody.onclick = (e) => { if (e.target.classList.contains('delete-dds-btn')) { const id = e.target.dataset.id; showConfirm('Удалить строку?', async () => { await deleteDDS(id); ddsCache = ddsCache.filter(i => i.id !== id); renderDDS(); }); } }; tbody.onchange = async (e) => { const id = e.target.dataset.id; if (!id) return; const item = ddsCache.find(i => i.id === id); if (!item) return; item.partner = tbody.querySelector(`.dds-partner[data-id="${id}"]`)?.value || ''; item.sum = tbody.querySelector(`.dds-sum[data-id="${id}"]`)?.value || ''; item.contracts = tbody.querySelector(`.dds-contracts[data-id="${id}"]`)?.value || ''; item.date = tbody.querySelector(`.dds-date[data-id="${id}"]`)?.value || ''; item.method = tbody.querySelector(`.dds-method[data-id="${id}"]`)?.value || ''; item.total = tbody.querySelector(`.dds-total[data-id="${id}"]`)?.value || ''; await saveDDS(item); renderDDS(); }; }
-        document.getElementById('add-dds-row').addEventListener('click', async () => { const item = { partner: '', sum: '', contracts: '', date: '', method: '', total: '' }; await saveDDS(item); ddsCache.push(item); renderDDS(); });
+        // ========== ВЫПЛАТЫ (ДДС с исправленным редактированием) ==========
+        function renderDDS() {
+            const tbody = document.querySelector('#dds-table tbody');
+            const footer = document.getElementById('dds-footer');
+            tbody.innerHTML = '';
+            let total = 0;
+            ddsCache.forEach(item => {
+                const val = parseAmount(item.total);
+                total += val;
+                const row = document.createElement('tr');
+                row.innerHTML = `<td><span class="editable-dds" data-field="partner" data-id="${item.id}">${escapeHtml(item.partner||'') || '&nbsp;'}</span></td><td><span class="editable-dds" data-field="sum" data-id="${item.id}">${escapeHtml(item.sum||'') || '&nbsp;'}</span></td><td><span class="editable-dds" data-field="contracts" data-id="${item.id}">${escapeHtml(item.contracts||'') || '&nbsp;'}</span></td><td><input type="date" class="dds-date" value="${item.date||''}" data-id="${item.id}" /></td><td><span class="editable-dds" data-field="method" data-id="${item.id}">${escapeHtml(item.method||'') || '&nbsp;'}</span></td><td style="border-left:2px solid var(--border);"><span class="editable-dds" data-field="total" data-id="${item.id}">${escapeHtml(item.total||'') || '&nbsp;'}</span></td><td><button class="delete-dds-btn" data-id="${item.id}" style="cursor:pointer;">✕</button></td>`;
+                tbody.appendChild(row);
+            });
+            footer.innerHTML = `<tr><td colspan="5" style="text-align:right; font-weight:bold;">Сумма итого:</td><td style="border-left:2px solid var(--border); font-weight:bold;">${total.toLocaleString('ru-RU')} ₽</td><td></td></tr>`;
+
+            // Обработчик кликов на editable-dds (назначаем на tbody, но используем stopPropagation у кнопок удаления)
+            tbody.addEventListener('click', function(e) {
+                // Кнопка удаления
+                if (e.target.classList.contains('delete-dds-btn')) {
+                    e.stopPropagation();
+                    const id = e.target.dataset.id;
+                    showConfirm('Удалить строку?', async () => {
+                        await deleteDDS(id);
+                        ddsCache = ddsCache.filter(i => i.id !== id);
+                        renderDDS();
+                    });
+                    return;
+                }
+                // Редактирование span
+                const span = e.target.closest('.editable-dds');
+                if (!span) return;
+                // Если уже внутри есть input/textarea – не трогаем
+                if (span.querySelector('input') || span.querySelector('textarea')) return;
+                
+                const id = span.dataset.id;
+                const field = span.dataset.field;
+                const item = ddsCache.find(i => i.id === id);
+                if (!item) return;
+                
+                const isMethod = field === 'method';
+                const currentValue = item[field] || '';
+                
+                // Заменяем содержимое span на поле ввода
+                span.innerHTML = '';
+                const input = document.createElement(isMethod ? 'textarea' : 'input');
+                if (!isMethod) input.type = 'text';
+                input.value = currentValue;
+                input.style.width = '100%';
+                input.style.padding = '2px';
+                input.style.border = '1px solid #ccc';
+                input.style.borderRadius = '3px';
+                input.style.fontSize = '11px';
+                if (isMethod) input.style.minHeight = '30px';
+                span.appendChild(input);
+                input.focus();
+                
+                // Функция сохранения
+                const save = async () => {
+                    const newValue = input.value;
+                    span.innerHTML = escapeHtml(newValue) || '&nbsp;';
+                    item[field] = newValue;
+                    await saveDDS(item);
+                };
+                
+                input.addEventListener('blur', save);
+                input.addEventListener('keydown', (ev) => {
+                    if (ev.key === 'Enter' && !isMethod) {
+                        ev.preventDefault();
+                        input.blur();
+                    }
+                });
+            });
+            
+            tbody.addEventListener('change', async (e) => {
+                if (e.target.classList.contains('dds-date')) {
+                    const id = e.target.dataset.id;
+                    const item = ddsCache.find(i => i.id === id);
+                    if (item) { item.date = e.target.value; await saveDDS(item); }
+                }
+            });
+        }
+
+        document.getElementById('add-dds-row-btn').addEventListener('click', async () => {
+            const partner = document.getElementById('dds-partner-input').value.trim();
+            const sum = document.getElementById('dds-sum-input').value.trim();
+            const contracts = document.getElementById('dds-contracts-input').value.trim();
+            const date = document.getElementById('dds-date-input-new').value;
+            const method = document.getElementById('dds-method-input').value.trim();
+            const total = document.getElementById('dds-total-input').value.trim();
+            if (!partner && !sum && !contracts && !method && !total) return;
+            const item = { partner, sum, contracts, date, method, total };
+            await saveDDS(item);
+            ddsCache.push(item);
+            document.getElementById('dds-partner-input').value = '';
+            document.getElementById('dds-sum-input').value = '';
+            document.getElementById('dds-contracts-input').value = '';
+            document.getElementById('dds-method-input').value = '';
+            document.getElementById('dds-total-input').value = '';
+            renderDDS();
+        });
+
         function renderDebt() { const tbody = document.querySelector('#debt-table tbody'); const totalSpan = document.getElementById('total-debt-amount'); tbody.innerHTML = ''; const contracts = ordersCache.filter(o => o.success === 'Да' && o.contractDate); let totalDebt = 0; const today = new Date(); today.setHours(0,0,0,0); contracts.forEach(o => { const cp = contractPayoutsCache[o.id] || {}; if (!cp.mainPaid) totalDebt += parseAmount(o.mainAmount); if (parseAmount(o.bonusAmount) > 0 && !cp.bonusPaid) totalDebt += parseAmount(o.bonusAmount); }); totalSpan.textContent = totalDebt > 0 ? `(${totalDebt.toLocaleString('ru-RU')} ₽)` : ''; contracts.forEach(order => { const cp = contractPayoutsCache[order.id] || {}; const mainAmount = parseAmount(order.mainAmount); const bonusAmount = parseAmount(order.bonusAmount); const cDate = new Date(order.contractDate + 'T00:00:00'); const getDays = (paidDate) => paidDate ? Math.ceil((new Date(paidDate+'T00:00:00') - cDate) / (1000*60*60*24)) : Math.ceil((today - cDate) / (1000*60*60*24)); const mainStatus = cp.mainPaid ? `<input type="date" class="debt-paid-date" data-id="${order.id}" data-type="main" value="${cp.mainPaidDate||''}" style="width:100px;" /> <span>(${getDays(cp.mainPaidDate)} дн.)</span>` : `Не выпл., ${getDays(cp.mainPaidDate)} дн.`; const bonusStatus = bonusAmount > 0 ? (cp.bonusPaid ? `<input type="date" class="debt-paid-date" data-id="${order.id}" data-type="bonus" value="${cp.bonusPaidDate||''}" style="width:100px;" /> <span>(${getDays(cp.bonusPaidDate)} дн.)</span>` : `Не выпл., ${getDays(cp.bonusPaidDate)} дн.`) : ''; const row = document.createElement('tr'); row.innerHTML = `<td style="text-align:left;">${escapeHtml(order.text||'')}</td><td>${order.contractDate}</td><td>${mainAmount.toLocaleString('ru-RU')} ₽</td><td><input type="checkbox" class="debt-paid-cb" data-id="${order.id}" data-type="main" ${cp.mainPaid?'checked':''} /></td><td>${mainStatus}</td><td>${bonusAmount > 0 ? bonusAmount.toLocaleString('ru-RU')+' ₽' : '—'}</td><td>${bonusAmount > 0 ? `<input type="checkbox" class="debt-paid-cb" data-id="${order.id}" data-type="bonus" ${cp.bonusPaid?'checked':''} />` : ''}</td><td>${bonusStatus}</td>`; tbody.appendChild(row); }); tbody.onclick = async (e) => { if (e.target.classList.contains('debt-paid-cb')) { const id = e.target.dataset.id; const type = e.target.dataset.type; const checked = e.target.checked; const cp = contractPayoutsCache[id] || {}; const todayStr = new Date().toISOString().slice(0,10); if (type==='main') { cp.mainPaid = checked; if (checked) cp.mainPaidDate = cp.mainPaidDate || todayStr; else delete cp.mainPaidDate; } else { cp.bonusPaid = checked; if (checked) cp.bonusPaidDate = cp.bonusPaidDate || todayStr; else delete cp.bonusPaidDate; } await saveContractPayout(id, cp); renderDebt(); } }; tbody.onchange = async (e) => { if (e.target.classList.contains('debt-paid-date')) { const id = e.target.dataset.id; const type = e.target.dataset.type; const cp = contractPayoutsCache[id] || {}; if (type==='main') cp.mainPaidDate = e.target.value || ''; else cp.bonusPaidDate = e.target.value || ''; await saveContractPayout(id, cp); } }; }
 
-        // ========== БАЗА ==========
-        function renderReserves() { const tbody = document.querySelector('#reserves-table tbody'); tbody.innerHTML = ''; reservesCache.forEach(item => { const row = document.createElement('tr'); row.innerHTML = `<td><textarea class="reserve-text" data-id="${item.id}" style="min-height:35px;">${escapeHtml(item.text||'')}</textarea></td><td><button class="copy-reserve-btn" data-text="${escapeHtml(item.text||'')}">📋</button> <button class="delete-reserve-btn" data-id="${item.id}">✕</button></td><td><input type="date" class="reserve-date" value="${item.dateAdded?item.dateAdded.substring(0,10):''}" data-id="${item.id}" /></td><td><select class="reserve-reason" data-id="${item.id}"><option value="">—</option><option value="Женщина" ${item.reason==='Женщина'?'selected':''}>Женщина</option><option value="Офицер" ${item.reason==='Офицер'?'selected':''}>Офицер</option><option value="Кат Д" ${item.reason==='Кат Д'?'selected':''}>Кат Д</option><option value="Кат В" ${item.reason==='Кат В'?'selected':''}>Кат В</option><option value="custom" ${item.reason&&!['Женщина','Офицер','Кат Д','Кат В'].includes(item.reason)?'selected':''}>Другое</option></select><input type="text" class="reserve-custom-reason" value="${item.reason&&!['Женщина','Офицер','Кат Д','Кат В'].includes(item.reason)?escapeHtml(item.reason):''}" data-id="${item.id}" style="display:${item.reason&&!['Женщина','Офицер','Кат Д','Кат В'].includes(item.reason)?'inline-block':'none'}; margin-top:3px;" placeholder="Свой текст" /></td>`; tbody.appendChild(row); }); document.getElementById('reserves-count').textContent = reservesCache.length ? `(${reservesCache.length})` : ''; tbody.onclick = async (e) => { if (e.target.classList.contains('delete-reserve-btn')) { const id = e.target.dataset.id; showConfirm('Удалить?', async () => { await deleteReserve(id); reservesCache = reservesCache.filter(i => i.id !== id); renderReserves(); }); } else if (e.target.classList.contains('copy-reserve-btn')) { await copyToClipboard(e.target.dataset.text); e.target.textContent = '✅'; setTimeout(() => { e.target.textContent = '📋'; }, 1000); } }; tbody.onchange = async (e) => { const id = e.target.dataset.id; const item = reservesCache.find(i => i.id === id); if (!item) return; if (e.target.classList.contains('reserve-text')) { item.text = e.target.value; await saveReserve(item); } else if (e.target.classList.contains('reserve-date')) { item.dateAdded = e.target.value + 'T00:00:00.000Z'; await saveReserve(item); } else if (e.target.classList.contains('reserve-reason')) { if (e.target.value === 'custom') tbody.querySelector(`.reserve-custom-reason[data-id="${id}"]`).style.display = 'inline-block'; else { tbody.querySelector(`.reserve-custom-reason[data-id="${id}"]`).style.display = 'none'; item.reason = e.target.value; await saveReserve(item); } } else if (e.target.classList.contains('reserve-custom-reason')) { item.reason = e.target.value; await saveReserve(item); } }; }
-        function renderRecruits() { const tbody = document.querySelector('#recruits-table tbody'); tbody.innerHTML = ''; recruitsCache.forEach(item => { const row = document.createElement('tr'); row.innerHTML = `<td><textarea class="recruit-text" data-id="${item.id}" style="min-height:35px;">${escapeHtml(item.text||'')}</textarea></td><td><button class="copy-recruit-btn" data-text="${escapeHtml(item.text||'')}">📋</button> <button class="delete-recruit-btn" data-id="${item.id}">✕</button></td><td><input type="text" class="recruit-reply" value="${escapeHtml(item.reply||'')}" data-id="${item.id}" /></td>`; tbody.appendChild(row); }); document.getElementById('recruits-count').textContent = recruitsCache.length ? `(${recruitsCache.length})` : ''; tbody.onclick = async (e) => { if (e.target.classList.contains('delete-recruit-btn')) { const id = e.target.dataset.id; showConfirm('Удалить?', async () => { await deleteRecruit(id); recruitsCache = recruitsCache.filter(i => i.id !== id); renderRecruits(); }); } else if (e.target.classList.contains('copy-recruit-btn')) { await copyToClipboard(e.target.dataset.text); e.target.textContent = '✅'; setTimeout(() => { e.target.textContent = '📋'; }, 1000); } }; tbody.onchange = async (e) => { const id = e.target.dataset.id; const item = recruitsCache.find(i => i.id === id); if (!item) return; if (e.target.classList.contains('recruit-text')) { item.text = e.target.value; await saveRecruit(item); } else if (e.target.classList.contains('recruit-reply')) { item.reply = e.target.value; await saveRecruit(item); } }; }
-        document.getElementById('add-reserve-row').addEventListener('click', async () => { const item = { text: '', dateAdded: new Date().toISOString(), reason: '' }; await saveReserve(item); reservesCache.push(item); renderReserves(); });
-        document.getElementById('add-recruit-row').addEventListener('click', async () => { const item = { text: '', reply: '' }; await saveRecruit(item); recruitsCache.push(item); renderRecruits(); });
+        // ========== БАЗА (с кликабельными текстами и датой) ==========
+        function renderReserves() {
+            const tbody = document.querySelector('#reserves-table tbody');
+            tbody.innerHTML = '';
+            reservesCache.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td><span class="editable-text" data-field="text" data-id="${item.id}">${escapeHtml(item.text||'')}</span></td><td><button class="copy-reserve-btn" data-text="${escapeHtml(item.text||'')}">📋</button> <button class="delete-reserve-btn" data-id="${item.id}">✕</button></td><td><input type="date" class="reserve-date" value="${item.dateAdded?item.dateAdded.substring(0,10):''}" data-id="${item.id}" /></td><td><select class="reserve-reason" data-id="${item.id}"><option value="">—</option><option value="Женщина" ${item.reason==='Женщина'?'selected':''}>Женщина</option><option value="Офицер" ${item.reason==='Офицер'?'selected':''}>Офицер</option><option value="Кат Д" ${item.reason==='Кат Д'?'selected':''}>Кат Д</option><option value="Кат В" ${item.reason==='Кат В'?'selected':''}>Кат В</option><option value="custom" ${item.reason&&!['Женщина','Офицер','Кат Д','Кат В'].includes(item.reason)?'selected':''}>Другое</option></select><input type="text" class="reserve-custom-reason" value="${item.reason&&!['Женщина','Офицер','Кат Д','Кат В'].includes(item.reason)?escapeHtml(item.reason):''}" data-id="${item.id}" style="display:${item.reason&&!['Женщина','Офицер','Кат Д','Кат В'].includes(item.reason)?'inline-block':'none'}; margin-top:3px;" placeholder="Свой текст" /></td>`;
+                tbody.appendChild(row);
+            });
+            document.getElementById('reserves-count').textContent = reservesCache.length ? `(${reservesCache.length})` : '';
+
+            tbody.querySelectorAll('.editable-text').forEach(span => {
+                span.addEventListener('click', () => {
+                    if (span.querySelector('textarea')) return;
+                    const id = span.dataset.id;
+                    const item = reservesCache.find(i => i.id === id);
+                    if (!item) return;
+                    const textarea = document.createElement('textarea');
+                    textarea.value = item.text || '';
+                    textarea.style.width = '100%';
+                    textarea.style.minHeight = '50px';
+                    span.replaceWith(textarea);
+                    textarea.focus();
+                    textarea.addEventListener('blur', async () => {
+                        item.text = textarea.value;
+                        await saveReserve(item);
+                        renderReserves();
+                    });
+                });
+            });
+
+            tbody.onclick = async (e) => {
+                if (e.target.classList.contains('delete-reserve-btn')) {
+                    const id = e.target.dataset.id;
+                    showConfirm('Удалить?', async () => { await deleteReserve(id); reservesCache = reservesCache.filter(i => i.id !== id); renderReserves(); });
+                } else if (e.target.classList.contains('copy-reserve-btn')) {
+                    await copyToClipboard(e.target.dataset.text);
+                    e.target.textContent = '✅';
+                    setTimeout(() => { e.target.textContent = '📋'; }, 1000);
+                }
+            };
+            tbody.onchange = async (e) => {
+                const id = e.target.dataset.id;
+                const item = reservesCache.find(i => i.id === id);
+                if (!item) return;
+                if (e.target.classList.contains('reserve-date')) {
+                    item.dateAdded = e.target.value + 'T00:00:00.000Z';
+                    await saveReserve(item);
+                } else if (e.target.classList.contains('reserve-reason')) {
+                    if (e.target.value === 'custom') {
+                        tbody.querySelector(`.reserve-custom-reason[data-id="${id}"]`).style.display = 'inline-block';
+                    } else {
+                        tbody.querySelector(`.reserve-custom-reason[data-id="${id}"]`).style.display = 'none';
+                        item.reason = e.target.value;
+                        await saveReserve(item);
+                    }
+                } else if (e.target.classList.contains('reserve-custom-reason')) {
+                    item.reason = e.target.value;
+                    await saveReserve(item);
+                }
+            };
+        }
+
+        function renderRecruits() {
+            const tbody = document.querySelector('#recruits-table tbody');
+            tbody.innerHTML = '';
+            recruitsCache.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td><span class="editable-text" data-field="text" data-id="${item.id}">${escapeHtml(item.text||'')}</span></td><td><button class="copy-recruit-btn" data-text="${escapeHtml(item.text||'')}">📋</button> <button class="delete-recruit-btn" data-id="${item.id}">✕</button></td><td><span class="editable-text" data-field="reply" data-id="${item.id}">${escapeHtml(item.reply||'')}</span></td>`;
+                tbody.appendChild(row);
+            });
+            document.getElementById('recruits-count').textContent = recruitsCache.length ? `(${recruitsCache.length})` : '';
+
+            tbody.querySelectorAll('.editable-text').forEach(span => {
+                span.addEventListener('click', () => {
+                    if (span.querySelector('input') || span.querySelector('textarea')) return;
+                    const id = span.dataset.id;
+                    const field = span.dataset.field;
+                    const item = recruitsCache.find(i => i.id === id);
+                    if (!item) return;
+                    const isText = field === 'text';
+                    const input = document.createElement(isText ? 'textarea' : 'input');
+                    if (!isText) input.type = 'text';
+                    input.value = item[field] || '';
+                    input.style.width = '100%';
+                    if (isText) input.style.minHeight = '50px';
+                    span.replaceWith(input);
+                    input.focus();
+                    input.addEventListener('blur', async () => {
+                        item[field] = input.value;
+                        await saveRecruit(item);
+                        renderRecruits();
+                    });
+                });
+            });
+
+            tbody.onclick = async (e) => {
+                if (e.target.classList.contains('delete-recruit-btn')) {
+                    const id = e.target.dataset.id;
+                    showConfirm('Удалить?', async () => { await deleteRecruit(id); recruitsCache = recruitsCache.filter(i => i.id !== id); renderRecruits(); });
+                } else if (e.target.classList.contains('copy-recruit-btn')) {
+                    await copyToClipboard(e.target.dataset.text);
+                    e.target.textContent = '✅';
+                    setTimeout(() => { e.target.textContent = '📋'; }, 1000);
+                }
+            };
+        }
+
+        document.getElementById('add-reserves-btn').addEventListener('click', async () => {
+            const textarea = document.getElementById('new-reserves-input');
+            const text = textarea.value.trim();
+            if (!text) return;
+            const dateVal = document.getElementById('reserves-date-input').value;
+            const dateStr = dateVal ? dateVal + 'T00:00:00.000Z' : new Date().toISOString();
+            const blocks = text.split(/\n\s*\n/);
+            for (const block of blocks) {
+                const trimmed = block.trim();
+                if (!trimmed) continue;
+                const item = { text: trimmed, dateAdded: dateStr, reason: '' };
+                await saveReserve(item);
+                reservesCache.push(item);
+            }
+            textarea.value = '';
+            renderReserves();
+        });
+        document.getElementById('add-recruits-btn').addEventListener('click', async () => {
+            const textarea = document.getElementById('new-recruits-input');
+            const text = textarea.value.trim();
+            if (!text) return;
+            const blocks = text.split(/\n\s*\n/);
+            for (const block of blocks) {
+                const trimmed = block.trim();
+                if (!trimmed) continue;
+                const item = { text: trimmed, reply: '' };
+                await saveRecruit(item);
+                recruitsCache.push(item);
+            }
+            textarea.value = '';
+            renderRecruits();
+        });
+
         document.querySelectorAll('#db-panel .sub-tab').forEach(tab => tab.addEventListener('click', function() { document.querySelectorAll('#db-panel .sub-tab').forEach(t => t.classList.remove('active')); this.classList.add('active'); document.getElementById('reserves-panel').style.display = this.dataset.db === 'reserves' ? 'block' : 'none'; document.getElementById('recruits-panel').style.display = this.dataset.db === 'recruits' ? 'block' : 'none'; }));
 
         function renderAll() {
