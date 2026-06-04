@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Панель управления лидами v3.109</title>
+    <title>Панель управления лидами v3.110</title>
     <script type="importmap">
         { "imports": { "firebase/app": "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js", "firebase/firestore": "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js" } }
     </script>
@@ -164,6 +164,8 @@
         .hidden-col { display: none; }
         .show-all-cols-btn { margin-top: 6px; padding: 3px 10px; background: #f1f5f9; border: 1px solid var(--border); border-radius: 4px; cursor: pointer; font-size: 11px; color: var(--text); }
         body.dark .show-all-cols-btn { background: #475569; }
+        .sync-indicator { font-size: 9px; color: #10b981; margin-left: 6px; }
+        .sync-indicator.syncing { color: #f59e0b; }
     </style>
 </head>
 <body>
@@ -176,6 +178,7 @@
             <div class="tab db-tab" data-tab="db">🗄️ База</div>
         </div>
         <div style="display: flex; align-items: center; gap: 6px;">
+            <span class="sync-indicator" id="sync-status" title="Статус синхронизации">⚡ Онлайн</span>
             <button class="refresh-btn" id="refresh-btn" title="Обновить страницу">🔄</button>
             <button class="theme-toggle" id="theme-toggle" title="Переключить тему">☀️</button>
             <span class="auto-save-indicator" id="auto-save-status"></span>
@@ -427,7 +430,7 @@
 
     <script type="module">
         import { initializeApp } from 'firebase/app';
-        import { getFirestore, collection, doc, getDocs, setDoc, addDoc, deleteDoc, query, orderBy } from 'firebase/firestore';
+        import { getFirestore, collection, doc, getDocs, setDoc, addDoc, deleteDoc, query, orderBy, onSnapshot } from 'firebase/firestore';
 
         const firebaseConfig = {
             apiKey: "AIzaSyAkl5rvje0xwveLk14rWAjdupp9LJuCNl8",
@@ -465,6 +468,7 @@
         let selectedDeferredDate = null;
         let calendarYear = new Date().getFullYear();
         let calendarMonth = new Date().getMonth();
+        let isInitialLoad = true;
 
         let hiddenColumns = JSON.parse(localStorage.getItem('hiddenColumns') || '[]');
 
@@ -483,6 +487,20 @@
                 if (data.savedStatsRows) savedStatsRows = data.savedStatsRows;
                 if (data.screenshots) screenshotsCache = data.screenshots;
             } catch(e) {}
+        }
+
+        function setSyncStatus(status) {
+            const el = document.getElementById('sync-status');
+            if (status === 'syncing') {
+                el.textContent = '🔄 Синхронизация...';
+                el.classList.add('syncing');
+            } else if (status === 'online') {
+                el.textContent = '⚡ Онлайн';
+                el.classList.remove('syncing');
+            } else if (status === 'error') {
+                el.textContent = '❌ Ошибка синхронизации';
+                el.classList.remove('syncing');
+            }
         }
 
         // Кнопка обновления страницы
@@ -587,20 +605,6 @@
         }
         async function saveManagers() { await setDoc(doc(managersRef, 'list'), { list: managersList }); }
 
-        async function loadSavedStatsRows() {
-            const snap = await getDocs(savedStatsRef);
-            savedStatsRows = [];
-            snap.forEach(doc => savedStatsRows.push({ id: doc.id, ...doc.data() }));
-        }
-        async function saveSavedStatsRow(row) {
-            if (row.id) await setDoc(doc(savedStatsRef, row.id), row);
-            else { const ref = await addDoc(savedStatsRef, row); row.id = ref.id; }
-        }
-        async function deleteSavedStatsRow(id) {
-            await deleteDoc(doc(savedStatsRef, id));
-            savedStatsRows = savedStatsRows.filter(r => r.id !== id);
-        }
-
         async function saveColumn(name, phones) { columnsCache[name] = phones; await setDoc(doc(columnsRef, name), { phones }); }
         async function saveOrder(order) { if (order.id) { await setDoc(doc(ordersRef, order.id), order); } else { const ref = await addDoc(ordersRef, order); order.id = ref.id; } }
         async function deleteOrder(id) { await deleteDoc(doc(ordersRef, id)); if (contractPayoutsCache[id]) { await deleteDoc(doc(contractPayoutsRef, id)); delete contractPayoutsCache[id]; } }
@@ -615,11 +619,6 @@
         async function saveRecruit(item) { if (item.id) { await setDoc(doc(recruitsRef, item.id), item); } else { const ref = await addDoc(recruitsRef, item); item.id = ref.id; } }
         async function deleteRecruit(id) { await deleteDoc(doc(recruitsRef, id)); }
 
-        async function loadScreenshots() {
-            const snap = await getDocs(screenshotsRef);
-            screenshotsCache = [];
-            snap.forEach(doc => screenshotsCache.push({ id: doc.id, ...doc.data() }));
-        }
         async function saveScreenshot(item) {
             if (item.id) await setDoc(doc(screenshotsRef, item.id), item);
             else { const ref = await addDoc(screenshotsRef, item); item.id = ref.id; }
@@ -627,6 +626,174 @@
         async function deleteScreenshot(id) {
             await deleteDoc(doc(screenshotsRef, id));
             screenshotsCache = screenshotsCache.filter(s => s.id !== id);
+        }
+
+        async function saveSavedStatsRow(row) {
+            if (row.id) await setDoc(doc(savedStatsRef, row.id), row);
+            else { const ref = await addDoc(savedStatsRef, row); row.id = ref.id; }
+        }
+        async function deleteSavedStatsRow(id) {
+            await deleteDoc(doc(savedStatsRef, id));
+            savedStatsRows = savedStatsRows.filter(r => r.id !== id);
+        }
+
+        // ========== REALTIME LISTENERS ==========
+        function setupRealtimeListeners() {
+            // Слушаем колонки
+            onSnapshot(columnsRef, (snapshot) => {
+                const newCache = {};
+                snapshot.forEach(docSnap => {
+                    newCache[docSnap.id] = docSnap.data().phones || [];
+                });
+                for (const name of managersList) {
+                    if (!newCache[name]) newCache[name] = [];
+                }
+                const changed = JSON.stringify(columnsCache) !== JSON.stringify(newCache);
+                columnsCache = newCache;
+                if (!isInitialLoad && changed) {
+                    renderAll();
+                }
+            }, (error) => {
+                console.error('Ошибка слушателя columns:', error);
+                setSyncStatus('error');
+            });
+
+            // Слушаем заявки
+            const ordersQuery = query(ordersRef, orderBy('dateAdded', 'desc'));
+            onSnapshot(ordersQuery, (snapshot) => {
+                const newCache = [];
+                snapshot.forEach(docSnap => {
+                    newCache.push({ id: docSnap.id, ...docSnap.data() });
+                });
+                const changed = JSON.stringify(ordersCache) !== JSON.stringify(newCache);
+                ordersCache = newCache;
+                if (!isInitialLoad && changed) {
+                    renderAll();
+                }
+            }, (error) => {
+                console.error('Ошибка слушателя orders:', error);
+                setSyncStatus('error');
+            });
+
+            // Слушаем потенциальные заявки
+            onSnapshot(potentialRef, (snapshot) => {
+                const newCache = [];
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    if (!data.ndzHistory && data.ndzCount > 0) data.ndzHistory = [];
+                    newCache.push({ phone: docSnap.id, ...data });
+                });
+                const changed = JSON.stringify(potentialCache) !== JSON.stringify(newCache);
+                potentialCache = newCache;
+                if (!isInitialLoad && changed) {
+                    renderAll();
+                }
+            }, (error) => {
+                console.error('Ошибка слушателя potential:', error);
+                setSyncStatus('error');
+            });
+
+            // Слушаем ДДС
+            onSnapshot(ddsRef, (snapshot) => {
+                const newCache = [];
+                snapshot.forEach(d => newCache.push({ id: d.id, ...d.data() }));
+                const changed = JSON.stringify(ddsCache) !== JSON.stringify(newCache);
+                ddsCache = newCache;
+                if (!isInitialLoad && changed) {
+                    renderAll();
+                }
+            }, (error) => {
+                console.error('Ошибка слушателя dds:', error);
+                setSyncStatus('error');
+            });
+
+            // Слушаем выплаты по контрактам
+            onSnapshot(contractPayoutsRef, (snapshot) => {
+                const newCache = {};
+                snapshot.forEach(docSnap => {
+                    newCache[docSnap.id] = docSnap.data();
+                });
+                const changed = JSON.stringify(contractPayoutsCache) !== JSON.stringify(newCache);
+                contractPayoutsCache = newCache;
+                if (!isInitialLoad && changed) {
+                    renderAll();
+                }
+            }, (error) => {
+                console.error('Ошибка слушателя contractPayouts:', error);
+                setSyncStatus('error');
+            });
+
+            // Слушаем запасы
+            onSnapshot(reservesRef, (snapshot) => {
+                const newCache = [];
+                snapshot.forEach(d => newCache.push({ id: d.id, ...d.data() }));
+                const changed = JSON.stringify(reservesCache) !== JSON.stringify(newCache);
+                reservesCache = newCache;
+                if (!isInitialLoad && changed) {
+                    renderAll();
+                }
+            }, (error) => {
+                console.error('Ошибка слушателя reserves:', error);
+                setSyncStatus('error');
+            });
+
+            // Слушаем рекруты
+            onSnapshot(recruitsRef, (snapshot) => {
+                const newCache = [];
+                snapshot.forEach(d => newCache.push({ id: d.id, ...d.data() }));
+                const changed = JSON.stringify(recruitsCache) !== JSON.stringify(newCache);
+                recruitsCache = newCache;
+                if (!isInitialLoad && changed) {
+                    renderAll();
+                }
+            }, (error) => {
+                console.error('Ошибка слушателя recruits:', error);
+                setSyncStatus('error');
+            });
+
+            // Слушаем менеджеров
+            onSnapshot(managersRef, (snapshot) => {
+                snapshot.forEach(docSnap => {
+                    const newList = docSnap.data().list || [];
+                    const changed = JSON.stringify(managersList) !== JSON.stringify(newList);
+                    if (changed) {
+                        managersList = newList;
+                        if (!isInitialLoad) renderAll();
+                    }
+                });
+            }, (error) => {
+                console.error('Ошибка слушателя managers:', error);
+                setSyncStatus('error');
+            });
+
+            // Слушаем сохранённые строки аналитики
+            onSnapshot(savedStatsRef, (snapshot) => {
+                const newRows = [];
+                snapshot.forEach(d => newRows.push({ id: d.id, ...d.data() }));
+                newRows.sort((a, b) => (a.order || 0) - (b.order || 0));
+                const changed = JSON.stringify(savedStatsRows) !== JSON.stringify(newRows);
+                savedStatsRows = newRows;
+                if (!isInitialLoad && changed) {
+                    renderAll();
+                }
+            }, (error) => {
+                console.error('Ошибка слушателя savedStats:', error);
+                setSyncStatus('error');
+            });
+
+            // Слушаем скриншоты
+            onSnapshot(screenshotsRef, (snapshot) => {
+                const newCache = [];
+                snapshot.forEach(d => newCache.push({ id: d.id, ...d.data() }));
+                const changed = JSON.stringify(screenshotsCache) !== JSON.stringify(newCache);
+                screenshotsCache = newCache;
+                if (!isInitialLoad && changed) {
+                    renderAll();
+                }
+            }, (error) => {
+                console.error('Ошибка слушателя screenshots:', error);
+                setSyncStatus('error');
+            });
         }
 
         async function migrateOrders() {
@@ -648,26 +815,16 @@
                     changed = true;
                 }
             }
-            if (changed) {
-                const snap = await getDocs(potentialRef);
-                potentialCache = [];
-                snap.forEach(docSnap => {
-                    const data = docSnap.data();
-                    if (!data.ndzHistory && data.ndzCount > 0) data.ndzHistory = [];
-                    potentialCache.push({ phone: docSnap.id, ...data });
-                });
-            }
         }
 
-        async function loadInitialData() {
+        async function initializeAppData() {
             try {
                 await loadManagers();
-                await loadSavedStatsRows();
-                savedStatsRows.sort((a, b) => (a.order || 0) - (b.order || 0));
-                await loadScreenshots();
+                // Загружаем данные один раз для начального отображения
                 const colsSnap = await getDocs(columnsRef);
                 colsSnap.forEach(docSnap => { columnsCache[docSnap.id] = docSnap.data().phones || []; });
                 for (const name of managersList) { if (!columnsCache[name]) { columnsCache[name] = []; await setDoc(doc(columnsRef, name), { phones: [] }); } }
+
                 const q = query(ordersRef, orderBy('dateAdded', 'desc'));
                 const ordSnap = await getDocs(q);
                 ordersCache = []; ordSnap.forEach(docSnap => { ordersCache.push({ id: docSnap.id, ...docSnap.data() }); });
@@ -690,6 +847,15 @@
                 await processDeferredReactivations();
                 const cpSnap = await getDocs(contractPayoutsRef); contractPayoutsCache = {}; cpSnap.forEach(docSnap => { contractPayoutsCache[docSnap.id] = docSnap.data(); });
 
+                const statsSnap = await getDocs(savedStatsRef);
+                savedStatsRows = [];
+                statsSnap.forEach(d => savedStatsRows.push({ id: d.id, ...d.data() }));
+                savedStatsRows.sort((a, b) => (a.order || 0) - (b.order || 0));
+
+                const scrSnap = await getDocs(screenshotsRef);
+                screenshotsCache = [];
+                scrSnap.forEach(d => screenshotsCache.push({ id: d.id, ...d.data() }));
+
                 const today = new Date().toISOString().slice(0, 10);
                 document.getElementById('filter-date-from').value = today; document.getElementById('filter-date-to').value = today;
                 document.getElementById('order-date-input').value = today; document.getElementById('order-filter-date-from').value = today; document.getElementById('order-filter-date-to').value = today;
@@ -700,8 +866,14 @@
                 document.getElementById('managers-date-from').value = bounds.firstDay; document.getElementById('managers-date-to').value = bounds.lastDay;
                 document.getElementById('stats-lead-date-from').value = bounds.firstDay; document.getElementById('stats-lead-date-to').value = bounds.lastDay;
                 document.getElementById('managers-lead-date-from').value = bounds.firstDay; document.getElementById('managers-lead-date-to').value = bounds.lastDay;
+
+                // Запускаем real-time слушатели после начальной загрузки
+                setupRealtimeListeners();
+                isInitialLoad = false;
+
                 renderAll();
-            } catch (error) { console.error(error); alert('Ошибка загрузки данных'); }
+                setSyncStatus('online');
+            } catch (error) { console.error(error); alert('Ошибка загрузки данных'); setSyncStatus('error'); }
         }
 
         // ========== ЛИДЫ ==========
@@ -939,6 +1111,7 @@
 
         function renderScreenshots() {
             const thumbs = document.getElementById('screen-thumbs');
+            if (!thumbs) return;
             thumbs.innerHTML = '';
             screenshotsCache.forEach(img => {
                 const div = document.createElement('div'); div.className = 'screen-thumb'; div.style.backgroundImage = `url(${img.data})`;
@@ -961,7 +1134,7 @@
         }
 
         document.addEventListener('paste', (e) => { const analyticsPanel = document.getElementById('analytics-panel'); if (analyticsPanel.style.display === 'none') return; const items = e.clipboardData?.items; if (items) { for (const item of items) { if (item.type.startsWith('image/')) { const blob = item.getAsFile(); addScreenshotFromBlob(blob); e.preventDefault(); break; } } } });
-        document.getElementById('screen-drop-zone').addEventListener('click', () => { document.getElementById('screen-drop-zone').focus(); });
+        document.getElementById('screen-drop-zone')?.addEventListener('click', () => { document.getElementById('screen-drop-zone').focus(); });
 
         // ========== ЗАЯВКИ ==========
         function getOrdersFilters() { return { dateFrom: document.getElementById('order-filter-date-from').value, dateTo: document.getElementById('order-filter-date-to').value, contract: document.getElementById('order-filter-contract').value, searchText: document.getElementById('order-filter-text').value.trim().toLowerCase() }; }
@@ -1211,7 +1384,7 @@
         document.querySelectorAll('#managers-sub-tabs .sub-tab').forEach(tab => tab.addEventListener('click', function() { document.querySelectorAll('#managers-sub-tabs .sub-tab').forEach(t => t.classList.remove('active')); this.classList.add('active'); document.getElementById('managers-contractDate-panel').style.display = this.dataset.mode==='contractDate'?'block':'none'; document.getElementById('managers-leadDate-panel').style.display = this.dataset.mode==='leadDate'?'block':'none'; renderManagersStats(); }));
         bindQuickFilter('stats', renderOverallStats); bindQuickFilter('stats-lead', renderOverallStats); bindQuickFilter('managers', renderManagersStats); bindQuickFilter('managers-lead', renderManagersStats);
 
-        // ========== ВЫПЛАТЫ (ДДС с исправленным редактированием) ==========
+        // ========== ВЫПЛАТЫ (ДДС) ==========
         function renderDDS() {
             const tbody = document.querySelector('#dds-table tbody');
             const footer = document.getElementById('dds-footer');
@@ -1226,9 +1399,7 @@
             });
             footer.innerHTML = `<tr><td colspan="5" style="text-align:right; font-weight:bold;">Сумма итого:</td><td style="border-left:2px solid var(--border); font-weight:bold;">${total.toLocaleString('ru-RU')} ₽</td><td></td></tr>`;
 
-            // Обработчик кликов на editable-dds (назначаем на tbody, но используем stopPropagation у кнопок удаления)
             tbody.addEventListener('click', function(e) {
-                // Кнопка удаления
                 if (e.target.classList.contains('delete-dds-btn')) {
                     e.stopPropagation();
                     const id = e.target.dataset.id;
@@ -1239,10 +1410,8 @@
                     });
                     return;
                 }
-                // Редактирование span
                 const span = e.target.closest('.editable-dds');
                 if (!span) return;
-                // Если уже внутри есть input/textarea – не трогаем
                 if (span.querySelector('input') || span.querySelector('textarea')) return;
                 
                 const id = span.dataset.id;
@@ -1253,7 +1422,6 @@
                 const isMethod = field === 'method';
                 const currentValue = item[field] || '';
                 
-                // Заменяем содержимое span на поле ввода
                 span.innerHTML = '';
                 const input = document.createElement(isMethod ? 'textarea' : 'input');
                 if (!isMethod) input.type = 'text';
@@ -1267,7 +1435,6 @@
                 span.appendChild(input);
                 input.focus();
                 
-                // Функция сохранения
                 const save = async () => {
                     const newValue = input.value;
                     span.innerHTML = escapeHtml(newValue) || '&nbsp;';
@@ -1314,7 +1481,7 @@
 
         function renderDebt() { const tbody = document.querySelector('#debt-table tbody'); const totalSpan = document.getElementById('total-debt-amount'); tbody.innerHTML = ''; const contracts = ordersCache.filter(o => o.success === 'Да' && o.contractDate); let totalDebt = 0; const today = new Date(); today.setHours(0,0,0,0); contracts.forEach(o => { const cp = contractPayoutsCache[o.id] || {}; if (!cp.mainPaid) totalDebt += parseAmount(o.mainAmount); if (parseAmount(o.bonusAmount) > 0 && !cp.bonusPaid) totalDebt += parseAmount(o.bonusAmount); }); totalSpan.textContent = totalDebt > 0 ? `(${totalDebt.toLocaleString('ru-RU')} ₽)` : ''; contracts.forEach(order => { const cp = contractPayoutsCache[order.id] || {}; const mainAmount = parseAmount(order.mainAmount); const bonusAmount = parseAmount(order.bonusAmount); const cDate = new Date(order.contractDate + 'T00:00:00'); const getDays = (paidDate) => paidDate ? Math.ceil((new Date(paidDate+'T00:00:00') - cDate) / (1000*60*60*24)) : Math.ceil((today - cDate) / (1000*60*60*24)); const mainStatus = cp.mainPaid ? `<input type="date" class="debt-paid-date" data-id="${order.id}" data-type="main" value="${cp.mainPaidDate||''}" style="width:100px;" /> <span>(${getDays(cp.mainPaidDate)} дн.)</span>` : `Не выпл., ${getDays(cp.mainPaidDate)} дн.`; const bonusStatus = bonusAmount > 0 ? (cp.bonusPaid ? `<input type="date" class="debt-paid-date" data-id="${order.id}" data-type="bonus" value="${cp.bonusPaidDate||''}" style="width:100px;" /> <span>(${getDays(cp.bonusPaidDate)} дн.)</span>` : `Не выпл., ${getDays(cp.bonusPaidDate)} дн.`) : ''; const row = document.createElement('tr'); row.innerHTML = `<td style="text-align:left;">${escapeHtml(order.text||'')}</td><td>${order.contractDate}</td><td>${mainAmount.toLocaleString('ru-RU')} ₽</td><td><input type="checkbox" class="debt-paid-cb" data-id="${order.id}" data-type="main" ${cp.mainPaid?'checked':''} /></td><td>${mainStatus}</td><td>${bonusAmount > 0 ? bonusAmount.toLocaleString('ru-RU')+' ₽' : '—'}</td><td>${bonusAmount > 0 ? `<input type="checkbox" class="debt-paid-cb" data-id="${order.id}" data-type="bonus" ${cp.bonusPaid?'checked':''} />` : ''}</td><td>${bonusStatus}</td>`; tbody.appendChild(row); }); tbody.onclick = async (e) => { if (e.target.classList.contains('debt-paid-cb')) { const id = e.target.dataset.id; const type = e.target.dataset.type; const checked = e.target.checked; const cp = contractPayoutsCache[id] || {}; const todayStr = new Date().toISOString().slice(0,10); if (type==='main') { cp.mainPaid = checked; if (checked) cp.mainPaidDate = cp.mainPaidDate || todayStr; else delete cp.mainPaidDate; } else { cp.bonusPaid = checked; if (checked) cp.bonusPaidDate = cp.bonusPaidDate || todayStr; else delete cp.bonusPaidDate; } await saveContractPayout(id, cp); renderDebt(); } }; tbody.onchange = async (e) => { if (e.target.classList.contains('debt-paid-date')) { const id = e.target.dataset.id; const type = e.target.dataset.type; const cp = contractPayoutsCache[id] || {}; if (type==='main') cp.mainPaidDate = e.target.value || ''; else cp.bonusPaidDate = e.target.value || ''; await saveContractPayout(id, cp); } }; }
 
-        // ========== БАЗА (с кликабельными текстами и датой) ==========
+        // ========== БАЗА ==========
         function renderReserves() {
             const tbody = document.querySelector('#reserves-table tbody');
             tbody.innerHTML = '';
@@ -1458,13 +1625,20 @@
         document.querySelectorAll('#db-panel .sub-tab').forEach(tab => tab.addEventListener('click', function() { document.querySelectorAll('#db-panel .sub-tab').forEach(t => t.classList.remove('active')); this.classList.add('active'); document.getElementById('reserves-panel').style.display = this.dataset.db === 'reserves' ? 'block' : 'none'; document.getElementById('recruits-panel').style.display = this.dataset.db === 'recruits' ? 'block' : 'none'; }));
 
         function renderAll() {
-            renderColumns();
-            renderPotentialWidget();
-            renderOrders();
-            if (document.getElementById('analytics-panel').style.display !== 'none') { renderOverallStats(); renderManagersStats(); renderScreenshots(); }
-            if (document.getElementById('payouts-panel').style.display !== 'none') { renderDebt(); renderDDS(); }
-            if (document.getElementById('db-panel').style.display !== 'none') { if (reservesCache.length) renderReserves(); if (recruitsCache.length) renderRecruits(); }
-            autoSave();
+            setSyncStatus('syncing');
+            try {
+                renderColumns();
+                renderPotentialWidget();
+                renderOrders();
+                if (document.getElementById('analytics-panel').style.display !== 'none') { renderOverallStats(); renderManagersStats(); renderScreenshots(); }
+                if (document.getElementById('payouts-panel').style.display !== 'none') { renderDebt(); renderDDS(); }
+                if (document.getElementById('db-panel').style.display !== 'none') { if (reservesCache.length) renderReserves(); if (recruitsCache.length) renderRecruits(); }
+                autoSave();
+                setTimeout(() => setSyncStatus('online'), 300);
+            } catch (e) {
+                console.error('Ошибка renderAll:', e);
+                setSyncStatus('error');
+            }
         }
 
         // Экспорт / Импорт
@@ -1487,7 +1661,7 @@
 
         document.getElementById('add-orders-btn').addEventListener('click', async () => { const textarea = document.getElementById('new-orders-input'); const text = textarea.value.trim(); if (!text) return; await addOrdersFromText(text, document.getElementById('order-date-input').value ? new Date(document.getElementById('order-date-input').value).toISOString() : undefined); textarea.value = ''; });
 
-        loadInitialData();
+        initializeAppData();
     </script>
 </body>
 </html>
