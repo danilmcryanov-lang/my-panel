@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Панель управления лидами v3.108</title>
+    <title>Панель управления лидами v3.109</title>
     <script type="importmap">
         { "imports": { "firebase/app": "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js", "firebase/firestore": "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js" } }
     </script>
@@ -126,7 +126,7 @@
         .confirm-yes { background: #ef4444; color: white; }
         .confirm-no { background: #e2e8f0; color: #1e293b; }
         .copy-all-potential-btn { margin-left: 8px; padding: 2px 8px; font-size: 11px; background: #f1f5f9; border: 1px solid var(--border); border-radius: 3px; cursor: pointer; color: var(--text); }
-        .theme-toggle { background: none; border: 1px solid var(--border); border-radius: 4px; padding: 3px 6px; cursor: pointer; font-size: 14px; }
+        .theme-toggle, .refresh-btn { background: none; border: 1px solid var(--border); border-radius: 4px; padding: 3px 6px; cursor: pointer; font-size: 14px; color: var(--text); }
         .auto-save-indicator { font-size: 9px; color: #64748b; margin-left: 6px; }
         .deferred-toggle { margin-left: 8px; padding: 2px 8px; font-size: 11px; background: #fef9c3; border: 1px solid #facc15; border-radius: 3px; cursor: pointer; }
         body.dark .deferred-toggle { background: #854d0e; border-color: #a16207; color: #fef9c3; }
@@ -176,6 +176,7 @@
             <div class="tab db-tab" data-tab="db">🗄️ База</div>
         </div>
         <div style="display: flex; align-items: center; gap: 6px;">
+            <button class="refresh-btn" id="refresh-btn" title="Обновить страницу">🔄</button>
             <button class="theme-toggle" id="theme-toggle" title="Переключить тему">☀️</button>
             <span class="auto-save-indicator" id="auto-save-status"></span>
         </div>
@@ -483,6 +484,11 @@
                 if (data.screenshots) screenshotsCache = data.screenshots;
             } catch(e) {}
         }
+
+        // Кнопка обновления страницы
+        document.getElementById('refresh-btn').addEventListener('click', () => {
+            location.reload();
+        });
 
         const themeToggle = document.getElementById('theme-toggle');
         const savedTheme = localStorage.getItem('crm-theme');
