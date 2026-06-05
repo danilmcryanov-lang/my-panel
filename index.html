@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Панель управления лидами v3.111</title>
+    <title>Панель управления лидами v3.112</title>
     <script type="importmap">
         { "imports": { "firebase/app": "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js", "firebase/firestore": "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js" } }
     </script>
@@ -166,6 +166,12 @@
         body.dark .show-all-cols-btn { background: #475569; }
         .sync-indicator { font-size: 9px; color: #10b981; margin-left: 6px; }
         .sync-indicator.syncing { color: #f59e0b; }
+        .db-filters-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; padding: 6px 10px; background: var(--card-bg); border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+        .db-filters-row .filter-group { display: flex; align-items: center; gap: 4px; }
+        .db-filters-row .filter-group label { font-size: 11px; font-weight: 500; white-space: nowrap; }
+        .db-filters-row .filter-group select { font-size: 11px; padding: 2px 5px; border-radius: 4px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text); }
+        .sort-btn { padding: 2px 6px; font-size: 10px; background: #f1f5f9; border: 1px solid var(--border); border-radius: 3px; cursor: pointer; color: var(--text); }
+        .sort-btn.active { background: var(--primary); color: white; }
     </style>
 </head>
 <body>
@@ -385,6 +391,25 @@
                 <textarea id="new-reserves-input" placeholder="Вставьте заявку или несколько (разделяйте пустой строкой)"></textarea>
                 <button id="add-reserves-btn">➕ Добавить заявки</button>
             </div>
+            <div class="db-filters-row" id="reserves-filters-row">
+                <div class="filter-group">
+                    <label>Сортировка по дате:</label>
+                    <button class="sort-btn active" id="reserves-sort-desc" data-sort="desc">↓ По убыванию</button>
+                    <button class="sort-btn" id="reserves-sort-asc" data-sort="asc">↑ По возрастанию</button>
+                </div>
+                <div class="filter-group">
+                    <label>Причина:</label>
+                    <select id="reserves-reason-filter">
+                        <option value="">Все</option>
+                        <option value="Женщина">Женщина</option>
+                        <option value="Офицер">Офицер</option>
+                        <option value="Кат Д">Кат Д</option>
+                        <option value="Кат В">Кат В</option>
+                        <option value="other">Другое</option>
+                        <option value="none">Без причины</option>
+                    </select>
+                </div>
+            </div>
             <div class="db-table-wrapper">
                 <table class="reserves-table" id="reserves-table">
                     <thead><tr><th style="width:50%;">Заявка</th><th style="width:15%;">Действия</th><th style="width:15%;">Дата заявки</th><th style="width:20%;">Причина</th></tr></thead>
@@ -469,6 +494,8 @@
         let calendarYear = new Date().getFullYear();
         let calendarMonth = new Date().getMonth();
         let isInitialLoad = true;
+        let reservesSortOrder = 'desc'; // по умолчанию по убыванию
+        let reservesReasonFilter = '';
 
         let hiddenColumns = JSON.parse(localStorage.getItem('hiddenColumns') || '[]');
 
@@ -503,7 +530,6 @@
             }
         }
 
-        // Кнопка обновления страницы
         document.getElementById('refresh-btn').addEventListener('click', () => {
             location.reload();
         });
@@ -637,9 +663,7 @@
             savedStatsRows = savedStatsRows.filter(r => r.id !== id);
         }
 
-        // ========== REALTIME LISTENERS ==========
         function setupRealtimeListeners() {
-            // Слушаем колонки
             onSnapshot(columnsRef, (snapshot) => {
                 const newCache = {};
                 snapshot.forEach(docSnap => {
@@ -658,7 +682,6 @@
                 setSyncStatus('error');
             });
 
-            // Слушаем заявки
             const ordersQuery = query(ordersRef, orderBy('dateAdded', 'desc'));
             onSnapshot(ordersQuery, (snapshot) => {
                 const newCache = [];
@@ -675,7 +698,6 @@
                 setSyncStatus('error');
             });
 
-            // Слушаем потенциальные заявки
             onSnapshot(potentialRef, (snapshot) => {
                 const newCache = [];
                 snapshot.forEach(docSnap => {
@@ -693,7 +715,6 @@
                 setSyncStatus('error');
             });
 
-            // Слушаем ДДС
             onSnapshot(ddsRef, (snapshot) => {
                 const newCache = [];
                 snapshot.forEach(d => newCache.push({ id: d.id, ...d.data() }));
@@ -707,7 +728,6 @@
                 setSyncStatus('error');
             });
 
-            // Слушаем выплаты по контрактам
             onSnapshot(contractPayoutsRef, (snapshot) => {
                 const newCache = {};
                 snapshot.forEach(docSnap => {
@@ -723,7 +743,6 @@
                 setSyncStatus('error');
             });
 
-            // Слушаем запасы
             onSnapshot(reservesRef, (snapshot) => {
                 const newCache = [];
                 snapshot.forEach(d => newCache.push({ id: d.id, ...d.data() }));
@@ -737,7 +756,6 @@
                 setSyncStatus('error');
             });
 
-            // Слушаем рекруты
             onSnapshot(recruitsRef, (snapshot) => {
                 const newCache = [];
                 snapshot.forEach(d => newCache.push({ id: d.id, ...d.data() }));
@@ -751,7 +769,6 @@
                 setSyncStatus('error');
             });
 
-            // Слушаем менеджеров
             onSnapshot(managersRef, (snapshot) => {
                 snapshot.forEach(docSnap => {
                     const newList = docSnap.data().list || [];
@@ -766,7 +783,6 @@
                 setSyncStatus('error');
             });
 
-            // Слушаем сохранённые строки аналитики
             onSnapshot(savedStatsRef, (snapshot) => {
                 const newRows = [];
                 snapshot.forEach(d => newRows.push({ id: d.id, ...d.data() }));
@@ -781,7 +797,6 @@
                 setSyncStatus('error');
             });
 
-            // Слушаем скриншоты
             onSnapshot(screenshotsRef, (snapshot) => {
                 const newCache = [];
                 snapshot.forEach(d => newCache.push({ id: d.id, ...d.data() }));
@@ -820,7 +835,6 @@
         async function initializeAppData() {
             try {
                 await loadManagers();
-                // Загружаем данные один раз для начального отображения
                 const colsSnap = await getDocs(columnsRef);
                 colsSnap.forEach(docSnap => { columnsCache[docSnap.id] = docSnap.data().phones || []; });
                 for (const name of managersList) { if (!columnsCache[name]) { columnsCache[name] = []; await setDoc(doc(columnsRef, name), { phones: [] }); } }
@@ -867,7 +881,6 @@
                 document.getElementById('stats-lead-date-from').value = bounds.firstDay; document.getElementById('stats-lead-date-to').value = bounds.lastDay;
                 document.getElementById('managers-lead-date-from').value = bounds.firstDay; document.getElementById('managers-lead-date-to').value = bounds.lastDay;
 
-                // Запускаем real-time слушатели после начальной загрузки
                 setupRealtimeListeners();
                 isInitialLoad = false;
 
@@ -1150,7 +1163,7 @@
         function bindQuickFilter(prefix, renderFn) { document.getElementById(`${prefix}-this-week`).addEventListener('click', () => { const now = new Date(); const day = now.getDay(); const mon = new Date(now); mon.setDate(now.getDate() - (day === 0 ? 6 : day - 1)); document.getElementById(`${prefix}-date-from`).value = mon.toISOString().slice(0,10); document.getElementById(`${prefix}-date-to`).value = now.toISOString().slice(0,10); renderFn(); }); document.getElementById(`${prefix}-this-month`).addEventListener('click', () => { setMonthBounds(`${prefix}-date-from`, `${prefix}-date-to`, 0); renderFn(); }); document.getElementById(`${prefix}-last-month`).addEventListener('click', () => { setMonthBounds(`${prefix}-date-from`, `${prefix}-date-to`, -1); renderFn(); }); document.getElementById(`${prefix}-all-time`).addEventListener('click', () => { document.getElementById(`${prefix}-date-from`).value = ''; document.getElementById(`${prefix}-date-to`).value = ''; renderFn(); }); [`${prefix}-date-from`, `${prefix}-date-to`].forEach(id => document.getElementById(id).addEventListener('change', renderFn)); }
         bindQuickFilter('order-filter', renderOrders); ['order-filter-contract'].forEach(id => document.getElementById(id).addEventListener('change', renderOrders)); document.getElementById('order-filter-text').addEventListener('input', renderOrders);
 
-        // ========== АНАЛИТИКА (с возможностью скрывать столбцы) ==========
+        // ========== АНАЛИТИКА ==========
         const colKeys = ['period','leads','orders','cvOL','contracts','cvCO','sum','avgDur','avgCheck','actions'];
         const colNames = {
             period: 'Период', leads: 'Кол-во лидов', orders: 'Кол-во заявок',
@@ -1476,16 +1489,57 @@
 
         function renderDebt() { const tbody = document.querySelector('#debt-table tbody'); const totalSpan = document.getElementById('total-debt-amount'); tbody.innerHTML = ''; const contracts = ordersCache.filter(o => o.success === 'Да' && o.contractDate); let totalDebt = 0; const today = new Date(); today.setHours(0,0,0,0); contracts.forEach(o => { const cp = contractPayoutsCache[o.id] || {}; if (!cp.mainPaid) totalDebt += parseAmount(o.mainAmount); if (parseAmount(o.bonusAmount) > 0 && !cp.bonusPaid) totalDebt += parseAmount(o.bonusAmount); }); totalSpan.textContent = totalDebt > 0 ? `(${totalDebt.toLocaleString('ru-RU')} ₽)` : ''; contracts.forEach(order => { const cp = contractPayoutsCache[order.id] || {}; const mainAmount = parseAmount(order.mainAmount); const bonusAmount = parseAmount(order.bonusAmount); const cDate = new Date(order.contractDate + 'T00:00:00'); const getDays = (paidDate) => paidDate ? Math.ceil((new Date(paidDate+'T00:00:00') - cDate) / (1000*60*60*24)) : Math.ceil((today - cDate) / (1000*60*60*24)); const mainStatus = cp.mainPaid ? `<input type="date" class="debt-paid-date" data-id="${order.id}" data-type="main" value="${cp.mainPaidDate||''}" style="width:100px;" /> <span>(${getDays(cp.mainPaidDate)} дн.)</span>` : `Не выпл., ${getDays(cp.mainPaidDate)} дн.`; const bonusStatus = bonusAmount > 0 ? (cp.bonusPaid ? `<input type="date" class="debt-paid-date" data-id="${order.id}" data-type="bonus" value="${cp.bonusPaidDate||''}" style="width:100px;" /> <span>(${getDays(cp.bonusPaidDate)} дн.)</span>` : `Не выпл., ${getDays(cp.bonusPaidDate)} дн.`) : ''; const row = document.createElement('tr'); row.innerHTML = `<td style="text-align:left;">${escapeHtml(order.text||'')}</td><td>${order.contractDate}</td><td>${mainAmount.toLocaleString('ru-RU')} ₽</td><td><input type="checkbox" class="debt-paid-cb" data-id="${order.id}" data-type="main" ${cp.mainPaid?'checked':''} /></td><td>${mainStatus}</td><td>${bonusAmount > 0 ? bonusAmount.toLocaleString('ru-RU')+' ₽' : '—'}</td><td>${bonusAmount > 0 ? `<input type="checkbox" class="debt-paid-cb" data-id="${order.id}" data-type="bonus" ${cp.bonusPaid?'checked':''} />` : ''}</td><td>${bonusStatus}</td>`; tbody.appendChild(row); }); tbody.onclick = async (e) => { if (e.target.classList.contains('debt-paid-cb')) { const id = e.target.dataset.id; const type = e.target.dataset.type; const checked = e.target.checked; const cp = contractPayoutsCache[id] || {}; const todayStr = new Date().toISOString().slice(0,10); if (type==='main') { cp.mainPaid = checked; if (checked) cp.mainPaidDate = cp.mainPaidDate || todayStr; else delete cp.mainPaidDate; } else { cp.bonusPaid = checked; if (checked) cp.bonusPaidDate = cp.bonusPaidDate || todayStr; else delete cp.bonusPaidDate; } await saveContractPayout(id, cp); renderDebt(); } }; tbody.onchange = async (e) => { if (e.target.classList.contains('debt-paid-date')) { const id = e.target.dataset.id; const type = e.target.dataset.type; const cp = contractPayoutsCache[id] || {}; if (type==='main') cp.mainPaidDate = e.target.value || ''; else cp.bonusPaidDate = e.target.value || ''; await saveContractPayout(id, cp); } }; }
 
-        // ========== БАЗА (исправлено дублирование) ==========
+        // ========== БАЗА (с фильтрами и сортировкой) ==========
+        // Сортировка для Запасов
+        document.getElementById('reserves-sort-desc').addEventListener('click', () => {
+            reservesSortOrder = 'desc';
+            document.getElementById('reserves-sort-desc').classList.add('active');
+            document.getElementById('reserves-sort-asc').classList.remove('active');
+            renderReserves();
+        });
+        document.getElementById('reserves-sort-asc').addEventListener('click', () => {
+            reservesSortOrder = 'asc';
+            document.getElementById('reserves-sort-asc').classList.add('active');
+            document.getElementById('reserves-sort-desc').classList.remove('active');
+            renderReserves();
+        });
+
+        // Фильтр по причине для Запасов
+        document.getElementById('reserves-reason-filter').addEventListener('change', () => {
+            reservesReasonFilter = document.getElementById('reserves-reason-filter').value;
+            renderReserves();
+        });
+
         function renderReserves() {
             const tbody = document.querySelector('#reserves-table tbody');
             tbody.innerHTML = '';
-            reservesCache.forEach(item => {
+
+            // Применяем фильтр по причине
+            let filtered = [...reservesCache];
+            if (reservesReasonFilter) {
+                if (reservesReasonFilter === 'none') {
+                    filtered = filtered.filter(item => !item.reason || item.reason === '');
+                } else if (reservesReasonFilter === 'other') {
+                    filtered = filtered.filter(item => item.reason && !['Женщина','Офицер','Кат Д','Кат В'].includes(item.reason));
+                } else {
+                    filtered = filtered.filter(item => item.reason === reservesReasonFilter);
+                }
+            }
+
+            // Применяем сортировку по дате
+            filtered.sort((a, b) => {
+                const dateA = a.dateAdded ? new Date(a.dateAdded) : new Date(0);
+                const dateB = b.dateAdded ? new Date(b.dateAdded) : new Date(0);
+                return reservesSortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+            });
+
+            document.getElementById('reserves-count').textContent = filtered.length ? `(${filtered.length})` : '';
+
+            filtered.forEach(item => {
                 const row = document.createElement('tr');
                 row.innerHTML = `<td><span class="editable-text" data-field="text" data-id="${item.id}">${escapeHtml(item.text||'')}</span></td><td><button class="copy-reserve-btn" data-text="${escapeHtml(item.text||'')}">📋</button> <button class="delete-reserve-btn" data-id="${item.id}">✕</button></td><td><input type="date" class="reserve-date" value="${item.dateAdded?item.dateAdded.substring(0,10):''}" data-id="${item.id}" /></td><td><select class="reserve-reason" data-id="${item.id}"><option value="">—</option><option value="Женщина" ${item.reason==='Женщина'?'selected':''}>Женщина</option><option value="Офицер" ${item.reason==='Офицер'?'selected':''}>Офицер</option><option value="Кат Д" ${item.reason==='Кат Д'?'selected':''}>Кат Д</option><option value="Кат В" ${item.reason==='Кат В'?'selected':''}>Кат В</option><option value="custom" ${item.reason&&!['Женщина','Офицер','Кат Д','Кат В'].includes(item.reason)?'selected':''}>Другое</option></select><input type="text" class="reserve-custom-reason" value="${item.reason&&!['Женщина','Офицер','Кат Д','Кат В'].includes(item.reason)?escapeHtml(item.reason):''}" data-id="${item.id}" style="display:${item.reason&&!['Женщина','Офицер','Кат Д','Кат В'].includes(item.reason)?'inline-block':'none'}; margin-top:3px;" placeholder="Свой текст" /></td>`;
                 tbody.appendChild(row);
             });
-            document.getElementById('reserves-count').textContent = reservesCache.length ? `(${reservesCache.length})` : '';
 
             tbody.querySelectorAll('.editable-text').forEach(span => {
                 span.addEventListener('click', () => {
@@ -1596,7 +1650,6 @@
                 if (!trimmed) continue;
                 const item = { text: trimmed, dateAdded: dateStr, reason: '' };
                 await saveReserve(item);
-                // НЕ добавляем в кеш — onSnapshot сам обновит
             }
             textarea.value = '';
             renderReserves();
@@ -1611,7 +1664,6 @@
                 if (!trimmed) continue;
                 const item = { text: trimmed, reply: '' };
                 await saveRecruit(item);
-                // НЕ добавляем в кеш — onSnapshot сам обновит
             }
             textarea.value = '';
             renderRecruits();
