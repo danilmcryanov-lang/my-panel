@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Панель управления лидами v3.110</title>
+    <title>Панель управления лидами v3.111</title>
     <script type="importmap">
         { "imports": { "firebase/app": "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js", "firebase/firestore": "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js" } }
     </script>
@@ -965,7 +965,7 @@
             const row = btn.closest('tr'); if (!row) return;
             if (btn.classList.contains('success-potential-btn')) {
                 row.style.display = 'none'; const po = potentialCache.find(p => p.phone === phone && p.status === 'active');
-                if (po) { const text = `${po.comment ? po.comment + ' ' : ''}${phone}`; const manager = findManagerByPhone(phone) || ''; const newOrder = { text, dateAdded: new Date().toISOString(), manager, success: '', mainAmount: '', bonusAmount: '' }; const ref = await addDoc(ordersRef, newOrder); newOrder.id = ref.id; ordersCache.push(newOrder); potentialCache = potentialCache.filter(p => !(p.phone === phone && p.status === 'active')); await deletePotentialOrder(phone); renderAll(); }
+                if (po) { const text = `${po.comment ? po.comment + ' ' : ''}${phone}`; const manager = findManagerByPhone(phone) || ''; const newOrder = { text, dateAdded: new Date().toISOString(), manager, success: '', mainAmount: '', bonusAmount: '' }; await addDoc(ordersRef, newOrder); potentialCache = potentialCache.filter(p => !(p.phone === phone && p.status === 'active')); await deletePotentialOrder(phone); renderAll(); }
             } else if (btn.classList.contains('fail-potential-btn')) { row.style.display = 'none'; potentialCache = potentialCache.filter(p => !(p.phone === phone && p.status === 'active')); await deletePotentialOrder(phone); renderAll(); }
             else if (btn.classList.contains('ndz-potential-btn')) {
                 const po = potentialCache.find(p => p.phone === phone && p.status === 'active');
@@ -1101,8 +1101,6 @@
                     const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
                     const item = { data: compressedDataUrl, timestamp: new Date().toISOString() };
                     await saveScreenshot(item);
-                    screenshotsCache.push(item);
-                    renderScreenshots();
                 };
                 img.src = dataUrl;
             };
@@ -1147,7 +1145,7 @@
             tbody.onchange = async (e) => { const target = e.target; const id = target.dataset.id; if (!id) return; const order = ordersCache.find(o => o.id === id); if (!order) return; if (target.classList.contains('manager-select')) { order.manager = target.value; await saveOrder(order); } else if (target.classList.contains('success-select')) { const prevSuccess = order.success; order.success = target.value; if (prevSuccess === 'Да' && order.success !== 'Да') { const cp = contractPayoutsCache[id]; if (cp && (cp.mainPaid || cp.bonusPaid)) { showConfirm('Снятие контракта удалит все внесённые выплаты. Продолжить?', async () => { await deleteContractPayout(id); await saveOrder(order); renderAll(); }); return; } } await saveOrder(order); renderAll(); } else if (target.classList.contains('order-main-amount')) { order.mainAmount = target.value; await saveOrder(order); } else if (target.classList.contains('order-bonus-amount')) { order.bonusAmount = target.value; await saveOrder(order); } else if (target.classList.contains('order-contract-date')) { order.contractDate = target.value; await saveOrder(order); renderAll(); } };
             tbody.onkeydown = async (e) => { if (e.key === 'Enter' && e.target.classList.contains('order-date-input')) { const id = e.target.dataset.id; const order = ordersCache.find(o => o.id === id); if (!order) return; order.dateAdded = e.target.value ? e.target.value + 'T00:00:00.000Z' : null; await saveOrder(order); renderAll(); e.target.blur(); } };
         }
-        async function addOrdersFromText(text, customDate) { const blocks = text.split(/\n\s*\n/); const dateStr = customDate || new Date().toISOString(); for (const block of blocks) { const trimmed = block.trim(); if (!trimmed) continue; const phone = extractPhoneNumber(trimmed); const manager = phone ? findManagerByPhone(phone) : ''; const newOrder = { text: trimmed, dateAdded: dateStr, manager, success: '', mainAmount: '', bonusAmount: '' }; const ref = await addDoc(ordersRef, newOrder); newOrder.id = ref.id; ordersCache.push(newOrder); } renderAll(); }
+        async function addOrdersFromText(text, customDate) { const blocks = text.split(/\n\s*\n/); const dateStr = customDate || new Date().toISOString(); for (const block of blocks) { const trimmed = block.trim(); if (!trimmed) continue; const phone = extractPhoneNumber(trimmed); const manager = phone ? findManagerByPhone(phone) : ''; const newOrder = { text: trimmed, dateAdded: dateStr, manager, success: '', mainAmount: '', bonusAmount: '' }; await addDoc(ordersRef, newOrder); } renderAll(); }
         function extractPhoneNumber(text) { const match = text.match(/(?:\+7|8)\d{10}/); return match ? match[0] : null; }
         function bindQuickFilter(prefix, renderFn) { document.getElementById(`${prefix}-this-week`).addEventListener('click', () => { const now = new Date(); const day = now.getDay(); const mon = new Date(now); mon.setDate(now.getDate() - (day === 0 ? 6 : day - 1)); document.getElementById(`${prefix}-date-from`).value = mon.toISOString().slice(0,10); document.getElementById(`${prefix}-date-to`).value = now.toISOString().slice(0,10); renderFn(); }); document.getElementById(`${prefix}-this-month`).addEventListener('click', () => { setMonthBounds(`${prefix}-date-from`, `${prefix}-date-to`, 0); renderFn(); }); document.getElementById(`${prefix}-last-month`).addEventListener('click', () => { setMonthBounds(`${prefix}-date-from`, `${prefix}-date-to`, -1); renderFn(); }); document.getElementById(`${prefix}-all-time`).addEventListener('click', () => { document.getElementById(`${prefix}-date-from`).value = ''; document.getElementById(`${prefix}-date-to`).value = ''; renderFn(); }); [`${prefix}-date-from`, `${prefix}-date-to`].forEach(id => document.getElementById(id).addEventListener('change', renderFn)); }
         bindQuickFilter('order-filter', renderOrders); ['order-filter-contract'].forEach(id => document.getElementById(id).addEventListener('change', renderOrders)); document.getElementById('order-filter-text').addEventListener('input', renderOrders);
@@ -1228,8 +1226,6 @@
                 const dateTo = mode === 'contractDate' ? document.getElementById('stats-date-to').value : document.getElementById('stats-lead-date-to').value;
                 const newRow = { mode, dateFrom, dateTo, order: savedStatsRows.filter(r => r.mode === mode).length };
                 await saveSavedStatsRow(newRow);
-                savedStatsRows.push(newRow);
-                renderOverallStats();
             });
 
             const filteredSavedRows = savedStatsRows.filter(r => r.mode === mode);
@@ -1470,7 +1466,6 @@
             if (!partner && !sum && !contracts && !method && !total) return;
             const item = { partner, sum, contracts, date, method, total };
             await saveDDS(item);
-            ddsCache.push(item);
             document.getElementById('dds-partner-input').value = '';
             document.getElementById('dds-sum-input').value = '';
             document.getElementById('dds-contracts-input').value = '';
@@ -1481,7 +1476,7 @@
 
         function renderDebt() { const tbody = document.querySelector('#debt-table tbody'); const totalSpan = document.getElementById('total-debt-amount'); tbody.innerHTML = ''; const contracts = ordersCache.filter(o => o.success === 'Да' && o.contractDate); let totalDebt = 0; const today = new Date(); today.setHours(0,0,0,0); contracts.forEach(o => { const cp = contractPayoutsCache[o.id] || {}; if (!cp.mainPaid) totalDebt += parseAmount(o.mainAmount); if (parseAmount(o.bonusAmount) > 0 && !cp.bonusPaid) totalDebt += parseAmount(o.bonusAmount); }); totalSpan.textContent = totalDebt > 0 ? `(${totalDebt.toLocaleString('ru-RU')} ₽)` : ''; contracts.forEach(order => { const cp = contractPayoutsCache[order.id] || {}; const mainAmount = parseAmount(order.mainAmount); const bonusAmount = parseAmount(order.bonusAmount); const cDate = new Date(order.contractDate + 'T00:00:00'); const getDays = (paidDate) => paidDate ? Math.ceil((new Date(paidDate+'T00:00:00') - cDate) / (1000*60*60*24)) : Math.ceil((today - cDate) / (1000*60*60*24)); const mainStatus = cp.mainPaid ? `<input type="date" class="debt-paid-date" data-id="${order.id}" data-type="main" value="${cp.mainPaidDate||''}" style="width:100px;" /> <span>(${getDays(cp.mainPaidDate)} дн.)</span>` : `Не выпл., ${getDays(cp.mainPaidDate)} дн.`; const bonusStatus = bonusAmount > 0 ? (cp.bonusPaid ? `<input type="date" class="debt-paid-date" data-id="${order.id}" data-type="bonus" value="${cp.bonusPaidDate||''}" style="width:100px;" /> <span>(${getDays(cp.bonusPaidDate)} дн.)</span>` : `Не выпл., ${getDays(cp.bonusPaidDate)} дн.`) : ''; const row = document.createElement('tr'); row.innerHTML = `<td style="text-align:left;">${escapeHtml(order.text||'')}</td><td>${order.contractDate}</td><td>${mainAmount.toLocaleString('ru-RU')} ₽</td><td><input type="checkbox" class="debt-paid-cb" data-id="${order.id}" data-type="main" ${cp.mainPaid?'checked':''} /></td><td>${mainStatus}</td><td>${bonusAmount > 0 ? bonusAmount.toLocaleString('ru-RU')+' ₽' : '—'}</td><td>${bonusAmount > 0 ? `<input type="checkbox" class="debt-paid-cb" data-id="${order.id}" data-type="bonus" ${cp.bonusPaid?'checked':''} />` : ''}</td><td>${bonusStatus}</td>`; tbody.appendChild(row); }); tbody.onclick = async (e) => { if (e.target.classList.contains('debt-paid-cb')) { const id = e.target.dataset.id; const type = e.target.dataset.type; const checked = e.target.checked; const cp = contractPayoutsCache[id] || {}; const todayStr = new Date().toISOString().slice(0,10); if (type==='main') { cp.mainPaid = checked; if (checked) cp.mainPaidDate = cp.mainPaidDate || todayStr; else delete cp.mainPaidDate; } else { cp.bonusPaid = checked; if (checked) cp.bonusPaidDate = cp.bonusPaidDate || todayStr; else delete cp.bonusPaidDate; } await saveContractPayout(id, cp); renderDebt(); } }; tbody.onchange = async (e) => { if (e.target.classList.contains('debt-paid-date')) { const id = e.target.dataset.id; const type = e.target.dataset.type; const cp = contractPayoutsCache[id] || {}; if (type==='main') cp.mainPaidDate = e.target.value || ''; else cp.bonusPaidDate = e.target.value || ''; await saveContractPayout(id, cp); } }; }
 
-        // ========== БАЗА ==========
+        // ========== БАЗА (исправлено дублирование) ==========
         function renderReserves() {
             const tbody = document.querySelector('#reserves-table tbody');
             tbody.innerHTML = '';
@@ -1601,7 +1596,7 @@
                 if (!trimmed) continue;
                 const item = { text: trimmed, dateAdded: dateStr, reason: '' };
                 await saveReserve(item);
-                reservesCache.push(item);
+                // НЕ добавляем в кеш — onSnapshot сам обновит
             }
             textarea.value = '';
             renderReserves();
@@ -1616,7 +1611,7 @@
                 if (!trimmed) continue;
                 const item = { text: trimmed, reply: '' };
                 await saveRecruit(item);
-                recruitsCache.push(item);
+                // НЕ добавляем в кеш — onSnapshot сам обновит
             }
             textarea.value = '';
             renderRecruits();
@@ -1632,7 +1627,7 @@
                 renderOrders();
                 if (document.getElementById('analytics-panel').style.display !== 'none') { renderOverallStats(); renderManagersStats(); renderScreenshots(); }
                 if (document.getElementById('payouts-panel').style.display !== 'none') { renderDebt(); renderDDS(); }
-                if (document.getElementById('db-panel').style.display !== 'none') { if (reservesCache.length) renderReserves(); if (recruitsCache.length) renderRecruits(); }
+                if (document.getElementById('db-panel').style.display !== 'none') { renderReserves(); renderRecruits(); }
                 autoSave();
                 setTimeout(() => setSyncStatus('online'), 300);
             } catch (e) {
