@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Панель управления лидами v3.112</title>
+    <title>Панель управления лидами v3.120</title>
     <script type="importmap">
         { "imports": { "firebase/app": "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js", "firebase/firestore": "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js" } }
     </script>
@@ -38,7 +38,6 @@
         .settings-dropdown-content button { display: block; width: 100%; padding: 4px 8px; background: transparent; border: none; cursor: pointer; text-align: left; font-size: 11px; color: var(--text); }
         .settings-dropdown-content button:hover { background: #f1f5f9; }
         body.dark .settings-dropdown-content button:hover { background: #475569; }
-
         .columns-container { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-start; }
         .column { background: var(--card-bg); border-radius: 8px; padding: 5px; min-width: 200px; max-width: 250px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); display: flex; flex-direction: column; gap: 2px; }
         .column-header { display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 12px; color: var(--text); }
@@ -56,12 +55,12 @@
         .delete-all-btn { padding: 1px 4px; font-size: 9px; background: #fee2e2; border: 1px solid #fecaca; border-radius: 3px; cursor: pointer; color: #b91c1c; margin-left: 3px; }
         .potential-widget { margin-top: 18px; background: var(--card-bg); border-radius: 10px; padding: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); overflow-x: auto; }
         .potential-table-wrapper { max-height: 55vh; overflow-y: auto; margin-bottom: 8px; border: 1px solid var(--border); border-radius: 6px; }
-        .potential-table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 700px; }
+        .potential-table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 750px; }
         .potential-table th, .potential-table td { padding: 5px 6px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: middle; }
         .potential-table th { background: #f8fafc; font-weight: 600; color: var(--text); position: sticky; top: 0; z-index: 2; }
         body.dark .potential-table th { background: #475569; }
         .potential-table td textarea.comment-input { width: 100%; min-height: 22px; padding: 2px; border: 1px solid #ccc; border-radius: 3px; background: var(--card-bg); color: var(--text); font-size: 11px; resize: vertical; word-wrap: break-word; overflow-wrap: break-word; font-family: inherit; }
-        .potential-table button { padding: 2px 6px; margin-right: 2px; border-radius: 3px; border: 1px solid #ccc; background: white; cursor: pointer; font-size: 10px; color: #1e293b; }
+        .potential-table button { padding: 2px 5px; margin-right: 2px; border-radius: 3px; border: 1px solid #ccc; background: white; cursor: pointer; font-size: 10px; color: #1e293b; }
         .ndz-counter { background: var(--status-ndz); color: white; border-radius: 8px; padding: 1px 5px; font-size: 9px; font-weight: bold; }
         .ndz-last-time { font-size: 9px; color: #b45309; margin-left: 2px; }
         .deferred-row { background: var(--defer-bg); }
@@ -128,6 +127,8 @@
         .copy-all-potential-btn { margin-left: 8px; padding: 2px 8px; font-size: 11px; background: #f1f5f9; border: 1px solid var(--border); border-radius: 3px; cursor: pointer; color: var(--text); }
         .theme-toggle, .refresh-btn { background: none; border: 1px solid var(--border); border-radius: 4px; padding: 3px 6px; cursor: pointer; font-size: 14px; color: var(--text); }
         .auto-save-indicator { font-size: 9px; color: #64748b; margin-left: 6px; }
+        .auto-import-indicator { font-size: 9px; color: #10b981; margin-left: 6px; display: none; }
+        .auto-import-indicator.show { display: inline; }
         .deferred-toggle { margin-left: 8px; padding: 2px 8px; font-size: 11px; background: #fef9c3; border: 1px solid #facc15; border-radius: 3px; cursor: pointer; }
         body.dark .deferred-toggle { background: #854d0e; border-color: #a16207; color: #fef9c3; }
         .deferred-list { background: var(--card-bg); border-radius: 8px; padding: 8px; margin-top: 10px; overflow-x: auto; }
@@ -172,6 +173,11 @@
         .db-filters-row .filter-group select { font-size: 11px; padding: 2px 5px; border-radius: 4px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text); }
         .sort-btn { padding: 2px 6px; font-size: 10px; background: #f1f5f9; border: 1px solid var(--border); border-radius: 3px; cursor: pointer; color: var(--text); }
         .sort-btn.active { background: var(--primary); color: white; }
+        .recruits-checkbox { width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary); }
+        .amocrm-form-container { margin-top: 15px; background: var(--card-bg); border-radius: 10px; padding: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); max-width: 500px; }
+        .amocrm-form-container h3 { margin-bottom: 4px; font-size: 12px; }
+        .amocrm-form-iframe { width: 100%; height: 140px; border: 1px solid var(--border); border-radius: 8px; }
+        .base-potential-btn { background: #8b5cf6 !important; color: white !important; border-color: #7c3aed !important; }
     </style>
 </head>
 <body>
@@ -184,6 +190,7 @@
             <div class="tab db-tab" data-tab="db">🗄️ База</div>
         </div>
         <div style="display: flex; align-items: center; gap: 6px;">
+            <span class="auto-import-indicator" id="auto-import-status">📥 Автоимпорт...</span>
             <span class="sync-indicator" id="sync-status" title="Статус синхронизации">⚡ Онлайн</span>
             <button class="refresh-btn" id="refresh-btn" title="Обновить страницу">🔄</button>
             <button class="theme-toggle" id="theme-toggle" title="Переключить тему">☀️</button>
@@ -283,6 +290,10 @@
                 <thead><tr><th>Заявка</th><th>Действия</th><th>Дата заявки</th><th>Менеджер</th><th>Контракт</th><th>Осн. сумма</th><th>Бонус</th><th>Дата подписания</th><th>Срок (дней)</th></tr></thead>
                 <tbody></tbody>
             </table>
+        </div>
+        <div class="amocrm-form-container">
+            <h3>📋 Форма передачи заявок</h3>
+            <iframe src="https://forms.amocrm.ru/rzlvmcv" class="amocrm-form-iframe" frameborder="0"></iframe>
         </div>
     </div>
 
@@ -422,6 +433,21 @@
                 <textarea id="new-recruits-input" placeholder="Вставьте заявку или несколько (разделяйте пустой строкой)"></textarea>
                 <button id="add-recruits-btn">➕ Добавить заявки</button>
             </div>
+            <div class="db-filters-row" id="recruits-filters-row">
+                <div class="filter-group">
+                    <label>Сортировка по дате:</label>
+                    <button class="sort-btn active" id="recruits-sort-desc" data-sort="desc">↓ По убыванию</button>
+                    <button class="sort-btn" id="recruits-sort-asc" data-sort="asc">↑ По возрастанию</button>
+                </div>
+                <div class="filter-group">
+                    <label>Отписал:</label>
+                    <select id="recruits-reply-filter">
+                        <option value="">Все</option>
+                        <option value="yes">Да (отписал)</option>
+                        <option value="no">Нет (не отписал)</option>
+                    </select>
+                </div>
+            </div>
             <div class="db-table-wrapper">
                 <table class="recruits-table" id="recruits-table">
                     <thead><tr><th style="width:60%;">Заявка</th><th style="width:20%;">Действия</th><th style="width:20%;">Отписал</th></tr></thead>
@@ -452,7 +478,6 @@
             </div>
         </div>
     </div>
-
     <script type="module">
         import { initializeApp } from 'firebase/app';
         import { getFirestore, collection, doc, getDocs, setDoc, addDoc, deleteDoc, query, orderBy, onSnapshot } from 'firebase/firestore';
@@ -494,8 +519,13 @@
         let calendarYear = new Date().getFullYear();
         let calendarMonth = new Date().getMonth();
         let isInitialLoad = true;
-        let reservesSortOrder = 'desc'; // по умолчанию по убыванию
+        let reservesSortOrder = 'desc';
         let reservesReasonFilter = '';
+        let recruitsSortOrder = 'desc';
+        let recruitsReplyFilter = '';
+
+        const AUTO_IMPORT_MANAGER = 'Вероника';
+        const AUTO_IMPORT_STORAGE_KEY = 'crm_auto_import_phones';
 
         let hiddenColumns = JSON.parse(localStorage.getItem('hiddenColumns') || '[]');
 
@@ -518,21 +548,19 @@
 
         function setSyncStatus(status) {
             const el = document.getElementById('sync-status');
-            if (status === 'syncing') {
-                el.textContent = '🔄 Синхронизация...';
-                el.classList.add('syncing');
-            } else if (status === 'online') {
-                el.textContent = '⚡ Онлайн';
-                el.classList.remove('syncing');
-            } else if (status === 'error') {
-                el.textContent = '❌ Ошибка синхронизации';
-                el.classList.remove('syncing');
-            }
+            if (status === 'syncing') { el.textContent = '🔄 Синхронизация...'; el.classList.add('syncing'); }
+            else if (status === 'online') { el.textContent = '⚡ Онлайн'; el.classList.remove('syncing'); }
+            else if (status === 'error') { el.textContent = '❌ Ошибка синхронизации'; el.classList.remove('syncing'); }
         }
 
-        document.getElementById('refresh-btn').addEventListener('click', () => {
-            location.reload();
-        });
+        function showAutoImportStatus(text, duration = 3000) {
+            const el = document.getElementById('auto-import-status');
+            el.textContent = text;
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), duration);
+        }
+
+        document.getElementById('refresh-btn').addEventListener('click', () => location.reload());
 
         const themeToggle = document.getElementById('theme-toggle');
         const savedTheme = localStorage.getItem('crm-theme');
@@ -545,17 +573,33 @@
         });
 
         function autoSave() {
-            const data = {
-                columns: columnsCache, orders: ordersCache, potentialOrders: potentialCache,
-                dds: ddsCache, contractPayouts: contractPayoutsCache,
-                reserves: reservesCache, recruits: recruitsCache, managers: managersList,
-                savedStatsRows, screenshots: screenshotsCache
-            };
+            const data = { columns: columnsCache, orders: ordersCache, potentialOrders: potentialCache, dds: ddsCache, contractPayouts: contractPayoutsCache, reserves: reservesCache, recruits: recruitsCache, managers: managersList, savedStatsRows, screenshots: screenshotsCache };
             localStorage.setItem('crm-autosave', JSON.stringify(data));
             document.getElementById('auto-save-status').textContent = 'Автосохранение выполнено';
             setTimeout(() => document.getElementById('auto-save-status').textContent = '', 2000);
         }
         setInterval(autoSave, 300000);
+
+        async function checkAutoImport() {
+            const raw = localStorage.getItem(AUTO_IMPORT_STORAGE_KEY);
+            if (!raw) return;
+            const phones = raw.split('\n').map(s => s.trim()).filter(s => /^\+7\d{10}$/.test(s));
+            if (phones.length === 0) { localStorage.removeItem(AUTO_IMPORT_STORAGE_KEY); return; }
+            if (!columnsCache[AUTO_IMPORT_MANAGER]) { columnsCache[AUTO_IMPORT_MANAGER] = []; }
+            const managerPhones = columnsCache[AUTO_IMPORT_MANAGER] || [];
+            const existingPhones = new Set(managerPhones.map(p => p.phone));
+            const newPhones = phones.filter(p => !existingPhones.has(p));
+            if (newPhones.length === 0) { localStorage.removeItem(AUTO_IMPORT_STORAGE_KEY); return; }
+            const now = new Date().toISOString();
+            newPhones.forEach(phone => { managerPhones.push({ phone, status: '', dateAdded: now }); });
+            await saveColumn(AUTO_IMPORT_MANAGER, managerPhones);
+            localStorage.removeItem(AUTO_IMPORT_STORAGE_KEY);
+            showAutoImportStatus(`✅ Автоимпорт: +${newPhones.length} лидов для ${AUTO_IMPORT_MANAGER}`, 4000);
+            renderAll();
+        }
+        setInterval(checkAutoImport, 3000);
+        setTimeout(checkAutoImport, 1000);
+
         document.getElementById('load-autosave-btn').addEventListener('click', () => {
             const saved = localStorage.getItem('crm-autosave');
             if (!saved) return alert('Нет сохранённых данных');
@@ -586,8 +630,7 @@
         }
 
         function showConfirm(message, onYes) {
-            const modal = document.createElement('div');
-            modal.className = 'confirm-modal';
+            const modal = document.createElement('div'); modal.className = 'confirm-modal';
             modal.innerHTML = `<div class="confirm-box"><p style="margin-bottom:10px;">${message}</p><button class="confirm-yes">Да</button><button class="confirm-no">Нет</button></div>`;
             document.body.appendChild(modal);
             modal.querySelector('.confirm-yes').onclick = () => { document.body.removeChild(modal); onYes?.(); };
@@ -602,26 +645,15 @@
             const bounds = getMonthBounds(targetDate.getFullYear(), targetDate.getMonth() + 1);
             document.getElementById(dateFromId).value = bounds.firstDay; document.getElementById(dateToId).value = bounds.lastDay;
         }
-
         function formatDateRange(dateFrom, dateTo) {
             if (!dateFrom && !dateTo) return '';
             const months = ['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
-            const format = (d) => {
-                if (!d) return '…';
-                const parts = d.split('-');
-                return `${parseInt(parts[2])} ${months[parseInt(parts[1])-1]}` + (parts[0] !== new Date().getFullYear().toString() ? ` ${parts[0]}` : '');
-            };
+            const format = (d) => { if (!d) return '…'; const parts = d.split('-'); return `${parseInt(parts[2])} ${months[parseInt(parts[1])-1]}` + (parts[0] !== new Date().getFullYear().toString() ? ` ${parts[0]}` : ''); };
             return `${format(dateFrom)} – ${format(dateTo)}`;
         }
-
         function formatDateTime(isoString) {
-            const date = new Date(isoString);
-            const months = ['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
-            const day = date.getDate();
-            const month = months[date.getMonth()];
-            const hours = String(date.getHours()).padStart(2,'0');
-            const minutes = String(date.getMinutes()).padStart(2,'0');
-            return `${day} ${month} ${hours}:${minutes}`;
+            const date = new Date(isoString); const months = ['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
+            return `${date.getDate()} ${months[date.getMonth()]} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
         }
 
         async function loadManagers() {
@@ -630,7 +662,6 @@
             else { managersList = ['Вероника','Ксюша','Полина','Оля','Аделина','Арина','Настя','Я']; await setDoc(doc(managersRef, 'list'), { list: managersList }); }
         }
         async function saveManagers() { await setDoc(doc(managersRef, 'list'), { list: managersList }); }
-
         async function saveColumn(name, phones) { columnsCache[name] = phones; await setDoc(doc(columnsRef, name), { phones }); }
         async function saveOrder(order) { if (order.id) { await setDoc(doc(ordersRef, order.id), order); } else { const ref = await addDoc(ordersRef, order); order.id = ref.id; } }
         async function deleteOrder(id) { await deleteDoc(doc(ordersRef, id)); if (contractPayoutsCache[id]) { await deleteDoc(doc(contractPayoutsRef, id)); delete contractPayoutsCache[id]; } }
@@ -644,248 +675,62 @@
         async function deleteReserve(id) { await deleteDoc(doc(reservesRef, id)); }
         async function saveRecruit(item) { if (item.id) { await setDoc(doc(recruitsRef, item.id), item); } else { const ref = await addDoc(recruitsRef, item); item.id = ref.id; } }
         async function deleteRecruit(id) { await deleteDoc(doc(recruitsRef, id)); }
+        async function saveScreenshot(item) { if (item.id) await setDoc(doc(screenshotsRef, item.id), item); else { const ref = await addDoc(screenshotsRef, item); item.id = ref.id; } }
+        async function deleteScreenshot(id) { await deleteDoc(doc(screenshotsRef, id)); screenshotsCache = screenshotsCache.filter(s => s.id !== id); }
+        async function saveSavedStatsRow(row) { if (row.id) await setDoc(doc(savedStatsRef, row.id), row); else { const ref = await addDoc(savedStatsRef, row); row.id = ref.id; } }
+        async function deleteSavedStatsRow(id) { await deleteDoc(doc(savedStatsRef, id)); savedStatsRows = savedStatsRows.filter(r => r.id !== id); }
 
-        async function saveScreenshot(item) {
-            if (item.id) await setDoc(doc(screenshotsRef, item.id), item);
-            else { const ref = await addDoc(screenshotsRef, item); item.id = ref.id; }
-        }
-        async function deleteScreenshot(id) {
-            await deleteDoc(doc(screenshotsRef, id));
-            screenshotsCache = screenshotsCache.filter(s => s.id !== id);
-        }
-
-        async function saveSavedStatsRow(row) {
-            if (row.id) await setDoc(doc(savedStatsRef, row.id), row);
-            else { const ref = await addDoc(savedStatsRef, row); row.id = ref.id; }
-        }
-        async function deleteSavedStatsRow(id) {
-            await deleteDoc(doc(savedStatsRef, id));
-            savedStatsRows = savedStatsRows.filter(r => r.id !== id);
+        // Добавление в Базу (Запасы) с комментарием
+        async function addToReserves(comment, phone) {
+            const now = new Date().toISOString();
+            const text = comment ? `${comment} ${phone}` : phone;
+            const item = { text: text, dateAdded: now, reason: '' };
+            await saveReserve(item);
         }
 
         function setupRealtimeListeners() {
-            onSnapshot(columnsRef, (snapshot) => {
-                const newCache = {};
-                snapshot.forEach(docSnap => {
-                    newCache[docSnap.id] = docSnap.data().phones || [];
-                });
-                for (const name of managersList) {
-                    if (!newCache[name]) newCache[name] = [];
-                }
-                const changed = JSON.stringify(columnsCache) !== JSON.stringify(newCache);
-                columnsCache = newCache;
-                if (!isInitialLoad && changed) {
-                    renderAll();
-                }
-            }, (error) => {
-                console.error('Ошибка слушателя columns:', error);
-                setSyncStatus('error');
-            });
-
-            const ordersQuery = query(ordersRef, orderBy('dateAdded', 'desc'));
-            onSnapshot(ordersQuery, (snapshot) => {
-                const newCache = [];
-                snapshot.forEach(docSnap => {
-                    newCache.push({ id: docSnap.id, ...docSnap.data() });
-                });
-                const changed = JSON.stringify(ordersCache) !== JSON.stringify(newCache);
-                ordersCache = newCache;
-                if (!isInitialLoad && changed) {
-                    renderAll();
-                }
-            }, (error) => {
-                console.error('Ошибка слушателя orders:', error);
-                setSyncStatus('error');
-            });
-
-            onSnapshot(potentialRef, (snapshot) => {
-                const newCache = [];
-                snapshot.forEach(docSnap => {
-                    const data = docSnap.data();
-                    if (!data.ndzHistory && data.ndzCount > 0) data.ndzHistory = [];
-                    newCache.push({ phone: docSnap.id, ...data });
-                });
-                const changed = JSON.stringify(potentialCache) !== JSON.stringify(newCache);
-                potentialCache = newCache;
-                if (!isInitialLoad && changed) {
-                    renderAll();
-                }
-            }, (error) => {
-                console.error('Ошибка слушателя potential:', error);
-                setSyncStatus('error');
-            });
-
-            onSnapshot(ddsRef, (snapshot) => {
-                const newCache = [];
-                snapshot.forEach(d => newCache.push({ id: d.id, ...d.data() }));
-                const changed = JSON.stringify(ddsCache) !== JSON.stringify(newCache);
-                ddsCache = newCache;
-                if (!isInitialLoad && changed) {
-                    renderAll();
-                }
-            }, (error) => {
-                console.error('Ошибка слушателя dds:', error);
-                setSyncStatus('error');
-            });
-
-            onSnapshot(contractPayoutsRef, (snapshot) => {
-                const newCache = {};
-                snapshot.forEach(docSnap => {
-                    newCache[docSnap.id] = docSnap.data();
-                });
-                const changed = JSON.stringify(contractPayoutsCache) !== JSON.stringify(newCache);
-                contractPayoutsCache = newCache;
-                if (!isInitialLoad && changed) {
-                    renderAll();
-                }
-            }, (error) => {
-                console.error('Ошибка слушателя contractPayouts:', error);
-                setSyncStatus('error');
-            });
-
-            onSnapshot(reservesRef, (snapshot) => {
-                const newCache = [];
-                snapshot.forEach(d => newCache.push({ id: d.id, ...d.data() }));
-                const changed = JSON.stringify(reservesCache) !== JSON.stringify(newCache);
-                reservesCache = newCache;
-                if (!isInitialLoad && changed) {
-                    renderAll();
-                }
-            }, (error) => {
-                console.error('Ошибка слушателя reserves:', error);
-                setSyncStatus('error');
-            });
-
-            onSnapshot(recruitsRef, (snapshot) => {
-                const newCache = [];
-                snapshot.forEach(d => newCache.push({ id: d.id, ...d.data() }));
-                const changed = JSON.stringify(recruitsCache) !== JSON.stringify(newCache);
-                recruitsCache = newCache;
-                if (!isInitialLoad && changed) {
-                    renderAll();
-                }
-            }, (error) => {
-                console.error('Ошибка слушателя recruits:', error);
-                setSyncStatus('error');
-            });
-
-            onSnapshot(managersRef, (snapshot) => {
-                snapshot.forEach(docSnap => {
-                    const newList = docSnap.data().list || [];
-                    const changed = JSON.stringify(managersList) !== JSON.stringify(newList);
-                    if (changed) {
-                        managersList = newList;
-                        if (!isInitialLoad) renderAll();
-                    }
-                });
-            }, (error) => {
-                console.error('Ошибка слушателя managers:', error);
-                setSyncStatus('error');
-            });
-
-            onSnapshot(savedStatsRef, (snapshot) => {
-                const newRows = [];
-                snapshot.forEach(d => newRows.push({ id: d.id, ...d.data() }));
-                newRows.sort((a, b) => (a.order || 0) - (b.order || 0));
-                const changed = JSON.stringify(savedStatsRows) !== JSON.stringify(newRows);
-                savedStatsRows = newRows;
-                if (!isInitialLoad && changed) {
-                    renderAll();
-                }
-            }, (error) => {
-                console.error('Ошибка слушателя savedStats:', error);
-                setSyncStatus('error');
-            });
-
-            onSnapshot(screenshotsRef, (snapshot) => {
-                const newCache = [];
-                snapshot.forEach(d => newCache.push({ id: d.id, ...d.data() }));
-                const changed = JSON.stringify(screenshotsCache) !== JSON.stringify(newCache);
-                screenshotsCache = newCache;
-                if (!isInitialLoad && changed) {
-                    renderAll();
-                }
-            }, (error) => {
-                console.error('Ошибка слушателя screenshots:', error);
-                setSyncStatus('error');
-            });
+            onSnapshot(columnsRef, (snapshot) => { const newCache = {}; snapshot.forEach(d => { newCache[d.id] = d.data().phones || []; }); for (const name of managersList) { if (!newCache[name]) newCache[name] = []; } if (!isInitialLoad && JSON.stringify(columnsCache) !== JSON.stringify(newCache)) { columnsCache = newCache; renderAll(); } else columnsCache = newCache; }, (e) => { console.error(e); setSyncStatus('error'); });
+            onSnapshot(query(ordersRef, orderBy('dateAdded', 'desc')), (snapshot) => { const newCache = []; snapshot.forEach(d => newCache.push({ id: d.id, ...d.data() })); if (!isInitialLoad && JSON.stringify(ordersCache) !== JSON.stringify(newCache)) { ordersCache = newCache; renderAll(); } else ordersCache = newCache; }, (e) => { console.error(e); setSyncStatus('error'); });
+            onSnapshot(potentialRef, (snapshot) => { const newCache = []; snapshot.forEach(d => { const data = d.data(); if (!data.ndzHistory && data.ndzCount > 0) data.ndzHistory = []; newCache.push({ phone: d.id, ...data }); }); if (!isInitialLoad && JSON.stringify(potentialCache) !== JSON.stringify(newCache)) { potentialCache = newCache; renderAll(); } else potentialCache = newCache; }, (e) => { console.error(e); setSyncStatus('error'); });
+            onSnapshot(ddsRef, (snapshot) => { const newCache = []; snapshot.forEach(d => newCache.push({ id: d.id, ...d.data() })); if (!isInitialLoad && JSON.stringify(ddsCache) !== JSON.stringify(newCache)) { ddsCache = newCache; renderAll(); } else ddsCache = newCache; }, (e) => { console.error(e); setSyncStatus('error'); });
+            onSnapshot(contractPayoutsRef, (snapshot) => { const newCache = {}; snapshot.forEach(d => { newCache[d.id] = d.data(); }); if (!isInitialLoad && JSON.stringify(contractPayoutsCache) !== JSON.stringify(newCache)) { contractPayoutsCache = newCache; renderAll(); } else contractPayoutsCache = newCache; }, (e) => { console.error(e); setSyncStatus('error'); });
+            onSnapshot(reservesRef, (snapshot) => { const newCache = []; snapshot.forEach(d => newCache.push({ id: d.id, ...d.data() })); if (!isInitialLoad && JSON.stringify(reservesCache) !== JSON.stringify(newCache)) { reservesCache = newCache; renderAll(); } else reservesCache = newCache; }, (e) => { console.error(e); setSyncStatus('error'); });
+            onSnapshot(recruitsRef, (snapshot) => { const newCache = []; snapshot.forEach(d => newCache.push({ id: d.id, ...d.data() })); if (!isInitialLoad && JSON.stringify(recruitsCache) !== JSON.stringify(newCache)) { recruitsCache = newCache; renderAll(); } else recruitsCache = newCache; }, (e) => { console.error(e); setSyncStatus('error'); });
+            onSnapshot(managersRef, (snapshot) => { snapshot.forEach(d => { const newList = d.data().list || []; if (JSON.stringify(managersList) !== JSON.stringify(newList)) { managersList = newList; if (!isInitialLoad) renderAll(); } }); }, (e) => { console.error(e); setSyncStatus('error'); });
+            onSnapshot(savedStatsRef, (snapshot) => { const newRows = []; snapshot.forEach(d => newRows.push({ id: d.id, ...d.data() })); newRows.sort((a, b) => (a.order || 0) - (b.order || 0)); if (!isInitialLoad && JSON.stringify(savedStatsRows) !== JSON.stringify(newRows)) { savedStatsRows = newRows; renderAll(); } else savedStatsRows = newRows; }, (e) => { console.error(e); setSyncStatus('error'); });
+            onSnapshot(screenshotsRef, (snapshot) => { const newCache = []; snapshot.forEach(d => newCache.push({ id: d.id, ...d.data() })); if (!isInitialLoad && JSON.stringify(screenshotsCache) !== JSON.stringify(newCache)) { screenshotsCache = newCache; renderAll(); } else screenshotsCache = newCache; }, (e) => { console.error(e); setSyncStatus('error'); });
         }
 
-        async function migrateOrders() {
-            for (const order of ordersCache) {
-                if (order.contractAmount && !order.mainAmount && !order.bonusAmount) {
-                    order.mainAmount = order.contractAmount; order.bonusAmount = ''; await saveOrder(order);
-                }
-            }
-        }
-
-        async function processDeferredReactivations() {
-            const today = new Date().toISOString().slice(0,10);
-            let changed = false;
-            for (const po of potentialCache) {
-                if (po.status === 'deferred' && po.deferDate && po.deferDate <= today) {
-                    po.status = 'active';
-                    po.deferDate = null;
-                    await savePotentialOrder(po);
-                    changed = true;
-                }
-            }
-        }
+        async function migrateOrders() { for (const order of ordersCache) { if (order.contractAmount && !order.mainAmount && !order.bonusAmount) { order.mainAmount = order.contractAmount; order.bonusAmount = ''; await saveOrder(order); } } }
+        async function processDeferredReactivations() { const today = new Date().toISOString().slice(0,10); for (const po of potentialCache) { if (po.status === 'deferred' && po.deferDate && po.deferDate <= today) { po.status = 'active'; po.deferDate = null; await savePotentialOrder(po); } } }
 
         async function initializeAppData() {
             try {
                 await loadManagers();
-                const colsSnap = await getDocs(columnsRef);
-                colsSnap.forEach(docSnap => { columnsCache[docSnap.id] = docSnap.data().phones || []; });
+                const colsSnap = await getDocs(columnsRef); colsSnap.forEach(d => { columnsCache[d.id] = d.data().phones || []; });
                 for (const name of managersList) { if (!columnsCache[name]) { columnsCache[name] = []; await setDoc(doc(columnsRef, name), { phones: [] }); } }
-
-                const q = query(ordersRef, orderBy('dateAdded', 'desc'));
-                const ordSnap = await getDocs(q);
-                ordersCache = []; ordSnap.forEach(docSnap => { ordersCache.push({ id: docSnap.id, ...docSnap.data() }); });
+                const ordSnap = await getDocs(query(ordersRef, orderBy('dateAdded', 'desc'))); ordersCache = []; ordSnap.forEach(d => ordersCache.push({ id: d.id, ...d.data() }));
                 await migrateOrders();
-
-                const ddsSnap = await getDocs(ddsRef);
-                ddsCache = []; ddsSnap.forEach(d => ddsCache.push({id: d.id, ...d.data()}));
-                const resSnap = await getDocs(reservesRef);
-                reservesCache = []; resSnap.forEach(d => reservesCache.push({id: d.id, ...d.data()}));
-                const recSnap = await getDocs(recruitsRef);
-                recruitsCache = []; recSnap.forEach(d => recruitsCache.push({id: d.id, ...d.data()}));
-
-                const potSnap = await getDocs(potentialRef);
-                potentialCache = [];
-                potSnap.forEach(docSnap => {
-                    const data = docSnap.data();
-                    if (!data.ndzHistory && data.ndzCount > 0) data.ndzHistory = [];
-                    potentialCache.push({ phone: docSnap.id, ...data });
-                });
+                const ddsSnap = await getDocs(ddsRef); ddsCache = []; ddsSnap.forEach(d => ddsCache.push({id: d.id, ...d.data()}));
+                const resSnap = await getDocs(reservesRef); reservesCache = []; resSnap.forEach(d => reservesCache.push({id: d.id, ...d.data()}));
+                const recSnap = await getDocs(recruitsRef); recruitsCache = []; recSnap.forEach(d => recruitsCache.push({id: d.id, ...d.data()}));
+                const potSnap = await getDocs(potentialRef); potentialCache = []; potSnap.forEach(d => { const data = d.data(); if (!data.ndzHistory && data.ndzCount > 0) data.ndzHistory = []; potentialCache.push({ phone: d.id, ...data }); });
                 await processDeferredReactivations();
-                const cpSnap = await getDocs(contractPayoutsRef); contractPayoutsCache = {}; cpSnap.forEach(docSnap => { contractPayoutsCache[docSnap.id] = docSnap.data(); });
-
-                const statsSnap = await getDocs(savedStatsRef);
-                savedStatsRows = [];
-                statsSnap.forEach(d => savedStatsRows.push({ id: d.id, ...d.data() }));
-                savedStatsRows.sort((a, b) => (a.order || 0) - (b.order || 0));
-
-                const scrSnap = await getDocs(screenshotsRef);
-                screenshotsCache = [];
-                scrSnap.forEach(d => screenshotsCache.push({ id: d.id, ...d.data() }));
-
+                const cpSnap = await getDocs(contractPayoutsRef); contractPayoutsCache = {}; cpSnap.forEach(d => { contractPayoutsCache[d.id] = d.data(); });
+                const statsSnap = await getDocs(savedStatsRef); savedStatsRows = []; statsSnap.forEach(d => savedStatsRows.push({ id: d.id, ...d.data() })); savedStatsRows.sort((a, b) => (a.order || 0) - (b.order || 0));
+                const scrSnap = await getDocs(screenshotsRef); screenshotsCache = []; scrSnap.forEach(d => screenshotsCache.push({ id: d.id, ...d.data() }));
                 const today = new Date().toISOString().slice(0, 10);
                 document.getElementById('filter-date-from').value = today; document.getElementById('filter-date-to').value = today;
                 document.getElementById('order-date-input').value = today; document.getElementById('order-filter-date-from').value = today; document.getElementById('order-filter-date-to').value = today;
-                document.getElementById('reserves-date-input').value = today;
-                document.getElementById('dds-date-input-new').value = today;
+                document.getElementById('reserves-date-input').value = today; document.getElementById('dds-date-input-new').value = today;
                 const bounds = getMonthBounds(new Date().getFullYear(), new Date().getMonth() + 1);
                 document.getElementById('stats-date-from').value = bounds.firstDay; document.getElementById('stats-date-to').value = bounds.lastDay;
                 document.getElementById('managers-date-from').value = bounds.firstDay; document.getElementById('managers-date-to').value = bounds.lastDay;
                 document.getElementById('stats-lead-date-from').value = bounds.firstDay; document.getElementById('stats-lead-date-to').value = bounds.lastDay;
                 document.getElementById('managers-lead-date-from').value = bounds.firstDay; document.getElementById('managers-lead-date-to').value = bounds.lastDay;
-
-                setupRealtimeListeners();
-                isInitialLoad = false;
-
-                renderAll();
-                setSyncStatus('online');
+                setupRealtimeListeners(); isInitialLoad = false;
+                renderAll(); setSyncStatus('online');
+                setTimeout(checkAutoImport, 500);
             } catch (error) { console.error(error); alert('Ошибка загрузки данных'); setSyncStatus('error'); }
         }
 
@@ -897,82 +742,23 @@
             const results = [];
             for (const q of queries) { for (const [colName, phones] of Object.entries(columnsCache)) { phones.forEach((item, idx) => { if (item.phone.includes(q)) results.push({ query: q, manager: colName, phone: item.phone, status: item.status || '—', leadIndex: idx, colName }); }); } }
             const resultsDiv = document.getElementById('search-results'); resultsDiv.innerHTML = results.length === 0 ? '<p>Ничего не найдено.</p>' : '';
-            if (results.length > 0) {
-                const table = document.createElement('table'); table.className = 'search-results-table'; table.innerHTML = `<tr><th>Запрос</th><th>Менеджер</th><th>Номер</th><th>Текущий статус</th><th>Новый статус</th></tr>`;
-                results.forEach(r => { const row = document.createElement('tr'); row.innerHTML = `<td>${escapeHtml(r.query)}</td><td>${escapeHtml(r.manager)}</td><td><a href="tel:${r.phone}" class="phone-link">${escapeHtml(r.phone)}</a></td><td>${escapeHtml(r.status)}</td><td><select class="status-change" data-manager="${escapeHtml(r.manager)}" data-phone="${escapeHtml(r.phone)}"><option value="">—</option><option value="НДЗ">НДЗ</option><option value="Провал">Провал</option><option value="Заявка">Заявка</option></select></td>`; table.appendChild(row); });
-                resultsDiv.appendChild(table);
-                document.querySelectorAll('.status-change').forEach(select => select.addEventListener('change', async function() { const manager = this.dataset.manager; const phone = this.dataset.phone; const newStatus = this.value; const phones = columnsCache[manager]; if (phones) { const lead = phones.find(p => p.phone === phone); if (lead) { lead.status = newStatus; await saveColumn(manager, phones); await syncPotentialOnStatusChange(phone, newStatus, manager); renderAll(); } } }));
-            }
+            if (results.length > 0) { const table = document.createElement('table'); table.className = 'search-results-table'; table.innerHTML = `<tr><th>Запрос</th><th>Менеджер</th><th>Номер</th><th>Текущий статус</th><th>Новый статус</th></tr>`; results.forEach(r => { const row = document.createElement('tr'); row.innerHTML = `<td>${escapeHtml(r.query)}</td><td>${escapeHtml(r.manager)}</td><td><a href="tel:${r.phone}" class="phone-link">${escapeHtml(r.phone)}</a></td><td>${escapeHtml(r.status)}</td><td><select class="status-change" data-manager="${escapeHtml(r.manager)}" data-phone="${escapeHtml(r.phone)}"><option value="">—</option><option value="НДЗ">НДЗ</option><option value="Провал">Провал</option><option value="Заявка">Заявка</option></select></td>`; table.appendChild(row); }); resultsDiv.appendChild(table);
+                document.querySelectorAll('.status-change').forEach(select => select.addEventListener('change', async function() { const manager = this.dataset.manager; const phone = this.dataset.phone; const newStatus = this.value; const phones = columnsCache[manager]; if (phones) { const lead = phones.find(p => p.phone === phone); if (lead) { lead.status = newStatus; await saveColumn(manager, phones); await syncPotentialOnStatusChange(phone, newStatus, manager); renderAll(); } } })); }
             document.getElementById('search-modal').style.display = 'flex';
         });
         document.getElementById('close-modal').addEventListener('click', () => { document.getElementById('search-modal').style.display = 'none'; });
-
         document.getElementById('filters-toggle-btn').addEventListener('click', () => { const panel = document.getElementById('filters-panel'); panel.classList.toggle('visible'); document.getElementById('filters-toggle-btn').textContent = panel.classList.contains('visible') ? '🔼 Скрыть фильтры' : '🔽 Фильтры'; });
         document.getElementById('apply-filters').addEventListener('click', renderAll);
         document.getElementById('clear-filters').addEventListener('click', () => { document.getElementById('filter-date-from').value = ''; document.getElementById('filter-date-to').value = ''; document.querySelectorAll('#status-checkboxes input[type="checkbox"]').forEach(cb => cb.checked = false); renderAll(); });
-
         function getActiveFilters() { const dateFrom = document.getElementById('filter-date-from').value; const dateTo = document.getElementById('filter-date-to').value; const checkboxes = document.querySelectorAll('#status-checkboxes input[type="checkbox"]'); const statuses = []; checkboxes.forEach(cb => { if (cb.checked) statuses.push(cb.value); }); return { dateFrom: dateFrom || null, dateTo: dateTo || null, statuses }; }
         function buildStatusCheckboxes() { const statusSet = new Set(['НДЗ', 'Провал', 'Заявка']); for (const phones of Object.values(columnsCache)) { for (const item of phones) { if (item.status && item.status !== 'успешные') statusSet.add(item.status); } } const container = document.getElementById('status-checkboxes'); container.innerHTML = ''; for (const s of statusSet) { const label = document.createElement('label'); label.innerHTML = `<input type="checkbox" value="${escapeHtml(s)}"> ${escapeHtml(s)}`; container.appendChild(label); } }
 
-        function renderColumns() {
-            const container = document.getElementById('columns-container'); container.innerHTML = '';
-            const filters = getActiveFilters(); buildStatusCheckboxes();
-            for (const colName of managersList) {
-                const phones = columnsCache[colName] || [];
-                const filteredPhones = phones.filter(item => {
-                    const { dateFrom, dateTo, statuses } = filters;
-                    if (dateFrom || dateTo) { if (!item.dateAdded) return false; const itemDate = item.dateAdded.substring(0,10); if (dateFrom && itemDate < dateFrom) return false; if (dateTo && itemDate > dateTo) return false; }
-                    if (statuses.length > 0 && !statuses.includes(item.status || '')) return false;
-                    return true;
-                });
-                const totalLeads = filteredPhones.length;
-                const zakazkiCount = filteredPhones.filter(item => item.status === 'Заявка').length;
-                const colDiv = document.createElement('div'); colDiv.className = 'column';
-                colDiv.innerHTML = `<div class="column-header"><span title="Двойной клик для переименования">${escapeHtml(colName)} (${totalLeads} лд, ${zakazkiCount} зав)</span><div><button class="copy-btn" title="Копировать видимые номера">📋</button><button class="delete-all-btn" title="Удалить отфильтрованные лиды">🗑️</button></div></div><div class="phone-list"></div><div class="add-phones"><textarea placeholder="Вставьте номера"></textarea><button>➕ Добавить</button></div>`;
-                const copyBtn = colDiv.querySelector('.copy-btn');
-                copyBtn.addEventListener('click', async () => { const numbers = filteredPhones.map(p => p.phone).join('\n'); await copyToClipboard(numbers); copyBtn.textContent = '✅'; setTimeout(() => { copyBtn.textContent = '📋'; }, 1000); });
-                const deleteAllBtn = colDiv.querySelector('.delete-all-btn');
-                deleteAllBtn.addEventListener('click', () => { if (filteredPhones.length === 0) return; showConfirm(`Удалить ${filteredPhones.length} отфильтрованных лидов менеджера ${colName}?`, async () => { const remaining = phones.filter(p => !filteredPhones.includes(p)); columnsCache[colName] = remaining; await saveColumn(colName, remaining); renderAll(); }); });
-                const listDiv = colDiv.querySelector('.phone-list');
-                filteredPhones.forEach(item => {
-                    const origIdx = phones.indexOf(item);
-                    const itemDiv = document.createElement('div');
-                    itemDiv.className = `phone-item${item.status==='НДЗ'?' status-ndz':''}${item.status==='Провал'?' status-fail':''}${item.status==='Заявка'?' status-order':''}`;
-                    const dateStr = item.dateAdded ? new Date(item.dateAdded).toLocaleDateString('ru-RU') : '';
-                    itemDiv.innerHTML = `<span class="date-added">${dateStr}</span><a href="tel:${item.phone}" class="phone-link">${escapeHtml(item.phone)}</a><select><option value="">—</option><option value="НДЗ" ${item.status==='НДЗ'?'selected':''}>НДЗ</option><option value="Провал" ${item.status==='Провал'?'selected':''}>Провал</option><option value="Заявка" ${item.status==='Заявка'?'selected':''}>Заявка</option></select><button class="delete-lead-btn" style="background:none;border:none;color:#ef4444;cursor:pointer;">✕</button>`;
-                    const statusSelect = itemDiv.querySelector('select'); const deleteBtn = itemDiv.querySelector('.delete-lead-btn');
-                    statusSelect.addEventListener('change', async () => { phones[origIdx].status = statusSelect.value; await saveColumn(colName, phones); await syncPotentialOnStatusChange(item.phone, statusSelect.value, colName); renderAll(); });
-                    deleteBtn.addEventListener('click', async () => { showConfirm('Удалить номер?', async () => { phones.splice(origIdx, 1); await saveColumn(colName, phones); renderAll(); }); });
-                    listDiv.appendChild(itemDiv);
-                });
-                const addDiv = colDiv.querySelector('.add-phones');
-                addDiv.querySelector('button').addEventListener('click', async () => { const lines = addDiv.querySelector('textarea').value.split('\n').map(s => s.trim()).filter(s => s.length > 0); if (!lines.length) return; const now = new Date().toISOString(); lines.forEach(phone => phones.push({ phone, status: '', dateAdded: now })); await saveColumn(colName, phones); renderAll(); });
-                container.appendChild(colDiv);
-            }
-        }
-
-        async function syncPotentialOnStatusChange(phone, newStatus, manager) {
-            if (newStatus === 'Заявка') { if (!potentialCache.find(p => p.phone === phone && p.status === 'active')) { const newPo = { phone, comment: '', dateAdded: new Date().toISOString(), ndzCount: 0, ndzHistory: [], status: 'active' }; potentialCache.push(newPo); await savePotentialOrder(newPo); } }
-        }
-
-        document.getElementById('columns-container').addEventListener('dblclick', async (e) => {
-            const headerSpan = e.target.closest('.column-header span'); if (!headerSpan) return;
-            const managerName = headerSpan.textContent.split(' (')[0];
-            const newName = prompt('Новое имя менеджера:', managerName);
-            if (newName && newName !== managerName) {
-                const idx = managersList.indexOf(managerName);
-                if (idx !== -1) managersList[idx] = newName;
-                columnsCache[newName] = columnsCache[managerName] || [];
-                delete columnsCache[managerName];
-                await deleteDoc(doc(columnsRef, managerName));
-                await saveManagers();
-                await saveColumn(newName, columnsCache[newName]);
-                renderAll();
-            }
-        });
+        function renderColumns() { const container = document.getElementById('columns-container'); container.innerHTML = ''; const filters = getActiveFilters(); buildStatusCheckboxes(); for (const colName of managersList) { const phones = columnsCache[colName] || []; const filteredPhones = phones.filter(item => { const { dateFrom, dateTo, statuses } = filters; if (dateFrom || dateTo) { if (!item.dateAdded) return false; const itemDate = item.dateAdded.substring(0,10); if (dateFrom && itemDate < dateFrom) return false; if (dateTo && itemDate > dateTo) return false; } if (statuses.length > 0 && !statuses.includes(item.status || '')) return false; return true; }); const totalLeads = filteredPhones.length; const zakazkiCount = filteredPhones.filter(item => item.status === 'Заявка').length; const colDiv = document.createElement('div'); colDiv.className = 'column'; colDiv.innerHTML = `<div class="column-header"><span title="Двойной клик для переименования">${escapeHtml(colName)} (${totalLeads} лд, ${zakazkiCount} зав)</span><div><button class="copy-btn" title="Копировать видимые номера">📋</button><button class="delete-all-btn" title="Удалить отфильтрованные лиды">🗑️</button></div></div><div class="phone-list"></div><div class="add-phones"><textarea placeholder="Вставьте номера"></textarea><button>➕ Добавить</button></div>`; const copyBtn = colDiv.querySelector('.copy-btn'); copyBtn.addEventListener('click', async () => { const numbers = filteredPhones.map(p => p.phone).join('\n'); await copyToClipboard(numbers); copyBtn.textContent = '✅'; setTimeout(() => { copyBtn.textContent = '📋'; }, 1000); }); const deleteAllBtn = colDiv.querySelector('.delete-all-btn'); deleteAllBtn.addEventListener('click', () => { if (filteredPhones.length === 0) return; showConfirm(`Удалить ${filteredPhones.length} отфильтрованных лидов менеджера ${colName}?`, async () => { const remaining = phones.filter(p => !filteredPhones.includes(p)); columnsCache[colName] = remaining; await saveColumn(colName, remaining); renderAll(); }); }); const listDiv = colDiv.querySelector('.phone-list'); filteredPhones.forEach(item => { const origIdx = phones.indexOf(item); const itemDiv = document.createElement('div'); itemDiv.className = `phone-item${item.status==='НДЗ'?' status-ndz':''}${item.status==='Провал'?' status-fail':''}${item.status==='Заявка'?' status-order':''}`; const dateStr = item.dateAdded ? new Date(item.dateAdded).toLocaleDateString('ru-RU') : ''; itemDiv.innerHTML = `<span class="date-added">${dateStr}</span><a href="tel:${item.phone}" class="phone-link">${escapeHtml(item.phone)}</a><select><option value="">—</option><option value="НДЗ" ${item.status==='НДЗ'?'selected':''}>НДЗ</option><option value="Провал" ${item.status==='Провал'?'selected':''}>Провал</option><option value="Заявка" ${item.status==='Заявка'?'selected':''}>Заявка</option></select><button class="delete-lead-btn" style="background:none;border:none;color:#ef4444;cursor:pointer;">✕</button>`; const statusSelect = itemDiv.querySelector('select'); const deleteBtn = itemDiv.querySelector('.delete-lead-btn'); statusSelect.addEventListener('change', async () => { phones[origIdx].status = statusSelect.value; await saveColumn(colName, phones); await syncPotentialOnStatusChange(item.phone, statusSelect.value, colName); renderAll(); }); deleteBtn.addEventListener('click', async () => { showConfirm('Удалить номер?', async () => { phones.splice(origIdx, 1); await saveColumn(colName, phones); renderAll(); }); }); listDiv.appendChild(itemDiv); }); const addDiv = colDiv.querySelector('.add-phones'); addDiv.querySelector('button').addEventListener('click', async () => { const lines = addDiv.querySelector('textarea').value.split('\n').map(s => s.trim()).filter(s => s.length > 0); if (!lines.length) return; const now = new Date().toISOString(); lines.forEach(phone => phones.push({ phone, status: '', dateAdded: now })); await saveColumn(colName, phones); renderAll(); }); container.appendChild(colDiv); } }
+        async function syncPotentialOnStatusChange(phone, newStatus, manager) { if (newStatus === 'Заявка') { if (!potentialCache.find(p => p.phone === phone && p.status === 'active')) { const newPo = { phone, comment: '', dateAdded: new Date().toISOString(), ndzCount: 0, ndzHistory: [], status: 'active' }; potentialCache.push(newPo); await savePotentialOrder(newPo); } } }
+        document.getElementById('columns-container').addEventListener('dblclick', async (e) => { const headerSpan = e.target.closest('.column-header span'); if (!headerSpan) return; const managerName = headerSpan.textContent.split(' (')[0]; const newName = prompt('Новое имя менеджера:', managerName); if (newName && newName !== managerName) { const idx = managersList.indexOf(managerName); if (idx !== -1) managersList[idx] = newName; columnsCache[newName] = columnsCache[managerName] || []; delete columnsCache[managerName]; await deleteDoc(doc(columnsRef, managerName)); await saveManagers(); await saveColumn(newName, columnsCache[newName]); renderAll(); } });
         document.getElementById('add-manager-menu-btn').addEventListener('click', async () => { const name = prompt('Имя нового менеджера:'); if (!name) return; if (managersList.includes(name)) { alert('Такой менеджер уже есть'); return; } managersList.push(name); columnsCache[name] = []; await saveManagers(); await saveColumn(name, []); renderAll(); });
 
-        // ========== ПОТЕНЦИАЛЬНЫЕ ЗАЯВКИ ==========
+        // ========== ПОТЕНЦИАЛЬНЫЕ ЗАЯВКИ (кнопка База с комментарием) ==========
         document.getElementById('potential-table').addEventListener('click', async (e) => {
             const btn = e.target.closest('button'); if (!btn) return; const phone = btn.dataset.phone; if (!phone) return;
             const row = btn.closest('tr'); if (!row) return;
@@ -986,178 +772,43 @@
             } else if (btn.classList.contains('defer-potential-btn')) {
                 const po = potentialCache.find(p => p.phone === phone && p.status === 'active');
                 if (po) { document.getElementById('defer-date-input').value = ''; document.getElementById('defer-modal').style.display = 'flex'; document.getElementById('confirm-defer-btn').dataset.phone = phone; }
+            } else if (btn.classList.contains('base-potential-btn')) {
+                const po = potentialCache.find(p => p.phone === phone && p.status === 'active');
+                if (po) {
+                    await addToReserves(po.comment || '', phone);
+                    row.style.display = 'none';
+                    potentialCache = potentialCache.filter(p => !(p.phone === phone && p.status === 'active'));
+                    await deletePotentialOrder(phone);
+                    const displayText = po.comment ? `"${po.comment}" ${phone}` : phone;
+                    showAutoImportStatus(`✅ ${displayText} → База (Запасы)`, 3000);
+                    renderAll();
+                }
             }
         });
-
         document.getElementById('cancel-defer-btn').addEventListener('click', () => { document.getElementById('defer-modal').style.display = 'none'; });
-        document.getElementById('confirm-defer-btn').addEventListener('click', async () => {
-            const phone = document.getElementById('confirm-defer-btn').dataset.phone;
-            const dateVal = document.getElementById('defer-date-input').value;
-            if (!dateVal) { alert('Выберите дату'); return; }
-            const po = potentialCache.find(p => p.phone === phone && p.status === 'active');
-            if (po) { po.status = 'deferred'; po.deferDate = dateVal; await savePotentialOrder(po); renderAll(); }
-            document.getElementById('defer-modal').style.display = 'none';
-        });
-
+        document.getElementById('confirm-defer-btn').addEventListener('click', async () => { const phone = document.getElementById('confirm-defer-btn').dataset.phone; const dateVal = document.getElementById('defer-date-input').value; if (!dateVal) { alert('Выберите дату'); return; } const po = potentialCache.find(p => p.phone === phone && p.status === 'active'); if (po) { po.status = 'deferred'; po.deferDate = dateVal; await savePotentialOrder(po); renderAll(); } document.getElementById('defer-modal').style.display = 'none'; });
         document.getElementById('copy-all-potential').addEventListener('click', async () => { const activePhones = potentialCache.filter(po => po.status === 'active').map(po => po.phone); if (activePhones.length === 0) return; await copyToClipboard(activePhones.join('\n')); const btn = document.getElementById('copy-all-potential'); btn.textContent = '✅ Скопировано'; setTimeout(() => { btn.textContent = '📋 Копировать все номера'; }, 1500); });
-
-        function renderDeferredCalendar() {
-            const calGrid = document.getElementById('cal-grid');
-            const monthLabel = document.getElementById('cal-month-label');
-            const months = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
-            monthLabel.textContent = `${months[calendarMonth]} ${calendarYear}`;
-            const firstDay = new Date(calendarYear, calendarMonth, 1).getDay();
-            const daysInMonth = new Date(calendarYear, calendarMonth+1, 0).getDate();
-            const deferredMap = {};
-            potentialCache.filter(p => p.status === 'deferred' && p.deferDate).forEach(p => {
-                const d = p.deferDate;
-                if (d.startsWith(`${calendarYear}-${String(calendarMonth+1).padStart(2,'0')}`)) { deferredMap[d] = (deferredMap[d] || 0) + 1; }
-            });
-            let html = `<table><thead><tr><th>Пн</th><th>Вт</th><th>Ср</th><th>Чт</th><th>Пт</th><th>Сб</th><th>Вс</th></tr></thead><tbody><tr>`;
-            let dayCount = 0;
-            const startDow = firstDay === 0 ? 6 : firstDay - 1;
-            for (let i = 0; i < startDow; i++) { html += '<td></td>'; dayCount++; }
-            const todayStr = new Date().toISOString().slice(0,10);
-            for (let d = 1; d <= daysInMonth; d++) {
-                const dateStr = `${calendarYear}-${String(calendarMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-                const count = deferredMap[dateStr] || 0;
-                const isToday = dateStr === todayStr;
-                const isSelected = selectedDeferredDate === dateStr;
-                let cls = '';
-                if (isToday) cls += ' today';
-                if (count > 0) cls += ' has-deferred';
-                if (isSelected) cls += ' selected';
-                html += `<td class="${cls}" data-date="${dateStr}">${d}${count > 0 ? `<sup>${count}</sup>` : ''}</td>`;
-                dayCount++;
-                if (dayCount % 7 === 0) html += '</tr><tr>';
-            }
-            html += '</tr></tbody></table>';
-            calGrid.innerHTML = html;
-            calGrid.querySelectorAll('td[data-date]').forEach(td => {
-                td.addEventListener('click', () => {
-                    const date = td.dataset.date;
-                    if (selectedDeferredDate === date) { selectedDeferredDate = null; document.getElementById('clear-deferred-filter').style.display = 'none'; }
-                    else { selectedDeferredDate = date; document.getElementById('clear-deferred-filter').style.display = 'inline-block'; }
-                    renderDeferredList(); renderDeferredCalendar();
-                });
-            });
-        }
-
-        function renderDeferredList() {
-            let deferred = potentialCache.filter(p => p.status === 'deferred');
-            if (selectedDeferredDate) { deferred = deferred.filter(p => p.deferDate === selectedDeferredDate); document.getElementById('deferred-list-title').textContent = `⏳ Отложенные на ${selectedDeferredDate}`; }
-            else { document.getElementById('deferred-list-title').textContent = '⏳ Отложенные заявки'; }
-            document.getElementById('deferred-count').textContent = deferred.length;
-            const tbody = document.querySelector('#deferred-table tbody'); tbody.innerHTML = '';
-            deferred.forEach(po => {
-                const row = document.createElement('tr'); row.className = 'deferred-row';
-                row.innerHTML = `<td><a href="tel:${po.phone}" class="phone-link">${escapeHtml(po.phone)}</a></td><td>${escapeHtml(po.comment || '')}</td><td>${po.deferDate ? new Date(po.deferDate).toLocaleDateString('ru-RU') : ''}</td><td><button class="return-defer-btn" data-phone="${escapeHtml(po.phone)}">↩️ Вернуть сейчас</button> <button class="delete-defer-btn" data-phone="${escapeHtml(po.phone)}">✕</button></td>`;
-                tbody.appendChild(row);
-            });
-        }
-
-        document.getElementById('deferred-list').addEventListener('click', async (e) => {
-            const btn = e.target.closest('button'); if (!btn) return; const phone = btn.dataset.phone;
-            if (btn.classList.contains('return-defer-btn')) {
-                const po = potentialCache.find(p => p.phone === phone && p.status === 'deferred');
-                if (po) { po.status = 'active'; po.deferDate = null; await savePotentialOrder(po); selectedDeferredDate = null; renderAll(); }
-            } else if (btn.classList.contains('delete-defer-btn')) {
-                showConfirm('Удалить отложенную заявку навсегда?', async () => { potentialCache = potentialCache.filter(p => p.phone !== phone || p.status !== 'deferred'); await deletePotentialOrder(phone); renderAll(); });
-            }
-        });
-
+        function renderDeferredCalendar() { const calGrid = document.getElementById('cal-grid'); const monthLabel = document.getElementById('cal-month-label'); const months = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь']; monthLabel.textContent = `${months[calendarMonth]} ${calendarYear}`; const firstDay = new Date(calendarYear, calendarMonth, 1).getDay(); const daysInMonth = new Date(calendarYear, calendarMonth+1, 0).getDate(); const deferredMap = {}; potentialCache.filter(p => p.status === 'deferred' && p.deferDate).forEach(p => { const d = p.deferDate; if (d.startsWith(`${calendarYear}-${String(calendarMonth+1).padStart(2,'0')}`)) { deferredMap[d] = (deferredMap[d] || 0) + 1; } }); let html = `<table><thead><tr><th>Пн</th><th>Вт</th><th>Ср</th><th>Чт</th><th>Пт</th><th>Сб</th><th>Вс</th></tr></thead><tbody><tr>`; let dayCount = 0; const startDow = firstDay === 0 ? 6 : firstDay - 1; for (let i = 0; i < startDow; i++) { html += '<td></td>'; dayCount++; } const todayStr = new Date().toISOString().slice(0,10); for (let d = 1; d <= daysInMonth; d++) { const dateStr = `${calendarYear}-${String(calendarMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; const count = deferredMap[dateStr] || 0; const isToday = dateStr === todayStr; const isSelected = selectedDeferredDate === dateStr; let cls = ''; if (isToday) cls += ' today'; if (count > 0) cls += ' has-deferred'; if (isSelected) cls += ' selected'; html += `<td class="${cls}" data-date="${dateStr}">${d}${count > 0 ? `<sup>${count}</sup>` : ''}</td>`; dayCount++; if (dayCount % 7 === 0) html += '</tr><tr>'; } html += '</tr></tbody></table>'; calGrid.innerHTML = html; calGrid.querySelectorAll('td[data-date]').forEach(td => { td.addEventListener('click', () => { const date = td.dataset.date; if (selectedDeferredDate === date) { selectedDeferredDate = null; document.getElementById('clear-deferred-filter').style.display = 'none'; } else { selectedDeferredDate = date; document.getElementById('clear-deferred-filter').style.display = 'inline-block'; } renderDeferredList(); renderDeferredCalendar(); }); }); }
+        function renderDeferredList() { let deferred = potentialCache.filter(p => p.status === 'deferred'); if (selectedDeferredDate) { deferred = deferred.filter(p => p.deferDate === selectedDeferredDate); document.getElementById('deferred-list-title').textContent = `⏳ Отложенные на ${selectedDeferredDate}`; } else { document.getElementById('deferred-list-title').textContent = '⏳ Отложенные заявки'; } document.getElementById('deferred-count').textContent = deferred.length; const tbody = document.querySelector('#deferred-table tbody'); tbody.innerHTML = ''; deferred.forEach(po => { const row = document.createElement('tr'); row.className = 'deferred-row'; row.innerHTML = `<td><a href="tel:${po.phone}" class="phone-link">${escapeHtml(po.phone)}</a></td><td>${escapeHtml(po.comment || '')}</td><td>${po.deferDate ? new Date(po.deferDate).toLocaleDateString('ru-RU') : ''}</td><td><button class="return-defer-btn" data-phone="${escapeHtml(po.phone)}">↩️ Вернуть сейчас</button> <button class="delete-defer-btn" data-phone="${escapeHtml(po.phone)}">✕</button></td>`; tbody.appendChild(row); }); }
+        document.getElementById('deferred-list').addEventListener('click', async (e) => { const btn = e.target.closest('button'); if (!btn) return; const phone = btn.dataset.phone; if (btn.classList.contains('return-defer-btn')) { const po = potentialCache.find(p => p.phone === phone && p.status === 'deferred'); if (po) { po.status = 'active'; po.deferDate = null; await savePotentialOrder(po); selectedDeferredDate = null; renderAll(); } } else if (btn.classList.contains('delete-defer-btn')) { showConfirm('Удалить отложенную заявку навсегда?', async () => { potentialCache = potentialCache.filter(p => p.phone !== phone || p.status !== 'deferred'); await deletePotentialOrder(phone); renderAll(); }); } });
         document.getElementById('clear-deferred-filter').addEventListener('click', () => { selectedDeferredDate = null; document.getElementById('clear-deferred-filter').style.display = 'none'; renderDeferredList(); renderDeferredCalendar(); });
         document.getElementById('cal-prev').addEventListener('click', () => { if (calendarMonth === 0) { calendarMonth = 11; calendarYear--; } else calendarMonth--; selectedDeferredDate = null; document.getElementById('clear-deferred-filter').style.display = 'none'; renderDeferredCalendar(); renderDeferredList(); });
         document.getElementById('cal-next').addEventListener('click', () => { if (calendarMonth === 11) { calendarMonth = 0; calendarYear++; } else calendarMonth++; selectedDeferredDate = null; document.getElementById('clear-deferred-filter').style.display = 'none'; renderDeferredCalendar(); renderDeferredList(); });
         document.getElementById('toggle-deferred-btn').addEventListener('click', () => { const list = document.getElementById('deferred-list'); list.style.display = list.style.display === 'none' ? 'block' : 'none'; if (list.style.display === 'block') { calendarYear = new Date().getFullYear(); calendarMonth = new Date().getMonth(); renderDeferredCalendar(); renderDeferredList(); } });
-
-        function renderPotentialWidget() {
-            potentialCache.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
-            const tbody = document.querySelector('#potential-table tbody'); tbody.innerHTML = '';
-            const visible = potentialCache.filter(po => po.status === 'active');
-            document.getElementById('potential-count').textContent = visible.length > 0 ? `(${visible.length})` : '';
-            visible.forEach(po => {
-                const manager = findManagerByPhone(po.phone) || '—';
-                const ndzCount = po.ndzCount || 0;
-                const ndzHistory = po.ndzHistory || [];
-                const lastNdz = ndzHistory.length > 0 ? ndzHistory[ndzHistory.length - 1] : null;
-                const lastNdzText = lastNdz ? ` (${formatDateTime(lastNdz)})` : '';
-                const row = document.createElement('tr');
-                row.innerHTML = `<td><a href="tel:${po.phone}" class="phone-link">${escapeHtml(po.phone)}</a></td><td>${escapeHtml(manager)}</td><td><textarea class="comment-input" data-phone="${escapeHtml(po.phone)}" rows="1">${escapeHtml(po.comment || '')}</textarea></td><td>${po.dateAdded ? new Date(po.dateAdded).toLocaleDateString('ru-RU') : ''}</td><td>${ndzCount > 0 ? `<span class="ndz-counter">${ndzCount}</span><span class="ndz-last-time">${lastNdzText}</span>` : ''}</td><td><button class="success-potential-btn" data-phone="${escapeHtml(po.phone)}">Успешно</button><button class="fail-potential-btn" data-phone="${escapeHtml(po.phone)}">Провал</button><button class="ndz-potential-btn" data-phone="${escapeHtml(po.phone)}">НДЗ</button><button class="defer-potential-btn" data-phone="${escapeHtml(po.phone)}">⏳ Отложить</button></td>`;
-                const textarea = row.querySelector('textarea');
-                textarea.addEventListener('input', () => { textarea.style.height = 'auto'; textarea.style.height = textarea.scrollHeight + 'px'; });
-                textarea.addEventListener('change', async () => { const phone = textarea.dataset.phone; const po = potentialCache.find(p => p.phone === phone && p.status === 'active'); if (po) { po.comment = textarea.value; await savePotentialOrder(po); } });
-                tbody.appendChild(row);
-            });
-            const deferredCount = potentialCache.filter(p => p.status === 'deferred').length;
-            document.getElementById('deferred-count').textContent = deferredCount;
-            if (document.getElementById('deferred-list').style.display === 'block') { renderDeferredCalendar(); renderDeferredList(); }
-        }
-
+        function renderPotentialWidget() { potentialCache.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded)); const tbody = document.querySelector('#potential-table tbody'); tbody.innerHTML = ''; const visible = potentialCache.filter(po => po.status === 'active'); document.getElementById('potential-count').textContent = visible.length > 0 ? `(${visible.length})` : ''; visible.forEach(po => { const manager = findManagerByPhone(po.phone) || '—'; const ndzCount = po.ndzCount || 0; const ndzHistory = po.ndzHistory || []; const lastNdz = ndzHistory.length > 0 ? ndzHistory[ndzHistory.length - 1] : null; const lastNdzText = lastNdz ? ` (${formatDateTime(lastNdz)})` : ''; const row = document.createElement('tr'); row.innerHTML = `<td><a href="tel:${po.phone}" class="phone-link">${escapeHtml(po.phone)}</a></td><td>${escapeHtml(manager)}</td><td><textarea class="comment-input" data-phone="${escapeHtml(po.phone)}" rows="1">${escapeHtml(po.comment || '')}</textarea></td><td>${po.dateAdded ? new Date(po.dateAdded).toLocaleDateString('ru-RU') : ''}</td><td>${ndzCount > 0 ? `<span class="ndz-counter">${ndzCount}</span><span class="ndz-last-time">${lastNdzText}</span>` : ''}</td><td><button class="success-potential-btn" data-phone="${escapeHtml(po.phone)}">Успешно</button><button class="fail-potential-btn" data-phone="${escapeHtml(po.phone)}">Провал</button><button class="ndz-potential-btn" data-phone="${escapeHtml(po.phone)}">НДЗ</button><button class="defer-potential-btn" data-phone="${escapeHtml(po.phone)}">⏳ Отложить</button><button class="base-potential-btn" data-phone="${escapeHtml(po.phone)}">🗄️ База</button></td>`; const textarea = row.querySelector('textarea'); textarea.addEventListener('input', () => { textarea.style.height = 'auto'; textarea.style.height = textarea.scrollHeight + 'px'; }); textarea.addEventListener('change', async () => { const phone = textarea.dataset.phone; const po = potentialCache.find(p => p.phone === phone && p.status === 'active'); if (po) { po.comment = textarea.value; await savePotentialOrder(po); } }); tbody.appendChild(row); }); const deferredCount = potentialCache.filter(p => p.status === 'deferred').length; document.getElementById('deferred-count').textContent = deferredCount; if (document.getElementById('deferred-list').style.display === 'block') { renderDeferredCalendar(); renderDeferredList(); } }
         function findManagerByPhone(phone) { for (const [colName, phones] of Object.entries(columnsCache)) { if (phones.some(p => p.phone === phone)) return colName; } return null; }
         document.getElementById('add-manual-potential').addEventListener('click', async () => { const phone = document.getElementById('manual-phone').value.trim(); const comment = document.getElementById('manual-comment').value.trim(); if (!phone) return alert('Введите номер телефона'); if (potentialCache.find(p => p.phone === phone && p.status === 'active')) { alert('Этот номер уже в потенциальных заявках'); return; } const newPo = { phone, comment, dateAdded: new Date().toISOString(), ndzCount: 0, ndzHistory: [], status: 'active' }; potentialCache.push(newPo); await savePotentialOrder(newPo); document.getElementById('manual-phone').value = ''; document.getElementById('manual-comment').value = ''; renderAll(); });
 
         // ========== СКРИНШОТЫ ==========
-        async function addScreenshotFromBlob(blob) {
-            const reader = new FileReader();
-            reader.onload = async () => {
-                const dataUrl = reader.result;
-                const img = new Image();
-                img.onload = async () => {
-                    const canvas = document.createElement('canvas');
-                    const maxW = 1920;
-                    let width = img.width, height = img.height;
-                    if (width > maxW) { height = height * (maxW / width); width = maxW; }
-                    canvas.width = width; canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-                    const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
-                    const item = { data: compressedDataUrl, timestamp: new Date().toISOString() };
-                    await saveScreenshot(item);
-                };
-                img.src = dataUrl;
-            };
-            reader.readAsDataURL(blob);
-        }
-
-        function renderScreenshots() {
-            const thumbs = document.getElementById('screen-thumbs');
-            if (!thumbs) return;
-            thumbs.innerHTML = '';
-            screenshotsCache.forEach(img => {
-                const div = document.createElement('div'); div.className = 'screen-thumb'; div.style.backgroundImage = `url(${img.data})`;
-                div.addEventListener('click', (e) => { if (e.target.classList.contains('delete-screen')) return; showFullImage(img.data); });
-                const delBtn = document.createElement('span'); delBtn.className = 'delete-screen'; delBtn.textContent = '×';
-                delBtn.addEventListener('click', async (e) => { e.stopPropagation(); showConfirm('Удалить скриншот?', async () => { await deleteScreenshot(img.id); renderScreenshots(); }); });
-                div.appendChild(delBtn); thumbs.appendChild(div);
-            });
-        }
-
-        function showFullImage(dataUrl) {
-            const div = document.createElement('div'); div.className = 'screen-fullview';
-            const img = document.createElement('img'); img.src = dataUrl; div.appendChild(img);
-            const closeBtn = document.createElement('button'); closeBtn.className = 'screen-close-btn'; closeBtn.textContent = '✕';
-            closeBtn.addEventListener('click', () => document.body.removeChild(div)); div.appendChild(closeBtn);
-            const openNewBtn = document.createElement('button'); openNewBtn.textContent = 'Открыть в новой вкладке'; openNewBtn.className = 'screen-open-new';
-            openNewBtn.addEventListener('click', (e) => { e.stopPropagation(); window.open(dataUrl, '_blank'); }); div.appendChild(openNewBtn);
-            div.addEventListener('click', (e) => { if (e.target === div) document.body.removeChild(div); });
-            document.body.appendChild(div);
-        }
-
+        async function addScreenshotFromBlob(blob) { const reader = new FileReader(); reader.onload = async () => { const dataUrl = reader.result; const img = new Image(); img.onload = async () => { const canvas = document.createElement('canvas'); const maxW = 1920; let width = img.width, height = img.height; if (width > maxW) { height = height * (maxW / width); width = maxW; } canvas.width = width; canvas.height = height; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height); const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.85); const item = { data: compressedDataUrl, timestamp: new Date().toISOString() }; await saveScreenshot(item); }; img.src = dataUrl; }; reader.readAsDataURL(blob); }
+        function renderScreenshots() { const thumbs = document.getElementById('screen-thumbs'); if (!thumbs) return; thumbs.innerHTML = ''; screenshotsCache.forEach(img => { const div = document.createElement('div'); div.className = 'screen-thumb'; div.style.backgroundImage = `url(${img.data})`; div.addEventListener('click', (e) => { if (e.target.classList.contains('delete-screen')) return; showFullImage(img.data); }); const delBtn = document.createElement('span'); delBtn.className = 'delete-screen'; delBtn.textContent = '×'; delBtn.addEventListener('click', async (e) => { e.stopPropagation(); showConfirm('Удалить скриншот?', async () => { await deleteScreenshot(img.id); renderScreenshots(); }); }); div.appendChild(delBtn); thumbs.appendChild(div); }); }
+        function showFullImage(dataUrl) { const div = document.createElement('div'); div.className = 'screen-fullview'; const img = document.createElement('img'); img.src = dataUrl; div.appendChild(img); const closeBtn = document.createElement('button'); closeBtn.className = 'screen-close-btn'; closeBtn.textContent = '✕'; closeBtn.addEventListener('click', () => document.body.removeChild(div)); div.appendChild(closeBtn); const openNewBtn = document.createElement('button'); openNewBtn.textContent = 'Открыть в новой вкладке'; openNewBtn.className = 'screen-open-new'; openNewBtn.addEventListener('click', (e) => { e.stopPropagation(); window.open(dataUrl, '_blank'); }); div.appendChild(openNewBtn); div.addEventListener('click', (e) => { if (e.target === div) document.body.removeChild(div); }); document.body.appendChild(div); }
         document.addEventListener('paste', (e) => { const analyticsPanel = document.getElementById('analytics-panel'); if (analyticsPanel.style.display === 'none') return; const items = e.clipboardData?.items; if (items) { for (const item of items) { if (item.type.startsWith('image/')) { const blob = item.getAsFile(); addScreenshotFromBlob(blob); e.preventDefault(); break; } } } });
         document.getElementById('screen-drop-zone')?.addEventListener('click', () => { document.getElementById('screen-drop-zone').focus(); });
 
         // ========== ЗАЯВКИ ==========
         function getOrdersFilters() { return { dateFrom: document.getElementById('order-filter-date-from').value, dateTo: document.getElementById('order-filter-date-to').value, contract: document.getElementById('order-filter-contract').value, searchText: document.getElementById('order-filter-text').value.trim().toLowerCase() }; }
-        function renderOrders() {
-            const filters = getOrdersFilters(); let filtered = ordersCache.filter(order => { if (filters.dateFrom || filters.dateTo) { if (!order.dateAdded) return false; const d = order.dateAdded.substring(0,10); if (filters.dateFrom && d < filters.dateFrom) return false; if (filters.dateTo && d > filters.dateTo) return false; } if (filters.contract === 'Да' && order.success !== 'Да') return false; if (filters.contract === 'Нет' && order.success !== '') return false; if (filters.searchText) return (order.text || '').toLowerCase().includes(filters.searchText); return true; }); filtered.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
-            document.getElementById('orders-count').textContent = `(${filtered.length})`;
-            const tbody = document.querySelector('#orders-table tbody'); tbody.innerHTML = '';
-            filtered.forEach(order => { if (order.contractAmount && !order.mainAmount && !order.bonusAmount) { order.mainAmount = order.contractAmount; order.bonusAmount = ''; } let duration = ''; if (order.success === 'Да' && order.dateAdded && order.contractDate) duration = Math.ceil((new Date(order.contractDate + 'T00:00:00') - new Date(order.dateAdded)) / (1000*60*60*24)); const row = document.createElement('tr'); row.innerHTML = `<td><span class="editable-order-text" data-id="${order.id}" style="cursor:pointer; white-space:pre-wrap;">${escapeHtml(order.text)}</span></td><td><button class="copy-order-btn" data-text="${order.text.replace(/"/g, '&quot;')}">📋</button> <button class="delete-order-btn" data-id="${order.id}">✕</button></td><td><input type="date" class="order-date-input" value="${(order.dateAdded||'').substring(0,10)}" data-id="${order.id}" style="width:100%;" /></td><td><select class="manager-select" data-id="${order.id}" style="width:100%;">${managersList.map(m => `<option value="${escapeHtml(m)}" ${order.manager===m?'selected':''}>${escapeHtml(m)}</option>`).join('')}<option value="" ${!order.manager?'selected':''}>Не найден</option></select></td><td><select class="success-select" data-id="${order.id}"><option value="" ${!order.success?'selected':''}>—</option><option value="Да" ${order.success==='Да'?'selected':''}>Да</option></select></td><td><input type="text" class="order-main-amount" value="${escapeHtml(order.mainAmount||'')}" data-id="${order.id}" style="width:70px; display:${order.success==='Да'?'inline-block':'none'};" /></td><td><input type="text" class="order-bonus-amount" value="${escapeHtml(order.bonusAmount||'')}" data-id="${order.id}" style="width:70px; display:${order.success==='Да'?'inline-block':'none'};" /></td><td><input type="date" class="order-contract-date" value="${order.contractDate||''}" data-id="${order.id}" style="width:100px; display:${order.success==='Да'?'inline-block':'none'};" /></td><td style="display:${order.success==='Да'?'table-cell':'none'};">${duration||'—'}</td>`; tbody.appendChild(row); });
-            tbody.onclick = async (e) => { const target = e.target; if (target.classList.contains('delete-order-btn')) { e.stopPropagation(); const id = target.dataset.id; showConfirm('Удалить заявку?', async () => { await deleteOrder(id); ordersCache = ordersCache.filter(o => o.id !== id); renderAll(); }); } else if (target.classList.contains('copy-order-btn')) { await copyToClipboard(target.dataset.text); target.textContent = '✅'; setTimeout(() => { target.textContent = '📋'; }, 1000); } else if (target.classList.contains('editable-order-text')) { const span = target; if (span.querySelector('textarea')) return; const id = span.dataset.id; const order = ordersCache.find(o => o.id === id); if (!order) return; const textarea = document.createElement('textarea'); textarea.value = order.text; textarea.style.width = '100%'; textarea.style.minHeight = '50px'; span.replaceWith(textarea); textarea.focus(); textarea.addEventListener('blur', async () => { order.text = textarea.value; await saveOrder(order); renderAll(); }); } };
-            tbody.onchange = async (e) => { const target = e.target; const id = target.dataset.id; if (!id) return; const order = ordersCache.find(o => o.id === id); if (!order) return; if (target.classList.contains('manager-select')) { order.manager = target.value; await saveOrder(order); } else if (target.classList.contains('success-select')) { const prevSuccess = order.success; order.success = target.value; if (prevSuccess === 'Да' && order.success !== 'Да') { const cp = contractPayoutsCache[id]; if (cp && (cp.mainPaid || cp.bonusPaid)) { showConfirm('Снятие контракта удалит все внесённые выплаты. Продолжить?', async () => { await deleteContractPayout(id); await saveOrder(order); renderAll(); }); return; } } await saveOrder(order); renderAll(); } else if (target.classList.contains('order-main-amount')) { order.mainAmount = target.value; await saveOrder(order); } else if (target.classList.contains('order-bonus-amount')) { order.bonusAmount = target.value; await saveOrder(order); } else if (target.classList.contains('order-contract-date')) { order.contractDate = target.value; await saveOrder(order); renderAll(); } };
-            tbody.onkeydown = async (e) => { if (e.key === 'Enter' && e.target.classList.contains('order-date-input')) { const id = e.target.dataset.id; const order = ordersCache.find(o => o.id === id); if (!order) return; order.dateAdded = e.target.value ? e.target.value + 'T00:00:00.000Z' : null; await saveOrder(order); renderAll(); e.target.blur(); } };
-        }
+        function renderOrders() { const filters = getOrdersFilters(); let filtered = ordersCache.filter(order => { if (filters.dateFrom || filters.dateTo) { if (!order.dateAdded) return false; const d = order.dateAdded.substring(0,10); if (filters.dateFrom && d < filters.dateFrom) return false; if (filters.dateTo && d > filters.dateTo) return false; } if (filters.contract === 'Да' && order.success !== 'Да') return false; if (filters.contract === 'Нет' && order.success !== '') return false; if (filters.searchText) return (order.text || '').toLowerCase().includes(filters.searchText); return true; }); filtered.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded)); document.getElementById('orders-count').textContent = `(${filtered.length})`; const tbody = document.querySelector('#orders-table tbody'); tbody.innerHTML = ''; filtered.forEach(order => { if (order.contractAmount && !order.mainAmount && !order.bonusAmount) { order.mainAmount = order.contractAmount; order.bonusAmount = ''; } let duration = ''; if (order.success === 'Да' && order.dateAdded && order.contractDate) duration = Math.ceil((new Date(order.contractDate + 'T00:00:00') - new Date(order.dateAdded)) / (1000*60*60*24)); const row = document.createElement('tr'); row.innerHTML = `<td><span class="editable-order-text" data-id="${order.id}" style="cursor:pointer; white-space:pre-wrap;">${escapeHtml(order.text)}</span></td><td><button class="copy-order-btn" data-text="${order.text.replace(/"/g, '&quot;')}">📋</button> <button class="delete-order-btn" data-id="${order.id}">✕</button></td><td><input type="date" class="order-date-input" value="${(order.dateAdded||'').substring(0,10)}" data-id="${order.id}" style="width:100%;" /></td><td><select class="manager-select" data-id="${order.id}" style="width:100%;">${managersList.map(m => `<option value="${escapeHtml(m)}" ${order.manager===m?'selected':''}>${escapeHtml(m)}</option>`).join('')}<option value="" ${!order.manager?'selected':''}>Не найден</option></select></td><td><select class="success-select" data-id="${order.id}"><option value="" ${!order.success?'selected':''}>—</option><option value="Да" ${order.success==='Да'?'selected':''}>Да</option></select></td><td><input type="text" class="order-main-amount" value="${escapeHtml(order.mainAmount||'')}" data-id="${order.id}" style="width:70px; display:${order.success==='Да'?'inline-block':'none'};" /></td><td><input type="text" class="order-bonus-amount" value="${escapeHtml(order.bonusAmount||'')}" data-id="${order.id}" style="width:70px; display:${order.success==='Да'?'inline-block':'none'};" /></td><td><input type="date" class="order-contract-date" value="${order.contractDate||''}" data-id="${order.id}" style="width:100px; display:${order.success==='Да'?'inline-block':'none'};" /></td><td style="display:${order.success==='Да'?'table-cell':'none'};">${duration||'—'}</td>`; tbody.appendChild(row); }); tbody.onclick = async (e) => { const target = e.target; if (target.classList.contains('delete-order-btn')) { e.stopPropagation(); const id = target.dataset.id; showConfirm('Удалить заявку?', async () => { await deleteOrder(id); ordersCache = ordersCache.filter(o => o.id !== id); renderAll(); }); } else if (target.classList.contains('copy-order-btn')) { await copyToClipboard(target.dataset.text); target.textContent = '✅'; setTimeout(() => { target.textContent = '📋'; }, 1000); } else if (target.classList.contains('editable-order-text')) { const span = target; if (span.querySelector('textarea')) return; const id = span.dataset.id; const order = ordersCache.find(o => o.id === id); if (!order) return; const textarea = document.createElement('textarea'); textarea.value = order.text; textarea.style.width = '100%'; textarea.style.minHeight = '50px'; span.replaceWith(textarea); textarea.focus(); textarea.addEventListener('blur', async () => { order.text = textarea.value; await saveOrder(order); renderAll(); }); } }; tbody.onchange = async (e) => { const target = e.target; const id = target.dataset.id; if (!id) return; const order = ordersCache.find(o => o.id === id); if (!order) return; if (target.classList.contains('manager-select')) { order.manager = target.value; await saveOrder(order); } else if (target.classList.contains('success-select')) { const prevSuccess = order.success; order.success = target.value; if (prevSuccess === 'Да' && order.success !== 'Да') { const cp = contractPayoutsCache[id]; if (cp && (cp.mainPaid || cp.bonusPaid)) { showConfirm('Снятие контракта удалит все внесённые выплаты. Продолжить?', async () => { await deleteContractPayout(id); await saveOrder(order); renderAll(); }); return; } } await saveOrder(order); renderAll(); } else if (target.classList.contains('order-main-amount')) { order.mainAmount = target.value; await saveOrder(order); } else if (target.classList.contains('order-bonus-amount')) { order.bonusAmount = target.value; await saveOrder(order); } else if (target.classList.contains('order-contract-date')) { order.contractDate = target.value; await saveOrder(order); renderAll(); } }; tbody.onkeydown = async (e) => { if (e.key === 'Enter' && e.target.classList.contains('order-date-input')) { const id = e.target.dataset.id; const order = ordersCache.find(o => o.id === id); if (!order) return; order.dateAdded = e.target.value ? e.target.value + 'T00:00:00.000Z' : null; await saveOrder(order); renderAll(); e.target.blur(); } }; }
         async function addOrdersFromText(text, customDate) { const blocks = text.split(/\n\s*\n/); const dateStr = customDate || new Date().toISOString(); for (const block of blocks) { const trimmed = block.trim(); if (!trimmed) continue; const phone = extractPhoneNumber(trimmed); const manager = phone ? findManagerByPhone(phone) : ''; const newOrder = { text: trimmed, dateAdded: dateStr, manager, success: '', mainAmount: '', bonusAmount: '' }; await addDoc(ordersRef, newOrder); } renderAll(); }
         function extractPhoneNumber(text) { const match = text.match(/(?:\+7|8)\d{10}/); return match ? match[0] : null; }
         function bindQuickFilter(prefix, renderFn) { document.getElementById(`${prefix}-this-week`).addEventListener('click', () => { const now = new Date(); const day = now.getDay(); const mon = new Date(now); mon.setDate(now.getDate() - (day === 0 ? 6 : day - 1)); document.getElementById(`${prefix}-date-from`).value = mon.toISOString().slice(0,10); document.getElementById(`${prefix}-date-to`).value = now.toISOString().slice(0,10); renderFn(); }); document.getElementById(`${prefix}-this-month`).addEventListener('click', () => { setMonthBounds(`${prefix}-date-from`, `${prefix}-date-to`, 0); renderFn(); }); document.getElementById(`${prefix}-last-month`).addEventListener('click', () => { setMonthBounds(`${prefix}-date-from`, `${prefix}-date-to`, -1); renderFn(); }); document.getElementById(`${prefix}-all-time`).addEventListener('click', () => { document.getElementById(`${prefix}-date-from`).value = ''; document.getElementById(`${prefix}-date-to`).value = ''; renderFn(); }); [`${prefix}-date-from`, `${prefix}-date-to`].forEach(id => document.getElementById(id).addEventListener('change', renderFn)); }
@@ -1165,549 +816,53 @@
 
         // ========== АНАЛИТИКА ==========
         const colKeys = ['period','leads','orders','cvOL','contracts','cvCO','sum','avgDur','avgCheck','actions'];
-        const colNames = {
-            period: 'Период', leads: 'Кол-во лидов', orders: 'Кол-во заявок',
-            cvOL: 'CV (заявки/лиды)', contracts: 'Кол-во контрактов', cvCO: 'CV (контракты/заявки)',
-            sum: 'Сумма контрактов (₽)', avgDur: 'Ср. срок контракта (дней)', avgCheck: 'Ср. чек (₽)',
-            actions: ''
-        };
-
-        function renderOverallStats() {
-            const thead = document.getElementById('overall-header-row');
-            const tbody = document.getElementById('overall-stats-tbody');
-
-            let headerHtml = '';
-            colKeys.forEach(key => {
-                if (key === 'actions') {
-                    headerHtml += '<th></th>';
-                } else {
-                    headerHtml += `<th class="col-${key}">${colNames[key]} <button class="hide-col-btn" data-col="${key}">–</button></th>`;
-                }
-            });
-            thead.innerHTML = headerHtml;
-
-            colKeys.forEach(key => {
-                const th = thead.querySelector(`.col-${key}`);
-                if (th) {
-                    if (hiddenColumns.includes(key)) th.classList.add('hidden-col');
-                    else th.classList.remove('hidden-col');
-                }
-            });
-            tbody.querySelectorAll('tr').forEach(row => {
-                colKeys.forEach(key => {
-                    const cells = row.querySelectorAll(`.col-${key}`);
-                    cells.forEach(cell => {
-                        if (hiddenColumns.includes(key)) cell.classList.add('hidden-col');
-                        else cell.classList.remove('hidden-col');
-                    });
-                });
-            });
-
-            const showAllBtn = document.getElementById('show-all-cols-btn');
-            if (hiddenColumns.length > 0) {
-                showAllBtn.style.display = 'inline-block';
-            } else {
-                showAllBtn.style.display = 'none';
-            }
-
-            tbody.innerHTML = '';
-
-            const mode = document.querySelector('#overall-sub-tabs .sub-tab.active')?.dataset.mode || 'contractDate';
-            let mainRange;
-            if (mode === 'contractDate') {
-                mainRange = { from: document.getElementById('stats-date-from').value || null, to: document.getElementById('stats-date-to').value || null };
-            } else {
-                mainRange = { from: document.getElementById('stats-lead-date-from').value || null, to: document.getElementById('stats-lead-date-to').value || null };
-            }
-            const mainLabel = formatDateRange(mainRange.from, mainRange.to) || 'Весь период';
-            const mainStats = calcStats(mainRange, mode);
-
-            const currentRow = document.getElementById('current-stats-row');
-            currentRow.innerHTML = `<span class="stat-item"><strong>${mainLabel}</strong></span>` +
-                (!hiddenColumns.includes('leads') ? `<span class="stat-item">Лидов: ${mainStats.totalLeads}</span>` : '') +
-                (!hiddenColumns.includes('orders') ? `<span class="stat-item">Заявок: ${mainStats.totalOrders}</span>` : '') +
-                (!hiddenColumns.includes('cvOL') ? `<span class="stat-item">CV: ${mainStats.cvOL}%</span>` : '') +
-                (!hiddenColumns.includes('contracts') ? `<span class="stat-item">Контрактов: ${mainStats.contractCount}</span>` : '') +
-                (!hiddenColumns.includes('cvCO') ? `<span class="stat-item">CV2: ${mainStats.cvCO}%</span>` : '') +
-                (!hiddenColumns.includes('sum') ? `<span class="stat-item">Сумма: ${mainStats.contractSum.toLocaleString('ru-RU')} ₽</span>` : '') +
-                (!hiddenColumns.includes('avgDur') ? `<span class="stat-item">Ср. срок: ${mainStats.avgDur}</span>` : '') +
-                (!hiddenColumns.includes('avgCheck') ? `<span class="stat-item">Ср. чек: ${mainStats.avgCheck}</span>` : '') +
-                `<button id="add-current-stats-btn">+</button>`;
-
-            document.getElementById('add-current-stats-btn').addEventListener('click', async () => {
-                const dateFrom = mode === 'contractDate' ? document.getElementById('stats-date-from').value : document.getElementById('stats-lead-date-from').value;
-                const dateTo = mode === 'contractDate' ? document.getElementById('stats-date-to').value : document.getElementById('stats-lead-date-to').value;
-                const newRow = { mode, dateFrom, dateTo, order: savedStatsRows.filter(r => r.mode === mode).length };
-                await saveSavedStatsRow(newRow);
-            });
-
-            const filteredSavedRows = savedStatsRows.filter(r => r.mode === mode);
-            for (let i = 0; i < filteredSavedRows.length; i++) {
-                const saved = filteredSavedRows[i];
-                const range = { from: saved.dateFrom || null, to: saved.dateTo || null };
-                const label = formatDateRange(saved.dateFrom, saved.dateTo) || 'Весь период';
-                const stats = calcStats(range, saved.mode);
-                const row = createStatsRow(label, stats, false, saved.id);
-                row.classList.add('draggable-row');
-                row.draggable = true;
-                row.dataset.index = i;
-                row.dataset.id = saved.id;
-                row.addEventListener('dragstart', (e) => {
-                    e.dataTransfer.setData('text/plain', JSON.stringify({ index: i, mode: saved.mode }));
-                    row.classList.add('dragging');
-                });
-                row.addEventListener('dragend', () => { row.classList.remove('dragging'); });
-                row.addEventListener('dragover', (e) => { e.preventDefault(); });
-                row.addEventListener('drop', async (e) => {
-                    e.preventDefault();
-                    const data = JSON.parse(e.dataTransfer.getData('text/plain'));
-                    if (data.mode !== mode) return;
-                    const fromIndex = data.index;
-                    const toIndex = parseInt(row.dataset.index);
-                    if (fromIndex !== toIndex && !isNaN(fromIndex) && !isNaN(toIndex)) {
-                        const modeRows = savedStatsRows.filter(r => r.mode === mode);
-                        const moved = modeRows.splice(fromIndex, 1)[0];
-                        modeRows.splice(toIndex, 0, moved);
-                        const otherRows = savedStatsRows.filter(r => r.mode !== mode);
-                        savedStatsRows.length = 0;
-                        savedStatsRows.push(...otherRows, ...modeRows);
-                        for (let j = 0; j < modeRows.length; j++) {
-                            modeRows[j].order = j;
-                            if (modeRows[j].id) await setDoc(doc(savedStatsRef, modeRows[j].id), modeRows[j]);
-                        }
-                        renderOverallStats();
-                    }
-                });
-                tbody.appendChild(row);
-            }
-
-            tbody.querySelectorAll('tr').forEach(row => {
-                colKeys.forEach(key => {
-                    const cells = row.querySelectorAll(`.col-${key}`);
-                    cells.forEach(cell => {
-                        if (hiddenColumns.includes(key)) cell.classList.add('hidden-col');
-                        else cell.classList.remove('hidden-col');
-                    });
-                });
-            });
-
-            if (hiddenColumns.length > 0) {
-                document.getElementById('show-all-cols-btn').style.display = 'inline-block';
-            } else {
-                document.getElementById('show-all-cols-btn').style.display = 'none';
-            }
-
-            thead.querySelectorAll('.hide-col-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const col = btn.dataset.col;
-                    if (!hiddenColumns.includes(col)) {
-                        hiddenColumns.push(col);
-                    }
-                    localStorage.setItem('hiddenColumns', JSON.stringify(hiddenColumns));
-                    renderOverallStats();
-                });
-            });
-        }
-
-        document.getElementById('show-all-cols-btn').addEventListener('click', () => {
-            hiddenColumns = [];
-            localStorage.setItem('hiddenColumns', JSON.stringify(hiddenColumns));
-            renderOverallStats();
-        });
-
-        function calcStats(range, mode) {
-            let totalLeads = 0;
-            for (const phones of Object.values(columnsCache)) totalLeads += phones.filter(l => isDateInRange(l.dateAdded, range)).length;
-            const filteredOrders = ordersCache.filter(o => isDateInRange(o.dateAdded, range));
-            const totalOrders = filteredOrders.length;
-            let contractCount = 0, contractSum = 0, totalDuration = 0, durationCount = 0;
-            const contractFilter = mode === 'contractDate'
-                ? (o) => o.contractDate && isDateInRange(o.contractDate, range)
-                : (o) => o.contractDate && isDateInRange(o.dateAdded, range);
-            for (const o of ordersCache) {
-                if (o.success === 'Да' && contractFilter(o)) {
-                    contractCount++;
-                    contractSum += parseAmount(o.mainAmount) + parseAmount(o.bonusAmount);
-                    if (o.dateAdded && o.contractDate) {
-                        const diff = Math.ceil((new Date(o.contractDate+'T00:00:00') - new Date(o.dateAdded)) / (1000*60*60*24));
-                        totalDuration += diff; durationCount++;
-                    }
-                }
-            }
-            const cvOL = totalLeads ? ((totalOrders/totalLeads)*100).toFixed(1) : '0.0';
-            const cvCO = totalOrders ? ((contractCount/totalOrders)*100).toFixed(1) : '0.0';
-            const avgDur = durationCount ? Math.round(totalDuration/durationCount) : '—';
-            const avgCheck = contractCount ? Math.round(contractSum/contractCount).toLocaleString('ru-RU')+' ₽' : '0 ₽';
-            return { totalLeads, totalOrders, cvOL, contractCount, cvCO, contractSum, avgDur, avgCheck };
-        }
-
-        function createStatsRow(label, stats, isMain = false, savedId = null) {
-            const row = document.createElement('tr');
-            row.innerHTML = `<td class="col-period">${label}</td>` +
-                `<td class="col-leads">${stats.totalLeads}</td>` +
-                `<td class="col-orders">${stats.totalOrders}</td>` +
-                `<td class="col-cvOL">${stats.cvOL}%</td>` +
-                `<td class="col-contracts">${stats.contractCount}</td>` +
-                `<td class="col-cvCO">${stats.cvCO}%</td>` +
-                `<td class="col-sum">${stats.contractSum.toLocaleString('ru-RU')} ₽</td>` +
-                `<td class="col-avgDur">${stats.avgDur}</td>` +
-                `<td class="col-avgCheck">${stats.avgCheck}</td>` +
-                (isMain ? '<td class="col-actions"></td>' : `<td class="col-actions"><button class="delete-saved-row-btn" data-id="${savedId}">✕</button></td>`);
-            return row;
-        }
-
-        function isDateInRange(dateStr, range) { if (!dateStr) return false; const d = dateStr.substring(0,10); if (range.from && d < range.from) return false; if (range.to && d > range.to) return false; return true; }
-
-        document.getElementById('overall-stats-table').addEventListener('click', async (e) => {
-            if (e.target.classList.contains('delete-saved-row-btn')) {
-                const id = e.target.dataset.id;
-                showConfirm('Удалить эту строку?', async () => {
-                    await deleteSavedStatsRow(id);
-                    renderOverallStats();
-                });
-            }
-        });
-
-        function renderManagersStats() {
-            const mode = document.querySelector('#managers-sub-tabs .sub-tab.active')?.dataset.mode || 'contractDate';
-            document.getElementById('managers-header-row').innerHTML = `<th>Менеджер</th><th>Кол-во лидов</th><th>Кол-во заявок</th><th>CV (заявки/лиды)</th><th>Кол-во контрактов</th><th>CV (контракты/заявки)</th><th>Сумма контрактов (₽)</th>`;
-            const range = mode === 'contractDate' ? { from: document.getElementById('managers-date-from').value || null, to: document.getElementById('managers-date-to').value || null } : { from: document.getElementById('managers-lead-date-from').value || null, to: document.getElementById('managers-lead-date-to').value || null };
-            const tbody = document.querySelector('#managers-stats-table tbody'); tbody.innerHTML = '';
-            managersList.forEach(manager => {
-                const leads = columnsCache[manager] || [];
-                const leadsCount = leads.filter(l => isDateInRange(l.dateAdded, range)).length;
-                const managerOrders = ordersCache.filter(o => o.manager === manager && isDateInRange(o.dateAdded, range));
-                const ordersCount = managerOrders.length;
-                const contractFilter = mode === 'contractDate'
-                    ? (o) => o.contractDate && isDateInRange(o.contractDate, range)
-                    : (o) => o.contractDate && isDateInRange(o.dateAdded, range);
-                const contracts = ordersCache.filter(o => o.success==='Да' && o.manager===manager && contractFilter(o));
-                let sum = 0; contracts.forEach(o => sum += parseAmount(o.mainAmount) + parseAmount(o.bonusAmount));
-                const cvOL = leadsCount ? ((ordersCount/leadsCount)*100).toFixed(1) : '0.0';
-                const cvCO = ordersCount ? ((contracts.length/ordersCount)*100).toFixed(1) : '0.0';
-                tbody.innerHTML += `<tr><td>${escapeHtml(manager)}</td><td>${leadsCount}</td><td>${ordersCount}</td><td>${cvOL}%</td><td>${contracts.length}</td><td>${cvCO}%</td><td>${sum.toLocaleString('ru-RU')} ₽</td></tr>`;
-            });
-        }
-        document.querySelectorAll('#overall-sub-tabs .sub-tab').forEach(tab => tab.addEventListener('click', function() { document.querySelectorAll('#overall-sub-tabs .sub-tab').forEach(t => t.classList.remove('active')); this.classList.add('active'); document.getElementById('overall-contractDate-panel').style.display = this.dataset.mode==='contractDate'?'block':'none'; document.getElementById('overall-leadDate-panel').style.display = this.dataset.mode==='leadDate'?'block':'none'; renderOverallStats(); }));
-        document.querySelectorAll('#managers-sub-tabs .sub-tab').forEach(tab => tab.addEventListener('click', function() { document.querySelectorAll('#managers-sub-tabs .sub-tab').forEach(t => t.classList.remove('active')); this.classList.add('active'); document.getElementById('managers-contractDate-panel').style.display = this.dataset.mode==='contractDate'?'block':'none'; document.getElementById('managers-leadDate-panel').style.display = this.dataset.mode==='leadDate'?'block':'none'; renderManagersStats(); }));
-        bindQuickFilter('stats', renderOverallStats); bindQuickFilter('stats-lead', renderOverallStats); bindQuickFilter('managers', renderManagersStats); bindQuickFilter('managers-lead', renderManagersStats);
+        const colNames = { period: 'Период', leads: 'Кол-во лидов', orders: 'Кол-во заявок', cvOL: 'CV (заявки/лиды)', contracts: 'Кол-во контрактов', cvCO: 'CV (контракты/заявки)', sum: 'Сумма контрактов (₽)', avgDur: 'Ср. срок контракта (дней)', avgCheck: 'Ср. чек (₽)', actions: '' };
+        function renderOverallStats() { const thead = document.getElementById('overall-header-row'); const tbody = document.getElementById('overall-stats-tbody'); let headerHtml = ''; colKeys.forEach(key => { if (key === 'actions') headerHtml += '<th></th>'; else headerHtml += `<th class="col-${key}">${colNames[key]} <button class="hide-col-btn" data-col="${key}">–</button></th>`; }); thead.innerHTML = headerHtml; colKeys.forEach(key => { const th = thead.querySelector(`.col-${key}`); if (th) { if (hiddenColumns.includes(key)) th.classList.add('hidden-col'); else th.classList.remove('hidden-col'); } }); tbody.querySelectorAll('tr').forEach(row => { colKeys.forEach(key => { const cells = row.querySelectorAll(`.col-${key}`); cells.forEach(cell => { if (hiddenColumns.includes(key)) cell.classList.add('hidden-col'); else cell.classList.remove('hidden-col'); }); }); }); const showAllBtn = document.getElementById('show-all-cols-btn'); showAllBtn.style.display = hiddenColumns.length > 0 ? 'inline-block' : 'none'; tbody.innerHTML = ''; const mode = document.querySelector('#overall-sub-tabs .sub-tab.active')?.dataset.mode || 'contractDate'; let mainRange; if (mode === 'contractDate') mainRange = { from: document.getElementById('stats-date-from').value || null, to: document.getElementById('stats-date-to').value || null }; else mainRange = { from: document.getElementById('stats-lead-date-from').value || null, to: document.getElementById('stats-lead-date-to').value || null }; const mainLabel = formatDateRange(mainRange.from, mainRange.to) || 'Весь период'; const mainStats = calcStats(mainRange, mode); const currentRow = document.getElementById('current-stats-row'); currentRow.innerHTML = `<span class="stat-item"><strong>${mainLabel}</strong></span>` + (!hiddenColumns.includes('leads')?`<span class="stat-item">Лидов: ${mainStats.totalLeads}</span>`:'') + (!hiddenColumns.includes('orders')?`<span class="stat-item">Заявок: ${mainStats.totalOrders}</span>`:'') + (!hiddenColumns.includes('cvOL')?`<span class="stat-item">CV: ${mainStats.cvOL}%</span>`:'') + (!hiddenColumns.includes('contracts')?`<span class="stat-item">Контрактов: ${mainStats.contractCount}</span>`:'') + (!hiddenColumns.includes('cvCO')?`<span class="stat-item">CV2: ${mainStats.cvCO}%</span>`:'') + (!hiddenColumns.includes('sum')?`<span class="stat-item">Сумма: ${mainStats.contractSum.toLocaleString('ru-RU')} ₽</span>`:'') + (!hiddenColumns.includes('avgDur')?`<span class="stat-item">Ср. срок: ${mainStats.avgDur}</span>`:'') + (!hiddenColumns.includes('avgCheck')?`<span class="stat-item">Ср. чек: ${mainStats.avgCheck}</span>`:'') + `<button id="add-current-stats-btn">+</button>`; document.getElementById('add-current-stats-btn').addEventListener('click', async () => { const df = mode==='contractDate'?document.getElementById('stats-date-from').value:document.getElementById('stats-lead-date-from').value; const dt = mode==='contractDate'?document.getElementById('stats-date-to').value:document.getElementById('stats-lead-date-to').value; const newRow = { mode, dateFrom: df, dateTo: dt, order: savedStatsRows.filter(r=>r.mode===mode).length }; await saveSavedStatsRow(newRow); }); const filteredSavedRows = savedStatsRows.filter(r => r.mode === mode); for (let i=0;i<filteredSavedRows.length;i++){ const saved=filteredSavedRows[i]; const range={from:saved.dateFrom||null,to:saved.dateTo||null}; const label=formatDateRange(saved.dateFrom,saved.dateTo)||'Весь период'; const stats=calcStats(range,saved.mode); const row=createStatsRow(label,stats,false,saved.id); row.classList.add('draggable-row'); row.draggable=true; row.dataset.index=i; row.dataset.id=saved.id; row.addEventListener('dragstart',(e)=>{e.dataTransfer.setData('text/plain',JSON.stringify({index:i,mode:saved.mode}));row.classList.add('dragging');}); row.addEventListener('dragend',()=>{row.classList.remove('dragging');}); row.addEventListener('dragover',(e)=>{e.preventDefault();}); row.addEventListener('drop',async(e)=>{e.preventDefault();const data=JSON.parse(e.dataTransfer.getData('text/plain'));if(data.mode!==mode)return;const fromIndex=data.index;const toIndex=parseInt(row.dataset.index);if(fromIndex!==toIndex&&!isNaN(fromIndex)&&!isNaN(toIndex)){const modeRows=savedStatsRows.filter(r=>r.mode===mode);const moved=modeRows.splice(fromIndex,1)[0];modeRows.splice(toIndex,0,moved);const otherRows=savedStatsRows.filter(r=>r.mode!==mode);savedStatsRows.length=0;savedStatsRows.push(...otherRows,...modeRows);for(let j=0;j<modeRows.length;j++){modeRows[j].order=j;if(modeRows[j].id)await setDoc(doc(savedStatsRef,modeRows[j].id),modeRows[j]);}renderOverallStats();}});tbody.appendChild(row);} tbody.querySelectorAll('tr').forEach(row=>{colKeys.forEach(key=>{const cells=row.querySelectorAll(`.col-${key}`);cells.forEach(cell=>{if(hiddenColumns.includes(key))cell.classList.add('hidden-col');else cell.classList.remove('hidden-col');});});}); thead.querySelectorAll('.hide-col-btn').forEach(btn=>{btn.addEventListener('click',(e)=>{e.stopPropagation();const col=btn.dataset.col;if(!hiddenColumns.includes(col))hiddenColumns.push(col);localStorage.setItem('hiddenColumns',JSON.stringify(hiddenColumns));renderOverallStats();});}); }
+        document.getElementById('show-all-cols-btn').addEventListener('click',()=>{hiddenColumns=[];localStorage.setItem('hiddenColumns',JSON.stringify(hiddenColumns));renderOverallStats();});
+        function calcStats(range,mode){let totalLeads=0;for(const phones of Object.values(columnsCache))totalLeads+=phones.filter(l=>isDateInRange(l.dateAdded,range)).length;const filteredOrders=ordersCache.filter(o=>isDateInRange(o.dateAdded,range));const totalOrders=filteredOrders.length;let contractCount=0,contractSum=0,totalDuration=0,durationCount=0;const contractFilter=mode==='contractDate'?(o)=>o.contractDate&&isDateInRange(o.contractDate,range):(o)=>o.contractDate&&isDateInRange(o.dateAdded,range);for(const o of ordersCache){if(o.success==='Да'&&contractFilter(o)){contractCount++;contractSum+=parseAmount(o.mainAmount)+parseAmount(o.bonusAmount);if(o.dateAdded&&o.contractDate){const diff=Math.ceil((new Date(o.contractDate+'T00:00:00')-new Date(o.dateAdded))/(1000*60*60*24));totalDuration+=diff;durationCount++;}}}const cvOL=totalLeads?((totalOrders/totalLeads)*100).toFixed(1):'0.0';const cvCO=totalOrders?((contractCount/totalOrders)*100).toFixed(1):'0.0';const avgDur=durationCount?Math.round(totalDuration/durationCount):'—';const avgCheck=contractCount?Math.round(contractSum/contractCount).toLocaleString('ru-RU')+' ₽':'0 ₽';return{totalLeads,totalOrders,cvOL,contractCount,cvCO,contractSum,avgDur,avgCheck};}
+        function createStatsRow(label,stats,isMain=false,savedId=null){const row=document.createElement('tr');row.innerHTML=`<td class="col-period">${label}</td><td class="col-leads">${stats.totalLeads}</td><td class="col-orders">${stats.totalOrders}</td><td class="col-cvOL">${stats.cvOL}%</td><td class="col-contracts">${stats.contractCount}</td><td class="col-cvCO">${stats.cvCO}%</td><td class="col-sum">${stats.contractSum.toLocaleString('ru-RU')} ₽</td><td class="col-avgDur">${stats.avgDur}</td><td class="col-avgCheck">${stats.avgCheck}</td>`+(isMain?'<td class="col-actions"></td>':`<td class="col-actions"><button class="delete-saved-row-btn" data-id="${savedId}">✕</button></td>`);return row;}
+        function isDateInRange(dateStr,range){if(!dateStr)return false;const d=dateStr.substring(0,10);if(range.from&&d<range.from)return false;if(range.to&&d>range.to)return false;return true;}
+        document.getElementById('overall-stats-table').addEventListener('click',async(e)=>{if(e.target.classList.contains('delete-saved-row-btn')){const id=e.target.dataset.id;showConfirm('Удалить эту строку?',async()=>{await deleteSavedStatsRow(id);renderOverallStats();});}});
+        function renderManagersStats(){const mode=document.querySelector('#managers-sub-tabs .sub-tab.active')?.dataset.mode||'contractDate';document.getElementById('managers-header-row').innerHTML='<th>Менеджер</th><th>Кол-во лидов</th><th>Кол-во заявок</th><th>CV (заявки/лиды)</th><th>Кол-во контрактов</th><th>CV (контракты/заявки)</th><th>Сумма контрактов (₽)</th>';const range=mode==='contractDate'?{from:document.getElementById('managers-date-from').value||null,to:document.getElementById('managers-date-to').value||null}:{from:document.getElementById('managers-lead-date-from').value||null,to:document.getElementById('managers-lead-date-to').value||null};const tbody=document.querySelector('#managers-stats-table tbody');tbody.innerHTML='';managersList.forEach(manager=>{const leads=columnsCache[manager]||[];const leadsCount=leads.filter(l=>isDateInRange(l.dateAdded,range)).length;const managerOrders=ordersCache.filter(o=>o.manager===manager&&isDateInRange(o.dateAdded,range));const ordersCount=managerOrders.length;const contractFilter=mode==='contractDate'?(o)=>o.contractDate&&isDateInRange(o.contractDate,range):(o)=>o.contractDate&&isDateInRange(o.dateAdded,range);const contracts=ordersCache.filter(o=>o.success==='Да'&&o.manager===manager&&contractFilter(o));let sum=0;contracts.forEach(o=>sum+=parseAmount(o.mainAmount)+parseAmount(o.bonusAmount));const cvOL=leadsCount?((ordersCount/leadsCount)*100).toFixed(1):'0.0';const cvCO=ordersCount?((contracts.length/ordersCount)*100).toFixed(1):'0.0';tbody.innerHTML+=`<tr><td>${escapeHtml(manager)}</td><td>${leadsCount}</td><td>${ordersCount}</td><td>${cvOL}%</td><td>${contracts.length}</td><td>${cvCO}%</td><td>${sum.toLocaleString('ru-RU')} ₽</td></tr>`;});}
+        document.querySelectorAll('#overall-sub-tabs .sub-tab').forEach(tab=>tab.addEventListener('click',function(){document.querySelectorAll('#overall-sub-tabs .sub-tab').forEach(t=>t.classList.remove('active'));this.classList.add('active');document.getElementById('overall-contractDate-panel').style.display=this.dataset.mode==='contractDate'?'block':'none';document.getElementById('overall-leadDate-panel').style.display=this.dataset.mode==='leadDate'?'block':'none';renderOverallStats();}));
+        document.querySelectorAll('#managers-sub-tabs .sub-tab').forEach(tab=>tab.addEventListener('click',function(){document.querySelectorAll('#managers-sub-tabs .sub-tab').forEach(t=>t.classList.remove('active'));this.classList.add('active');document.getElementById('managers-contractDate-panel').style.display=this.dataset.mode==='contractDate'?'block':'none';document.getElementById('managers-leadDate-panel').style.display=this.dataset.mode==='leadDate'?'block':'none';renderManagersStats();}));
+        bindQuickFilter('stats',renderOverallStats);bindQuickFilter('stats-lead',renderOverallStats);bindQuickFilter('managers',renderManagersStats);bindQuickFilter('managers-lead',renderManagersStats);
 
         // ========== ВЫПЛАТЫ (ДДС) ==========
-        function renderDDS() {
-            const tbody = document.querySelector('#dds-table tbody');
-            const footer = document.getElementById('dds-footer');
-            tbody.innerHTML = '';
-            let total = 0;
-            ddsCache.forEach(item => {
-                const val = parseAmount(item.total);
-                total += val;
-                const row = document.createElement('tr');
-                row.innerHTML = `<td><span class="editable-dds" data-field="partner" data-id="${item.id}">${escapeHtml(item.partner||'') || '&nbsp;'}</span></td><td><span class="editable-dds" data-field="sum" data-id="${item.id}">${escapeHtml(item.sum||'') || '&nbsp;'}</span></td><td><span class="editable-dds" data-field="contracts" data-id="${item.id}">${escapeHtml(item.contracts||'') || '&nbsp;'}</span></td><td><input type="date" class="dds-date" value="${item.date||''}" data-id="${item.id}" /></td><td><span class="editable-dds" data-field="method" data-id="${item.id}">${escapeHtml(item.method||'') || '&nbsp;'}</span></td><td style="border-left:2px solid var(--border);"><span class="editable-dds" data-field="total" data-id="${item.id}">${escapeHtml(item.total||'') || '&nbsp;'}</span></td><td><button class="delete-dds-btn" data-id="${item.id}" style="cursor:pointer;">✕</button></td>`;
-                tbody.appendChild(row);
-            });
-            footer.innerHTML = `<tr><td colspan="5" style="text-align:right; font-weight:bold;">Сумма итого:</td><td style="border-left:2px solid var(--border); font-weight:bold;">${total.toLocaleString('ru-RU')} ₽</td><td></td></tr>`;
+        function renderDDS(){const tbody=document.querySelector('#dds-table tbody');const footer=document.getElementById('dds-footer');tbody.innerHTML='';let total=0;ddsCache.forEach(item=>{const val=parseAmount(item.total);total+=val;const row=document.createElement('tr');row.innerHTML=`<td><span class="editable-dds" data-field="partner" data-id="${item.id}">${escapeHtml(item.partner||'')||'&nbsp;'}</span></td><td><span class="editable-dds" data-field="sum" data-id="${item.id}">${escapeHtml(item.sum||'')||'&nbsp;'}</span></td><td><span class="editable-dds" data-field="contracts" data-id="${item.id}">${escapeHtml(item.contracts||'')||'&nbsp;'}</span></td><td><input type="date" class="dds-date" value="${item.date||''}" data-id="${item.id}" /></td><td><span class="editable-dds" data-field="method" data-id="${item.id}">${escapeHtml(item.method||'')||'&nbsp;'}</span></td><td style="border-left:2px solid var(--border);"><span class="editable-dds" data-field="total" data-id="${item.id}">${escapeHtml(item.total||'')||'&nbsp;'}</span></td><td><button class="delete-dds-btn" data-id="${item.id}" style="cursor:pointer;">✕</button></td>`;tbody.appendChild(row);});footer.innerHTML=`<tr><td colspan="5" style="text-align:right;font-weight:bold;">Сумма итого:</td><td style="border-left:2px solid var(--border);font-weight:bold;">${total.toLocaleString('ru-RU')} ₽</td><td></td></tr>`;tbody.addEventListener('click',function(e){if(e.target.classList.contains('delete-dds-btn')){e.stopPropagation();const id=e.target.dataset.id;showConfirm('Удалить строку?',async()=>{await deleteDDS(id);ddsCache=ddsCache.filter(i=>i.id!==id);renderDDS();});return;}const span=e.target.closest('.editable-dds');if(!span)return;if(span.querySelector('input')||span.querySelector('textarea'))return;const id=span.dataset.id;const field=span.dataset.field;const item=ddsCache.find(i=>i.id===id);if(!item)return;const isMethod=field==='method';const currentValue=item[field]||'';span.innerHTML='';const input=document.createElement(isMethod?'textarea':'input');if(!isMethod)input.type='text';input.value=currentValue;input.style.width='100%';input.style.padding='2px';input.style.border='1px solid #ccc';input.style.borderRadius='3px';input.style.fontSize='11px';if(isMethod)input.style.minHeight='30px';span.appendChild(input);input.focus();const save=async()=>{const newValue=input.value;span.innerHTML=escapeHtml(newValue)||'&nbsp;';item[field]=newValue;await saveDDS(item);};input.addEventListener('blur',save);input.addEventListener('keydown',(ev)=>{if(ev.key==='Enter'&&!isMethod){ev.preventDefault();input.blur();}});});tbody.addEventListener('change',async(e)=>{if(e.target.classList.contains('dds-date')){const id=e.target.dataset.id;const item=ddsCache.find(i=>i.id===id);if(item){item.date=e.target.value;await saveDDS(item);}}});}
+        document.getElementById('add-dds-row-btn').addEventListener('click',async()=>{const partner=document.getElementById('dds-partner-input').value.trim();const sum=document.getElementById('dds-sum-input').value.trim();const contracts=document.getElementById('dds-contracts-input').value.trim();const date=document.getElementById('dds-date-input-new').value;const method=document.getElementById('dds-method-input').value.trim();const total=document.getElementById('dds-total-input').value.trim();if(!partner&&!sum&&!contracts&&!method&&!total)return;const item={partner,sum,contracts,date,method,total};await saveDDS(item);document.getElementById('dds-partner-input').value='';document.getElementById('dds-sum-input').value='';document.getElementById('dds-contracts-input').value='';document.getElementById('dds-method-input').value='';document.getElementById('dds-total-input').value='';renderDDS();});
+        function renderDebt(){const tbody=document.querySelector('#debt-table tbody');const totalSpan=document.getElementById('total-debt-amount');tbody.innerHTML='';const contracts=ordersCache.filter(o=>o.success==='Да'&&o.contractDate);let totalDebt=0;const today=new Date();today.setHours(0,0,0,0);contracts.forEach(o=>{const cp=contractPayoutsCache[o.id]||{};if(!cp.mainPaid)totalDebt+=parseAmount(o.mainAmount);if(parseAmount(o.bonusAmount)>0&&!cp.bonusPaid)totalDebt+=parseAmount(o.bonusAmount);});totalSpan.textContent=totalDebt>0?`(${totalDebt.toLocaleString('ru-RU')} ₽)`:' ';contracts.forEach(order=>{const cp=contractPayoutsCache[order.id]||{};const mainAmount=parseAmount(order.mainAmount);const bonusAmount=parseAmount(order.bonusAmount);const cDate=new Date(order.contractDate+'T00:00:00');const getDays=(paidDate)=>paidDate?Math.ceil((new Date(paidDate+'T00:00:00')-cDate)/(1000*60*60*24)):Math.ceil((today-cDate)/(1000*60*60*24));const mainStatus=cp.mainPaid?`<input type="date" class="debt-paid-date" data-id="${order.id}" data-type="main" value="${cp.mainPaidDate||''}" style="width:100px;" /> <span>(${getDays(cp.mainPaidDate)} дн.)</span>`:`Не выпл., ${getDays(cp.mainPaidDate)} дн.`;const bonusStatus=bonusAmount>0?(cp.bonusPaid?`<input type="date" class="debt-paid-date" data-id="${order.id}" data-type="bonus" value="${cp.bonusPaidDate||''}" style="width:100px;" /> <span>(${getDays(cp.bonusPaidDate)} дн.)</span>`:`Не выпл., ${getDays(cp.bonusPaidDate)} дн.`):'';const row=document.createElement('tr');row.innerHTML=`<td style="text-align:left;">${escapeHtml(order.text||'')}</td><td>${order.contractDate}</td><td>${mainAmount.toLocaleString('ru-RU')} ₽</td><td><input type="checkbox" class="debt-paid-cb" data-id="${order.id}" data-type="main" ${cp.mainPaid?'checked':''} /></td><td>${mainStatus}</td><td>${bonusAmount>0?bonusAmount.toLocaleString('ru-RU')+' ₽':'—'}</td><td>${bonusAmount>0?`<input type="checkbox" class="debt-paid-cb" data-id="${order.id}" data-type="bonus" ${cp.bonusPaid?'checked':''} />`:''}</td><td>${bonusStatus}</td>`;tbody.appendChild(row);});tbody.onclick=async(e)=>{if(e.target.classList.contains('debt-paid-cb')){const id=e.target.dataset.id;const type=e.target.dataset.type;const checked=e.target.checked;const cp=contractPayoutsCache[id]||{};const todayStr=new Date().toISOString().slice(0,10);if(type==='main'){cp.mainPaid=checked;if(checked)cp.mainPaidDate=cp.mainPaidDate||todayStr;else delete cp.mainPaidDate;}else{cp.bonusPaid=checked;if(checked)cp.bonusPaidDate=cp.bonusPaidDate||todayStr;else delete cp.bonusPaidDate;}await saveContractPayout(id,cp);renderDebt();}};tbody.onchange=async(e)=>{if(e.target.classList.contains('debt-paid-date')){const id=e.target.dataset.id;const type=e.target.dataset.type;const cp=contractPayoutsCache[id]||{};if(type==='main')cp.mainPaidDate=e.target.value||'';else cp.bonusPaidDate=e.target.value||'';await saveContractPayout(id,cp);}};}
 
-            tbody.addEventListener('click', function(e) {
-                if (e.target.classList.contains('delete-dds-btn')) {
-                    e.stopPropagation();
-                    const id = e.target.dataset.id;
-                    showConfirm('Удалить строку?', async () => {
-                        await deleteDDS(id);
-                        ddsCache = ddsCache.filter(i => i.id !== id);
-                        renderDDS();
-                    });
-                    return;
-                }
-                const span = e.target.closest('.editable-dds');
-                if (!span) return;
-                if (span.querySelector('input') || span.querySelector('textarea')) return;
-                
-                const id = span.dataset.id;
-                const field = span.dataset.field;
-                const item = ddsCache.find(i => i.id === id);
-                if (!item) return;
-                
-                const isMethod = field === 'method';
-                const currentValue = item[field] || '';
-                
-                span.innerHTML = '';
-                const input = document.createElement(isMethod ? 'textarea' : 'input');
-                if (!isMethod) input.type = 'text';
-                input.value = currentValue;
-                input.style.width = '100%';
-                input.style.padding = '2px';
-                input.style.border = '1px solid #ccc';
-                input.style.borderRadius = '3px';
-                input.style.fontSize = '11px';
-                if (isMethod) input.style.minHeight = '30px';
-                span.appendChild(input);
-                input.focus();
-                
-                const save = async () => {
-                    const newValue = input.value;
-                    span.innerHTML = escapeHtml(newValue) || '&nbsp;';
-                    item[field] = newValue;
-                    await saveDDS(item);
-                };
-                
-                input.addEventListener('blur', save);
-                input.addEventListener('keydown', (ev) => {
-                    if (ev.key === 'Enter' && !isMethod) {
-                        ev.preventDefault();
-                        input.blur();
-                    }
-                });
-            });
-            
-            tbody.addEventListener('change', async (e) => {
-                if (e.target.classList.contains('dds-date')) {
-                    const id = e.target.dataset.id;
-                    const item = ddsCache.find(i => i.id === id);
-                    if (item) { item.date = e.target.value; await saveDDS(item); }
-                }
-            });
-        }
+        // ========== БАЗА (Запасы с фильтрами) ==========
+        document.getElementById('reserves-sort-desc').addEventListener('click',()=>{reservesSortOrder='desc';document.getElementById('reserves-sort-desc').classList.add('active');document.getElementById('reserves-sort-asc').classList.remove('active');renderReserves();});
+        document.getElementById('reserves-sort-asc').addEventListener('click',()=>{reservesSortOrder='asc';document.getElementById('reserves-sort-asc').classList.add('active');document.getElementById('reserves-sort-desc').classList.remove('active');renderReserves();});
+        document.getElementById('reserves-reason-filter').addEventListener('change',()=>{reservesReasonFilter=document.getElementById('reserves-reason-filter').value;renderReserves();});
+        function renderReserves(){const tbody=document.querySelector('#reserves-table tbody');tbody.innerHTML='';let filtered=[...reservesCache];if(reservesReasonFilter){if(reservesReasonFilter==='none')filtered=filtered.filter(item=>!item.reason||item.reason==='');else if(reservesReasonFilter==='other')filtered=filtered.filter(item=>item.reason&&!['Женщина','Офицер','Кат Д','Кат В'].includes(item.reason));else filtered=filtered.filter(item=>item.reason===reservesReasonFilter);}filtered.sort((a,b)=>{const dateA=a.dateAdded?new Date(a.dateAdded):new Date(0);const dateB=b.dateAdded?new Date(b.dateAdded):new Date(0);return reservesSortOrder==='desc'?dateB-dateA:dateA-dateB;});document.getElementById('reserves-count').textContent=filtered.length?`(${filtered.length})`:'';filtered.forEach(item=>{const row=document.createElement('tr');row.innerHTML=`<td><span class="editable-text" data-field="text" data-id="${item.id}">${escapeHtml(item.text||'')}</span></td><td><button class="copy-reserve-btn" data-text="${escapeHtml(item.text||'')}">📋</button> <button class="delete-reserve-btn" data-id="${item.id}">✕</button></td><td><input type="date" class="reserve-date" value="${item.dateAdded?item.dateAdded.substring(0,10):''}" data-id="${item.id}" /></td><td><select class="reserve-reason" data-id="${item.id}"><option value="">—</option><option value="Женщина" ${item.reason==='Женщина'?'selected':''}>Женщина</option><option value="Офицер" ${item.reason==='Офицер'?'selected':''}>Офицер</option><option value="Кат Д" ${item.reason==='Кат Д'?'selected':''}>Кат Д</option><option value="Кат В" ${item.reason==='Кат В'?'selected':''}>Кат В</option><option value="custom" ${item.reason&&!['Женщина','Офицер','Кат Д','Кат В'].includes(item.reason)?'selected':''}>Другое</option></select><input type="text" class="reserve-custom-reason" value="${item.reason&&!['Женщина','Офицер','Кат Д','Кат В'].includes(item.reason)?escapeHtml(item.reason):''}" data-id="${item.id}" style="display:${item.reason&&!['Женщина','Офицер','Кат Д','Кат В'].includes(item.reason)?'inline-block':'none'};margin-top:3px;" placeholder="Свой текст" /></td>`;tbody.appendChild(row);});tbody.querySelectorAll('.editable-text').forEach(span=>{span.addEventListener('click',()=>{if(span.querySelector('textarea'))return;const id=span.dataset.id;const item=reservesCache.find(i=>i.id===id);if(!item)return;const textarea=document.createElement('textarea');textarea.value=item.text||'';textarea.style.width='100%';textarea.style.minHeight='50px';span.replaceWith(textarea);textarea.focus();textarea.addEventListener('blur',async()=>{item.text=textarea.value;await saveReserve(item);renderReserves();});});});tbody.onclick=async(e)=>{if(e.target.classList.contains('delete-reserve-btn')){const id=e.target.dataset.id;showConfirm('Удалить?',async()=>{await deleteReserve(id);reservesCache=reservesCache.filter(i=>i.id!==id);renderReserves();});}else if(e.target.classList.contains('copy-reserve-btn')){await copyToClipboard(e.target.dataset.text);e.target.textContent='✅';setTimeout(()=>{e.target.textContent='📋';},1000);}};tbody.onchange=async(e)=>{const id=e.target.dataset.id;const item=reservesCache.find(i=>i.id===id);if(!item)return;if(e.target.classList.contains('reserve-date')){item.dateAdded=e.target.value+'T00:00:00.000Z';await saveReserve(item);}else if(e.target.classList.contains('reserve-reason')){if(e.target.value==='custom')tbody.querySelector(`.reserve-custom-reason[data-id="${id}"]`).style.display='inline-block';else{tbody.querySelector(`.reserve-custom-reason[data-id="${id}"]`).style.display='none';item.reason=e.target.value;await saveReserve(item);}}else if(e.target.classList.contains('reserve-custom-reason')){item.reason=e.target.value;await saveReserve(item);}};}
 
-        document.getElementById('add-dds-row-btn').addEventListener('click', async () => {
-            const partner = document.getElementById('dds-partner-input').value.trim();
-            const sum = document.getElementById('dds-sum-input').value.trim();
-            const contracts = document.getElementById('dds-contracts-input').value.trim();
-            const date = document.getElementById('dds-date-input-new').value;
-            const method = document.getElementById('dds-method-input').value.trim();
-            const total = document.getElementById('dds-total-input').value.trim();
-            if (!partner && !sum && !contracts && !method && !total) return;
-            const item = { partner, sum, contracts, date, method, total };
-            await saveDDS(item);
-            document.getElementById('dds-partner-input').value = '';
-            document.getElementById('dds-sum-input').value = '';
-            document.getElementById('dds-contracts-input').value = '';
-            document.getElementById('dds-method-input').value = '';
-            document.getElementById('dds-total-input').value = '';
-            renderDDS();
-        });
+        // ========== БАЗА (Рекруты) ==========
+        document.getElementById('recruits-sort-desc').addEventListener('click',()=>{recruitsSortOrder='desc';document.getElementById('recruits-sort-desc').classList.add('active');document.getElementById('recruits-sort-asc').classList.remove('active');renderRecruits();});
+        document.getElementById('recruits-sort-asc').addEventListener('click',()=>{recruitsSortOrder='asc';document.getElementById('recruits-sort-asc').classList.add('active');document.getElementById('recruits-sort-desc').classList.remove('active');renderRecruits();});
+        document.getElementById('recruits-reply-filter').addEventListener('change',()=>{recruitsReplyFilter=document.getElementById('recruits-reply-filter').value;renderRecruits();});
+        function renderRecruits(){const tbody=document.querySelector('#recruits-table tbody');tbody.innerHTML='';let filtered=[...recruitsCache];if(recruitsReplyFilter){if(recruitsReplyFilter==='yes')filtered=filtered.filter(item=>item.reply===true);else if(recruitsReplyFilter==='no')filtered=filtered.filter(item=>!item.reply||item.reply!==true);}filtered.sort((a,b)=>{const dateA=a.dateAdded?new Date(a.dateAdded):new Date(0);const dateB=b.dateAdded?new Date(b.dateAdded):new Date(0);return recruitsSortOrder==='desc'?dateB-dateA:dateA-dateB;});document.getElementById('recruits-count').textContent=filtered.length?`(${filtered.length})`:'';filtered.forEach(item=>{const row=document.createElement('tr');row.innerHTML=`<td><span class="editable-text" data-field="text" data-id="${item.id}">${escapeHtml(item.text||'')}</span></td><td><button class="copy-recruit-btn" data-text="${escapeHtml(item.text||'')}">📋</button> <button class="delete-recruit-btn" data-id="${item.id}">✕</button></td><td><input type="checkbox" class="recruits-checkbox reply-checkbox" data-id="${item.id}" ${item.reply?'checked':''} /></td>`;tbody.appendChild(row);});tbody.querySelectorAll('.editable-text').forEach(span=>{span.addEventListener('click',()=>{if(span.querySelector('input')||span.querySelector('textarea'))return;const id=span.dataset.id;const field=span.dataset.field;const item=recruitsCache.find(i=>i.id===id);if(!item)return;const isText=field==='text';const input=document.createElement(isText?'textarea':'input');if(!isText)input.type='text';input.value=item[field]||'';input.style.width='100%';if(isText)input.style.minHeight='50px';span.replaceWith(input);input.focus();input.addEventListener('blur',async()=>{item[field]=input.value;await saveRecruit(item);renderRecruits();});});});tbody.addEventListener('change',async(e)=>{if(e.target.classList.contains('reply-checkbox')){const id=e.target.dataset.id;const item=recruitsCache.find(i=>i.id===id);if(item){item.reply=e.target.checked;await saveRecruit(item);}}});tbody.onclick=async(e)=>{if(e.target.classList.contains('delete-recruit-btn')){const id=e.target.dataset.id;showConfirm('Удалить?',async()=>{await deleteRecruit(id);recruitsCache=recruitsCache.filter(i=>i.id!==id);renderRecruits();});}else if(e.target.classList.contains('copy-recruit-btn')){await copyToClipboard(e.target.dataset.text);e.target.textContent='✅';setTimeout(()=>{e.target.textContent='📋';},1000);}};}
+        document.getElementById('add-reserves-btn').addEventListener('click',async()=>{const textarea=document.getElementById('new-reserves-input');const text=textarea.value.trim();if(!text)return;const dateVal=document.getElementById('reserves-date-input').value;const dateStr=dateVal?dateVal+'T00:00:00.000Z':new Date().toISOString();const blocks=text.split(/\n\s*\n/);for(const block of blocks){const trimmed=block.trim();if(!trimmed)continue;const item={text:trimmed,dateAdded:dateStr,reason:''};await saveReserve(item);}textarea.value='';renderReserves();});
+        document.getElementById('add-recruits-btn').addEventListener('click',async()=>{const textarea=document.getElementById('new-recruits-input');const text=textarea.value.trim();if(!text)return;const blocks=text.split(/\n\s*\n/);for(const block of blocks){const trimmed=block.trim();if(!trimmed)continue;const item={text:trimmed,reply:false,dateAdded:new Date().toISOString()};await saveRecruit(item);}textarea.value='';renderRecruits();});
+        document.querySelectorAll('#db-panel .sub-tab').forEach(tab=>tab.addEventListener('click',function(){document.querySelectorAll('#db-panel .sub-tab').forEach(t=>t.classList.remove('active'));this.classList.add('active');document.getElementById('reserves-panel').style.display=this.dataset.db==='reserves'?'block':'none';document.getElementById('recruits-panel').style.display=this.dataset.db==='recruits'?'block':'none';}));
 
-        function renderDebt() { const tbody = document.querySelector('#debt-table tbody'); const totalSpan = document.getElementById('total-debt-amount'); tbody.innerHTML = ''; const contracts = ordersCache.filter(o => o.success === 'Да' && o.contractDate); let totalDebt = 0; const today = new Date(); today.setHours(0,0,0,0); contracts.forEach(o => { const cp = contractPayoutsCache[o.id] || {}; if (!cp.mainPaid) totalDebt += parseAmount(o.mainAmount); if (parseAmount(o.bonusAmount) > 0 && !cp.bonusPaid) totalDebt += parseAmount(o.bonusAmount); }); totalSpan.textContent = totalDebt > 0 ? `(${totalDebt.toLocaleString('ru-RU')} ₽)` : ''; contracts.forEach(order => { const cp = contractPayoutsCache[order.id] || {}; const mainAmount = parseAmount(order.mainAmount); const bonusAmount = parseAmount(order.bonusAmount); const cDate = new Date(order.contractDate + 'T00:00:00'); const getDays = (paidDate) => paidDate ? Math.ceil((new Date(paidDate+'T00:00:00') - cDate) / (1000*60*60*24)) : Math.ceil((today - cDate) / (1000*60*60*24)); const mainStatus = cp.mainPaid ? `<input type="date" class="debt-paid-date" data-id="${order.id}" data-type="main" value="${cp.mainPaidDate||''}" style="width:100px;" /> <span>(${getDays(cp.mainPaidDate)} дн.)</span>` : `Не выпл., ${getDays(cp.mainPaidDate)} дн.`; const bonusStatus = bonusAmount > 0 ? (cp.bonusPaid ? `<input type="date" class="debt-paid-date" data-id="${order.id}" data-type="bonus" value="${cp.bonusPaidDate||''}" style="width:100px;" /> <span>(${getDays(cp.bonusPaidDate)} дн.)</span>` : `Не выпл., ${getDays(cp.bonusPaidDate)} дн.`) : ''; const row = document.createElement('tr'); row.innerHTML = `<td style="text-align:left;">${escapeHtml(order.text||'')}</td><td>${order.contractDate}</td><td>${mainAmount.toLocaleString('ru-RU')} ₽</td><td><input type="checkbox" class="debt-paid-cb" data-id="${order.id}" data-type="main" ${cp.mainPaid?'checked':''} /></td><td>${mainStatus}</td><td>${bonusAmount > 0 ? bonusAmount.toLocaleString('ru-RU')+' ₽' : '—'}</td><td>${bonusAmount > 0 ? `<input type="checkbox" class="debt-paid-cb" data-id="${order.id}" data-type="bonus" ${cp.bonusPaid?'checked':''} />` : ''}</td><td>${bonusStatus}</td>`; tbody.appendChild(row); }); tbody.onclick = async (e) => { if (e.target.classList.contains('debt-paid-cb')) { const id = e.target.dataset.id; const type = e.target.dataset.type; const checked = e.target.checked; const cp = contractPayoutsCache[id] || {}; const todayStr = new Date().toISOString().slice(0,10); if (type==='main') { cp.mainPaid = checked; if (checked) cp.mainPaidDate = cp.mainPaidDate || todayStr; else delete cp.mainPaidDate; } else { cp.bonusPaid = checked; if (checked) cp.bonusPaidDate = cp.bonusPaidDate || todayStr; else delete cp.bonusPaidDate; } await saveContractPayout(id, cp); renderDebt(); } }; tbody.onchange = async (e) => { if (e.target.classList.contains('debt-paid-date')) { const id = e.target.dataset.id; const type = e.target.dataset.type; const cp = contractPayoutsCache[id] || {}; if (type==='main') cp.mainPaidDate = e.target.value || ''; else cp.bonusPaidDate = e.target.value || ''; await saveContractPayout(id, cp); } }; }
-
-        // ========== БАЗА (с фильтрами и сортировкой) ==========
-        // Сортировка для Запасов
-        document.getElementById('reserves-sort-desc').addEventListener('click', () => {
-            reservesSortOrder = 'desc';
-            document.getElementById('reserves-sort-desc').classList.add('active');
-            document.getElementById('reserves-sort-asc').classList.remove('active');
-            renderReserves();
-        });
-        document.getElementById('reserves-sort-asc').addEventListener('click', () => {
-            reservesSortOrder = 'asc';
-            document.getElementById('reserves-sort-asc').classList.add('active');
-            document.getElementById('reserves-sort-desc').classList.remove('active');
-            renderReserves();
-        });
-
-        // Фильтр по причине для Запасов
-        document.getElementById('reserves-reason-filter').addEventListener('change', () => {
-            reservesReasonFilter = document.getElementById('reserves-reason-filter').value;
-            renderReserves();
-        });
-
-        function renderReserves() {
-            const tbody = document.querySelector('#reserves-table tbody');
-            tbody.innerHTML = '';
-
-            // Применяем фильтр по причине
-            let filtered = [...reservesCache];
-            if (reservesReasonFilter) {
-                if (reservesReasonFilter === 'none') {
-                    filtered = filtered.filter(item => !item.reason || item.reason === '');
-                } else if (reservesReasonFilter === 'other') {
-                    filtered = filtered.filter(item => item.reason && !['Женщина','Офицер','Кат Д','Кат В'].includes(item.reason));
-                } else {
-                    filtered = filtered.filter(item => item.reason === reservesReasonFilter);
-                }
-            }
-
-            // Применяем сортировку по дате
-            filtered.sort((a, b) => {
-                const dateA = a.dateAdded ? new Date(a.dateAdded) : new Date(0);
-                const dateB = b.dateAdded ? new Date(b.dateAdded) : new Date(0);
-                return reservesSortOrder === 'desc' ? dateB - dateA : dateA - dateB;
-            });
-
-            document.getElementById('reserves-count').textContent = filtered.length ? `(${filtered.length})` : '';
-
-            filtered.forEach(item => {
-                const row = document.createElement('tr');
-                row.innerHTML = `<td><span class="editable-text" data-field="text" data-id="${item.id}">${escapeHtml(item.text||'')}</span></td><td><button class="copy-reserve-btn" data-text="${escapeHtml(item.text||'')}">📋</button> <button class="delete-reserve-btn" data-id="${item.id}">✕</button></td><td><input type="date" class="reserve-date" value="${item.dateAdded?item.dateAdded.substring(0,10):''}" data-id="${item.id}" /></td><td><select class="reserve-reason" data-id="${item.id}"><option value="">—</option><option value="Женщина" ${item.reason==='Женщина'?'selected':''}>Женщина</option><option value="Офицер" ${item.reason==='Офицер'?'selected':''}>Офицер</option><option value="Кат Д" ${item.reason==='Кат Д'?'selected':''}>Кат Д</option><option value="Кат В" ${item.reason==='Кат В'?'selected':''}>Кат В</option><option value="custom" ${item.reason&&!['Женщина','Офицер','Кат Д','Кат В'].includes(item.reason)?'selected':''}>Другое</option></select><input type="text" class="reserve-custom-reason" value="${item.reason&&!['Женщина','Офицер','Кат Д','Кат В'].includes(item.reason)?escapeHtml(item.reason):''}" data-id="${item.id}" style="display:${item.reason&&!['Женщина','Офицер','Кат Д','Кат В'].includes(item.reason)?'inline-block':'none'}; margin-top:3px;" placeholder="Свой текст" /></td>`;
-                tbody.appendChild(row);
-            });
-
-            tbody.querySelectorAll('.editable-text').forEach(span => {
-                span.addEventListener('click', () => {
-                    if (span.querySelector('textarea')) return;
-                    const id = span.dataset.id;
-                    const item = reservesCache.find(i => i.id === id);
-                    if (!item) return;
-                    const textarea = document.createElement('textarea');
-                    textarea.value = item.text || '';
-                    textarea.style.width = '100%';
-                    textarea.style.minHeight = '50px';
-                    span.replaceWith(textarea);
-                    textarea.focus();
-                    textarea.addEventListener('blur', async () => {
-                        item.text = textarea.value;
-                        await saveReserve(item);
-                        renderReserves();
-                    });
-                });
-            });
-
-            tbody.onclick = async (e) => {
-                if (e.target.classList.contains('delete-reserve-btn')) {
-                    const id = e.target.dataset.id;
-                    showConfirm('Удалить?', async () => { await deleteReserve(id); reservesCache = reservesCache.filter(i => i.id !== id); renderReserves(); });
-                } else if (e.target.classList.contains('copy-reserve-btn')) {
-                    await copyToClipboard(e.target.dataset.text);
-                    e.target.textContent = '✅';
-                    setTimeout(() => { e.target.textContent = '📋'; }, 1000);
-                }
-            };
-            tbody.onchange = async (e) => {
-                const id = e.target.dataset.id;
-                const item = reservesCache.find(i => i.id === id);
-                if (!item) return;
-                if (e.target.classList.contains('reserve-date')) {
-                    item.dateAdded = e.target.value + 'T00:00:00.000Z';
-                    await saveReserve(item);
-                } else if (e.target.classList.contains('reserve-reason')) {
-                    if (e.target.value === 'custom') {
-                        tbody.querySelector(`.reserve-custom-reason[data-id="${id}"]`).style.display = 'inline-block';
-                    } else {
-                        tbody.querySelector(`.reserve-custom-reason[data-id="${id}"]`).style.display = 'none';
-                        item.reason = e.target.value;
-                        await saveReserve(item);
-                    }
-                } else if (e.target.classList.contains('reserve-custom-reason')) {
-                    item.reason = e.target.value;
-                    await saveReserve(item);
-                }
-            };
-        }
-
-        function renderRecruits() {
-            const tbody = document.querySelector('#recruits-table tbody');
-            tbody.innerHTML = '';
-            recruitsCache.forEach(item => {
-                const row = document.createElement('tr');
-                row.innerHTML = `<td><span class="editable-text" data-field="text" data-id="${item.id}">${escapeHtml(item.text||'')}</span></td><td><button class="copy-recruit-btn" data-text="${escapeHtml(item.text||'')}">📋</button> <button class="delete-recruit-btn" data-id="${item.id}">✕</button></td><td><span class="editable-text" data-field="reply" data-id="${item.id}">${escapeHtml(item.reply||'')}</span></td>`;
-                tbody.appendChild(row);
-            });
-            document.getElementById('recruits-count').textContent = recruitsCache.length ? `(${recruitsCache.length})` : '';
-
-            tbody.querySelectorAll('.editable-text').forEach(span => {
-                span.addEventListener('click', () => {
-                    if (span.querySelector('input') || span.querySelector('textarea')) return;
-                    const id = span.dataset.id;
-                    const field = span.dataset.field;
-                    const item = recruitsCache.find(i => i.id === id);
-                    if (!item) return;
-                    const isText = field === 'text';
-                    const input = document.createElement(isText ? 'textarea' : 'input');
-                    if (!isText) input.type = 'text';
-                    input.value = item[field] || '';
-                    input.style.width = '100%';
-                    if (isText) input.style.minHeight = '50px';
-                    span.replaceWith(input);
-                    input.focus();
-                    input.addEventListener('blur', async () => {
-                        item[field] = input.value;
-                        await saveRecruit(item);
-                        renderRecruits();
-                    });
-                });
-            });
-
-            tbody.onclick = async (e) => {
-                if (e.target.classList.contains('delete-recruit-btn')) {
-                    const id = e.target.dataset.id;
-                    showConfirm('Удалить?', async () => { await deleteRecruit(id); recruitsCache = recruitsCache.filter(i => i.id !== id); renderRecruits(); });
-                } else if (e.target.classList.contains('copy-recruit-btn')) {
-                    await copyToClipboard(e.target.dataset.text);
-                    e.target.textContent = '✅';
-                    setTimeout(() => { e.target.textContent = '📋'; }, 1000);
-                }
-            };
-        }
-
-        document.getElementById('add-reserves-btn').addEventListener('click', async () => {
-            const textarea = document.getElementById('new-reserves-input');
-            const text = textarea.value.trim();
-            if (!text) return;
-            const dateVal = document.getElementById('reserves-date-input').value;
-            const dateStr = dateVal ? dateVal + 'T00:00:00.000Z' : new Date().toISOString();
-            const blocks = text.split(/\n\s*\n/);
-            for (const block of blocks) {
-                const trimmed = block.trim();
-                if (!trimmed) continue;
-                const item = { text: trimmed, dateAdded: dateStr, reason: '' };
-                await saveReserve(item);
-            }
-            textarea.value = '';
-            renderReserves();
-        });
-        document.getElementById('add-recruits-btn').addEventListener('click', async () => {
-            const textarea = document.getElementById('new-recruits-input');
-            const text = textarea.value.trim();
-            if (!text) return;
-            const blocks = text.split(/\n\s*\n/);
-            for (const block of blocks) {
-                const trimmed = block.trim();
-                if (!trimmed) continue;
-                const item = { text: trimmed, reply: '' };
-                await saveRecruit(item);
-            }
-            textarea.value = '';
-            renderRecruits();
-        });
-
-        document.querySelectorAll('#db-panel .sub-tab').forEach(tab => tab.addEventListener('click', function() { document.querySelectorAll('#db-panel .sub-tab').forEach(t => t.classList.remove('active')); this.classList.add('active'); document.getElementById('reserves-panel').style.display = this.dataset.db === 'reserves' ? 'block' : 'none'; document.getElementById('recruits-panel').style.display = this.dataset.db === 'recruits' ? 'block' : 'none'; }));
-
-        function renderAll() {
-            setSyncStatus('syncing');
-            try {
-                renderColumns();
-                renderPotentialWidget();
-                renderOrders();
-                if (document.getElementById('analytics-panel').style.display !== 'none') { renderOverallStats(); renderManagersStats(); renderScreenshots(); }
-                if (document.getElementById('payouts-panel').style.display !== 'none') { renderDebt(); renderDDS(); }
-                if (document.getElementById('db-panel').style.display !== 'none') { renderReserves(); renderRecruits(); }
-                autoSave();
-                setTimeout(() => setSyncStatus('online'), 300);
-            } catch (e) {
-                console.error('Ошибка renderAll:', e);
-                setSyncStatus('error');
-            }
-        }
+        function renderAll(){setSyncStatus('syncing');try{renderColumns();renderPotentialWidget();renderOrders();if(document.getElementById('analytics-panel').style.display!=='none'){renderOverallStats();renderManagersStats();renderScreenshots();}if(document.getElementById('payouts-panel').style.display!=='none'){renderDebt();renderDDS();}if(document.getElementById('db-panel').style.display!=='none'){renderReserves();renderRecruits();}autoSave();setTimeout(()=>setSyncStatus('online'),300);}catch(e){console.error('Ошибка renderAll:',e);setSyncStatus('error');}}
 
         // Экспорт / Импорт
-        window.exportData = async () => { const data = { columns: columnsCache, orders: ordersCache, potentialOrders: potentialCache, dds: ddsCache, contractPayouts: contractPayoutsCache, reserves: reservesCache, recruits: recruitsCache, managers: managersList, savedStatsRows, screenshots: screenshotsCache }; const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'}); const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='full_backup.json'; a.click(); };
-        window.exportOrders = () => { const blob = new Blob([JSON.stringify(ordersCache,null,2)],{type:'application/json'}); const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='orders_export.json'; a.click(); };
-        window.exportPayouts = async () => { const data = { dds: ddsCache, contractPayouts: contractPayoutsCache }; const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'}); const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='payouts_export.json'; a.click(); };
-        window.exportDB = async () => { const data = { reserves: reservesCache, recruits: recruitsCache }; const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'}); const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='db_export.json'; a.click(); };
-        window.importData = () => {
-            const input = document.createElement('input'); input.type='file'; input.accept='.json';
-            input.onchange = async (e) => { const file = e.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = async (re) => { try { const imported = JSON.parse(re.target.result); if(!imported?.columns||!imported?.orders) { alert('Неверный формат файла.'); return; } const batch = []; (await getDocs(columnsRef)).forEach(d => batch.push(deleteDoc(doc(columnsRef, d.id)))); (await getDocs(ordersRef)).forEach(d => batch.push(deleteDoc(doc(ordersRef, d.id)))); (await getDocs(potentialRef)).forEach(d => batch.push(deleteDoc(doc(potentialRef, d.id)))); (await getDocs(contractPayoutsRef)).forEach(d => batch.push(deleteDoc(doc(contractPayoutsRef, d.id)))); (await getDocs(ddsRef)).forEach(d => batch.push(deleteDoc(doc(ddsRef, d.id)))); (await getDocs(reservesRef)).forEach(d => batch.push(deleteDoc(doc(reservesRef, d.id)))); (await getDocs(recruitsRef)).forEach(d => batch.push(deleteDoc(doc(recruitsRef, d.id)))); (await getDocs(savedStatsRef)).forEach(d => batch.push(deleteDoc(doc(savedStatsRef, d.id)))); (await getDocs(screenshotsRef)).forEach(d => batch.push(deleteDoc(doc(screenshotsRef, d.id)))); await Promise.all(batch); for(const [name, phones] of Object.entries(imported.columns)) await setDoc(doc(columnsRef, name), { phones }); for(const order of imported.orders) await addDoc(ordersRef, order); for(const po of imported.potentialOrders||[]) await setDoc(doc(potentialRef, po.phone), po); if(imported.contractPayouts) for(const [id, data] of Object.entries(imported.contractPayouts)) await setDoc(doc(contractPayoutsRef, id), data); if(imported.dds) for(const item of imported.dds) await addDoc(ddsRef, item); if(imported.reserves) for(const item of imported.reserves) await addDoc(reservesRef, item); if(imported.recruits) for(const item of imported.recruits) await addDoc(recruitsRef, item); if(imported.managers) { managersList = imported.managers; await setDoc(doc(managersRef, 'list'), { list: managersList }); } if(imported.savedStatsRows) { for(const r of imported.savedStatsRows) await addDoc(savedStatsRef, r); } if(imported.screenshots) { for(const s of imported.screenshots) await addDoc(screenshotsRef, s); } alert('Импорт выполнен.'); location.reload(); } catch(ex) { alert('Ошибка импорта.'); } }; reader.readAsText(file); }; input.click(); };
+        window.exportData=async()=>{const data={columns:columnsCache,orders:ordersCache,potentialOrders:potentialCache,dds:ddsCache,contractPayouts:contractPayoutsCache,reserves:reservesCache,recruits:recruitsCache,managers:managersList,savedStatsRows,screenshots:screenshotsCache};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='full_backup.json';a.click();};
+        window.exportOrders=()=>{const blob=new Blob([JSON.stringify(ordersCache,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='orders_export.json';a.click();};
+        window.exportPayouts=async()=>{const data={dds:ddsCache,contractPayouts:contractPayoutsCache};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='payouts_export.json';a.click();};
+        window.exportDB=async()=>{const data={reserves:reservesCache,recruits:recruitsCache};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='db_export.json';a.click();};
+        window.importData=()=>{const input=document.createElement('input');input.type='file';input.accept='.json';input.onchange=async(e)=>{const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=async(re)=>{try{const imported=JSON.parse(re.target.result);if(!imported?.columns||!imported?.orders){alert('Неверный формат файла.');return;}const batch=[];(await getDocs(columnsRef)).forEach(d=>batch.push(deleteDoc(doc(columnsRef,d.id)))); (await getDocs(ordersRef)).forEach(d=>batch.push(deleteDoc(doc(ordersRef,d.id)))); (await getDocs(potentialRef)).forEach(d=>batch.push(deleteDoc(doc(potentialRef,d.id)))); (await getDocs(contractPayoutsRef)).forEach(d=>batch.push(deleteDoc(doc(contractPayoutsRef,d.id)))); (await getDocs(ddsRef)).forEach(d=>batch.push(deleteDoc(doc(ddsRef,d.id)))); (await getDocs(reservesRef)).forEach(d=>batch.push(deleteDoc(doc(reservesRef,d.id)))); (await getDocs(recruitsRef)).forEach(d=>batch.push(deleteDoc(doc(recruitsRef,d.id)))); (await getDocs(savedStatsRef)).forEach(d=>batch.push(deleteDoc(doc(savedStatsRef,d.id)))); (await getDocs(screenshotsRef)).forEach(d=>batch.push(deleteDoc(doc(screenshotsRef,d.id))));await Promise.all(batch);for(const [name,phones] of Object.entries(imported.columns))await setDoc(doc(columnsRef,name),{phones});for(const order of imported.orders)await addDoc(ordersRef,order);for(const po of imported.potentialOrders||[])await setDoc(doc(potentialRef,po.phone),po);if(imported.contractPayouts)for(const [id,data] of Object.entries(imported.contractPayouts))await setDoc(doc(contractPayoutsRef,id),data);if(imported.dds)for(const item of imported.dds)await addDoc(ddsRef,item);if(imported.reserves)for(const item of imported.reserves)await addDoc(reservesRef,item);if(imported.recruits)for(const item of imported.recruits)await addDoc(recruitsRef,item);if(imported.managers){managersList=imported.managers;await setDoc(doc(managersRef,'list'),{list:managersList});}if(imported.savedStatsRows){for(const r of imported.savedStatsRows)await addDoc(savedStatsRef,r);}if(imported.screenshots){for(const s of imported.screenshots)await addDoc(screenshotsRef,s);}alert('Импорт выполнен.');location.reload();}catch(ex){alert('Ошибка импорта.');}};reader.readAsText(file);};input.click();};
 
         // Переключение вкладок
-        const tabElements = document.querySelectorAll('.tab');
-        const contentElements = document.querySelectorAll('.content');
-        const settingsDropdown = document.getElementById('settings-dropdown');
-        const settingsToggleBtn = document.getElementById('settings-toggle-btn');
-        tabElements.forEach(tab => tab.addEventListener('click', async () => { tabElements.forEach(t => t.classList.remove('active')); tab.classList.add('active'); contentElements.forEach(c => c.style.display = 'none'); const panel = document.getElementById(tab.dataset.tab + '-panel'); if (panel) panel.style.display = 'block'; if (tab.dataset.tab === 'analytics') { renderOverallStats(); renderManagersStats(); renderScreenshots(); } else if (tab.dataset.tab === 'payouts') { renderDebt(); renderDDS(); } else if (tab.dataset.tab === 'db') { renderReserves(); renderRecruits(); } }));
-        settingsToggleBtn.addEventListener('click', () => settingsDropdown.style.display = settingsDropdown.style.display === 'block' ? 'none' : 'block');
-        window.addEventListener('click', (e) => { if (!e.target.matches('.settings-toggle')) settingsDropdown.style.display = 'none'; });
-
-        document.getElementById('add-orders-btn').addEventListener('click', async () => { const textarea = document.getElementById('new-orders-input'); const text = textarea.value.trim(); if (!text) return; await addOrdersFromText(text, document.getElementById('order-date-input').value ? new Date(document.getElementById('order-date-input').value).toISOString() : undefined); textarea.value = ''; });
-
+        const tabElements=document.querySelectorAll('.tab');const contentElements=document.querySelectorAll('.content');const settingsDropdown=document.getElementById('settings-dropdown');const settingsToggleBtn=document.getElementById('settings-toggle-btn');
+        tabElements.forEach(tab=>tab.addEventListener('click',async()=>{tabElements.forEach(t=>t.classList.remove('active'));tab.classList.add('active');contentElements.forEach(c=>c.style.display='none');const panel=document.getElementById(tab.dataset.tab+'-panel');if(panel)panel.style.display='block';if(tab.dataset.tab==='analytics'){renderOverallStats();renderManagersStats();renderScreenshots();}else if(tab.dataset.tab==='payouts'){renderDebt();renderDDS();}else if(tab.dataset.tab==='db'){renderReserves();renderRecruits();}}));
+        settingsToggleBtn.addEventListener('click',()=>settingsDropdown.style.display=settingsDropdown.style.display==='block'?'none':'block');
+        window.addEventListener('click',(e)=>{if(!e.target.matches('.settings-toggle'))settingsDropdown.style.display='none';});
+        document.getElementById('add-orders-btn').addEventListener('click',async()=>{const textarea=document.getElementById('new-orders-input');const text=textarea.value.trim();if(!text)return;await addOrdersFromText(text,document.getElementById('order-date-input').value?new Date(document.getElementById('order-date-input').value).toISOString():undefined);textarea.value='';});
         initializeAppData();
     </script>
 </body>
