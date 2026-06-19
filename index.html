@@ -838,10 +838,54 @@
             const queries = raw.split('\n').map(s => s.trim()).filter(s => s.length > 0);
             document.getElementById('search-phones').value = '';
             const results = [];
-            for (const q of queries) { for (const [colName, phones] of Object.entries(columnsCache)) { phones.forEach((item, idx) => { if (item.phone.includes(q)) results.push({ query: q, manager: colName, phone: item.phone, status: item.status || '—', leadIndex: idx, colName }); }); } }
+
+            // Нормализация: только цифры, ведущая 8 => 7
+            const normalizePhone = (phone) => {
+                let digits = phone.replace(/\D/g, '');
+                if (digits.startsWith('8') && digits.length === 11) {
+                    digits = '7' + digits.slice(1);
+                }
+                return digits;
+            };
+
+            for (const q of queries) {
+                const normalizedQ = normalizePhone(q);
+                for (const [colName, phones] of Object.entries(columnsCache)) {
+                    phones.forEach((item, idx) => {
+                        const normalizedPhone = normalizePhone(item.phone);
+                        if (normalizedPhone.includes(normalizedQ)) {
+                            results.push({
+                                query: q,
+                                manager: colName,
+                                phone: item.phone,
+                                status: item.status || '—',
+                                leadIndex: idx,
+                                colName
+                            });
+                        }
+                    });
+                }
+            }
+
             const resultsDiv = document.getElementById('search-results'); resultsDiv.innerHTML = results.length === 0 ? '<p>Ничего не найдено.</p>' : '';
-            if (results.length > 0) { const table = document.createElement('table'); table.className = 'search-results-table'; table.innerHTML = `<tr><th>Запрос</th><th>Менеджер</th><th>Номер</th><th>Текущий статус</th><th>Новый статус</th></tr>`; results.forEach(r => { const row = document.createElement('tr'); row.innerHTML = `<td>${escapeHtml(r.query)}</td><td>${escapeHtml(r.manager)}</td><td><a href="tel:${r.phone}" class="phone-link">${escapeHtml(r.phone)}</a></td><td>${escapeHtml(r.status)}</td><td><select class="status-change" data-manager="${escapeHtml(r.manager)}" data-phone="${escapeHtml(r.phone)}"><option value="">—</option><option value="НДЗ">НДЗ</option><option value="Провал">Провал</option><option value="Заявка">Заявка</option></select></td>`; table.appendChild(row); }); resultsDiv.appendChild(table);
-                document.querySelectorAll('.status-change').forEach(select => select.addEventListener('change', async function() { const manager = this.dataset.manager; const phone = this.dataset.phone; const newStatus = this.value; const phones = columnsCache[manager]; if (phones) { const lead = phones.find(p => p.phone === phone); if (lead) { lead.status = newStatus; await saveColumn(manager, phones); await syncPotentialOnStatusChange(phone, newStatus, manager); await cleanDuplicates(manager); renderAll(); } } })); }
+            if (results.length > 0) {
+                const table = document.createElement('table'); table.className = 'search-results-table';
+                table.innerHTML = `<tr><th>Запрос</th><th>Менеджер</th><th>Номер</th><th>Текущий статус</th><th>Новый статус</th></tr>`;
+                results.forEach(r => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `<td>${escapeHtml(r.query)}</td><td>${escapeHtml(r.manager)}</td><td><a href="tel:${r.phone}" class="phone-link">${escapeHtml(r.phone)}</a></td><td>${escapeHtml(r.status)}</td><td><select class="status-change" data-manager="${escapeHtml(r.manager)}" data-phone="${escapeHtml(r.phone)}"><option value="">—</option><option value="НДЗ">НДЗ</option><option value="Провал">Провал</option><option value="Заявка">Заявка</option></select></td>`;
+                    table.appendChild(row);
+                });
+                resultsDiv.appendChild(table);
+                document.querySelectorAll('.status-change').forEach(select => select.addEventListener('change', async function() {
+                    const manager = this.dataset.manager; const phone = this.dataset.phone; const newStatus = this.value;
+                    const phones = columnsCache[manager];
+                    if (phones) {
+                        const lead = phones.find(p => p.phone === phone);
+                        if (lead) { lead.status = newStatus; await saveColumn(manager, phones); await syncPotentialOnStatusChange(phone, newStatus, manager); await cleanDuplicates(manager); renderAll(); }
+                    }
+                }));
+            }
             document.getElementById('search-modal').style.display = 'flex';
         });
         document.getElementById('close-modal')?.addEventListener('click', () => { document.getElementById('search-modal').style.display = 'none'; });
@@ -855,7 +899,7 @@
         async function syncPotentialOnStatusChange(phone, newStatus, manager) { if (newStatus === 'Заявка') { if (!potentialCache.find(p => p.phone === phone && p.status === 'active')) { const newPo = { phone, comment: '', dateAdded: new Date().toISOString(), ndzCount: 0, ndzHistory: [], status: 'active' }; potentialCache.push(newPo); await savePotentialOrder(newPo); } } }
         document.getElementById('columns-container')?.addEventListener('dblclick', async (e) => { const headerSpan = e.target.closest('.column-header span'); if (!headerSpan) return; const managerName = headerSpan.textContent.split(' (')[0]; const newName = prompt('Новое имя менеджера:', managerName); if (newName && newName !== managerName) { const idx = managersList.indexOf(managerName); if (idx !== -1) managersList[idx] = newName; columnsCache[newName] = columnsCache[managerName] || []; delete columnsCache[managerName]; await deleteDoc(doc(columnsRef, managerName)); await saveManagers(); await saveColumn(newName, columnsCache[newName]); await cleanDuplicates(newName); renderAll(); } });
         document.getElementById('add-manager-menu-btn')?.addEventListener('click', async () => { const name = prompt('Имя нового менеджера:'); if (!name) return; if (managersList.includes(name)) { alert('Такой менеджер уже есть'); return; } managersList.push(name); columnsCache[name] = []; await saveManagers(); await saveColumn(name, []); renderAll(); });
-        // ========== ПОТЕНЦИАЛЬНЫЕ ЗАЯВКИ (исправлено редактирование комментария) ==========
+        // ========== ПОТЕНЦИАЛЬНЫЕ ЗАЯВКИ ==========
         document.getElementById('potential-table')?.addEventListener('click', async (e) => {
             const btn = e.target.closest('button'); if (!btn) return; const phone = btn.dataset.phone; if (!phone) return;
             const row = btn.closest('tr'); if (!row) return;
@@ -898,17 +942,11 @@
         document.addEventListener('paste', (e) => { const analyticsPanel = document.getElementById('analytics-panel'); if (!analyticsPanel || analyticsPanel.style.display === 'none') return; const items = e.clipboardData?.items; if (items) { for (const item of items) { if (item.type.startsWith('image/')) { const blob = item.getAsFile(); addScreenshotFromBlob(blob); e.preventDefault(); break; } } } });
         document.getElementById('screen-drop-zone')?.addEventListener('click', () => { document.getElementById('screen-drop-zone').focus(); });
 
-        // ========== ЗАЯВКИ (календарь с popup) ==========
-        // Кнопка показа календаря
-        document.getElementById('calendar-toggle-btn')?.addEventListener('click', () => {
-            const popup = document.getElementById('orders-calendar-popup');
-            if (popup) popup.classList.toggle('visible');
-        });
-
+        // ========== ЗАЯВКИ ==========
+        document.getElementById('calendar-toggle-btn')?.addEventListener('click', () => { const popup = document.getElementById('orders-calendar-popup'); if (popup) popup.classList.toggle('visible'); });
         function getOrdersFilters() { return { dateFrom: document.getElementById('order-filter-date-from')?.value || '', dateTo: document.getElementById('order-filter-date-to')?.value || '', contract: document.getElementById('order-filter-contract')?.value || '', searchText: (document.getElementById('order-filter-text')?.value || '').trim().toLowerCase(), calendarDate: selectedOrdersDate }; }
         function renderOrders() { const filters = getOrdersFilters(); let filtered = ordersCache.filter(order => { if (filters.dateFrom || filters.dateTo) { if (!order.dateAdded) return false; const d = order.dateAdded.substring(0,10); if (filters.dateFrom && d < filters.dateFrom) return false; if (filters.dateTo && d > filters.dateTo) return false; } if (filters.contract === 'Да' && order.success !== 'Да') return false; if (filters.contract === 'Нет' && order.success !== '') return false; if (filters.searchText) return (order.text || '').toLowerCase().includes(filters.searchText); if (filters.calendarDate) { if (!order.dateAdded) return false; return order.dateAdded.substring(0,10) === filters.calendarDate; } return true; }); filtered.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded)); const countEl = document.getElementById('orders-count'); if(countEl) countEl.textContent = `(${filtered.length})`; const tbody = document.querySelector('#orders-table tbody'); if(!tbody) return; tbody.innerHTML = ''; filtered.forEach(order => { if (order.contractAmount && !order.mainAmount && !order.bonusAmount) { order.mainAmount = order.contractAmount; order.bonusAmount = ''; } let duration = ''; if (order.success === 'Да' && order.dateAdded && order.contractDate) duration = Math.ceil((new Date(order.contractDate + 'T00:00:00') - new Date(order.dateAdded)) / (1000*60*60*24)); const row = document.createElement('tr'); row.innerHTML = `<td><span class="editable-order-text" data-id="${order.id}" style="cursor:pointer; white-space:pre-wrap;">${escapeHtml(order.text)}</span></td><td><button class="copy-order-btn" data-text="${order.text.replace(/"/g, '&quot;')}">📋</button> <button class="base-order-btn" data-id="${order.id}" data-text="${order.text.replace(/"/g, '&quot;')}">🗄️ База</button> <button class="delete-order-btn" data-id="${order.id}">✕</button></td><td><input type="date" class="order-date-input" value="${(order.dateAdded||'').substring(0,10)}" data-id="${order.id}" style="width:100%;" /></td><td><select class="manager-select" data-id="${order.id}" style="width:100%;">${managersList.map(m => `<option value="${escapeHtml(m)}" ${order.manager===m?'selected':''}>${escapeHtml(m)}</option>`).join('')}<option value="" ${!order.manager?'selected':''}>Не найден</option></select></td><td><select class="success-select" data-id="${order.id}"><option value="" ${!order.success?'selected':''}>—</option><option value="Да" ${order.success==='Да'?'selected':''}>Да</option></select></td><td><input type="text" class="order-main-amount" value="${escapeHtml(order.mainAmount||'')}" data-id="${order.id}" style="width:70px; display:${order.success==='Да'?'inline-block':'none'};" /></td><td><input type="text" class="order-bonus-amount" value="${escapeHtml(order.bonusAmount||'')}" data-id="${order.id}" style="width:70px; display:${order.success==='Да'?'inline-block':'none'};" /></td><td><input type="date" class="order-contract-date" value="${order.contractDate||''}" data-id="${order.id}" style="width:100px; display:${order.success==='Да'?'inline-block':'none'};" /></td><td style="display:${order.success==='Да'?'table-cell':'none'};">${duration||'—'}</td>`; tbody.appendChild(row); }); tbody.onclick = async (e) => { const target = e.target; if (target.classList.contains('delete-order-btn')) { e.stopPropagation(); const id = target.dataset.id; showConfirm('Удалить заявку?', async () => { await deleteOrder(id); ordersCache = ordersCache.filter(o => o.id !== id); renderAll(); }); } else if (target.classList.contains('copy-order-btn')) { await copyToClipboard(target.dataset.text); target.textContent = '✅'; setTimeout(() => { target.textContent = '📋'; }, 1000); } else if (target.classList.contains('base-order-btn')) { e.stopPropagation(); const id = target.dataset.id; const order = ordersCache.find(o => o.id === id); if (order) { const now = new Date().toISOString(); const item = { text: order.text, dateAdded: now, reason: '' }; await saveReserve(item); await deleteOrder(id); ordersCache = ordersCache.filter(o => o.id !== id); const displayText = order.text.length > 50 ? order.text.substring(0, 50) + '...' : order.text; showAutoImportStatus(`✅ "${displayText}" → База (Запасы)`, 3000); renderAll(); } } else if (target.classList.contains('editable-order-text')) { const span = target; if (span.querySelector('textarea')) return; const id = span.dataset.id; const order = ordersCache.find(o => o.id === id); if (!order) return; const textarea = document.createElement('textarea'); textarea.value = order.text; textarea.style.width = '100%'; textarea.style.minHeight = '50px'; span.replaceWith(textarea); textarea.focus(); textarea.addEventListener('blur', async () => { order.text = textarea.value; await saveOrder(order); renderAll(); }); } }; tbody.onchange = async (e) => { const target = e.target; const id = target.dataset.id; if (!id) return; const order = ordersCache.find(o => o.id === id); if (!order) return; if (target.classList.contains('manager-select')) { order.manager = target.value; await saveOrder(order); } else if (target.classList.contains('success-select')) { const prevSuccess = order.success; order.success = target.value; if (prevSuccess === 'Да' && order.success !== 'Да') { const cp = contractPayoutsCache[id]; if (cp && (cp.mainPaid || cp.bonusPaid)) { showConfirm('Снятие контракта удалит все внесённые выплаты. Продолжить?', async () => { await deleteContractPayout(id); await saveOrder(order); renderAll(); }); return; } } await saveOrder(order); renderAll(); } else if (target.classList.contains('order-main-amount')) { order.mainAmount = target.value; await saveOrder(order); } else if (target.classList.contains('order-bonus-amount')) { order.bonusAmount = target.value; await saveOrder(order); } else if (target.classList.contains('order-contract-date')) { order.contractDate = target.value; await saveOrder(order); renderAll(); } }; tbody.onkeydown = async (e) => { if (e.key === 'Enter' && e.target.classList.contains('order-date-input')) { const id = e.target.dataset.id; const order = ordersCache.find(o => o.id === id); if (!order) return; order.dateAdded = e.target.value ? e.target.value + 'T00:00:00.000Z' : null; await saveOrder(order); renderAll(); e.target.blur(); } }; renderOrdersCalendar(); }
 
-        // Календарь заявок
         function renderOrdersCalendar() {
             const calGrid = document.getElementById('ord-cal-grid'); if(!calGrid) return;
             const monthLabel = document.getElementById('ord-cal-month-label');
