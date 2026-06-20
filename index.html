@@ -1053,5 +1053,37 @@
         document.getElementById('add-orders-btn')?.addEventListener('click',async()=>{const textarea=document.getElementById('new-orders-input');if(!textarea)return;const text=textarea.value.trim();if(!text)return;const dateInput=document.getElementById('order-date-input');await addOrdersFromText(text,dateInput?.value?new Date(dateInput.value).toISOString():undefined);textarea.value='';});
         initializeAppData();
     </script>
+    <script>
+  (function() {
+    // Ждём появления Firestore (модуль загрузится асинхронно)
+    let attempts = 0;
+    const interval = setInterval(async () => {
+      attempts++;
+      const db = window.firebase?.firestore?.();
+      if (db) {
+        clearInterval(interval);
+        console.log('Экспорт запущен...');
+        const collections = ['columns','orders','potentialOrders','dds','reserves','recruits','contractPayouts','managers','savedStatsRows','screenshots'];
+        const result = {};
+        for (const col of collections) {
+          const snap = await db.collection(col).get();
+          result[col] = [];
+          snap.forEach(d => result[col].push({id: d.id, ...d.data()}));
+          console.log(`✅ ${col}: ${result[col].length}`);
+        }
+        // Скачиваем JSON-файл
+        const blob = new Blob([JSON.stringify(result, null, 2)], {type: 'application/json'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'firestore_backup.json';
+        a.click();
+        console.log('📥 firestore_backup.json скачан');
+      } else if (attempts > 50) {
+        clearInterval(interval);
+        console.error('Firestore не найден');
+      }
+    }, 500);
+  })();
+</script>
 </body>
 </html>
