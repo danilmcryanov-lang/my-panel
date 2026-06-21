@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Панель управления лидами v3.208</title>
+    <title>Панель управления лидами v3.209</title>
     <script type="importmap">
         { "imports": { "firebase/app": "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js", "firebase/firestore": "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js" } }
     </script>
@@ -183,6 +183,24 @@
         .base-order-btn { background: #8b5cf6 !important; color: white !important; border-color: #7c3aed !important; font-size: 10px; padding: 2px 5px; border-radius: 3px; cursor: pointer; }
         .dds-filters-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; padding: 6px 10px; background: var(--card-bg); border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
         .clear-calendar-filter-btn { padding: 2px 6px; font-size: 10px; background: #f1f5f9; border: 1px solid var(--border); border-radius: 3px; cursor: pointer; color: var(--text); margin-top: 4px; display: none; }
+        /* ===== СТИЛИ ДЛЯ ПОТЕНЦИАЛОК (НОВЫЙ ПОРЯДОК, МОБИЛЬНАЯ АДАПТАЦИЯ) ===== */
+        .potential-actions { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+        .potential-actions button {
+            font-size: 10px; padding: 2px 6px; border-radius: 4px;
+            border: 1px solid #ccc; background: white; cursor: pointer;
+            white-space: nowrap; display: inline-flex; align-items: center; gap: 2px;
+        }
+        @media (max-width: 600px) {
+            .potential-table td.col-manager,
+            .potential-table th.col-manager,
+            .potential-table td.col-date-added,
+            .potential-table th.col-date-added { display: none; }
+            .potential-actions { flex-direction: column; gap: 10px; }
+            .potential-actions button {
+                width: 100%; justify-content: center;
+                padding: 6px 8px; font-size: 11px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -238,7 +256,7 @@
             </div>
             <div class="potential-table-wrapper">
                 <table class="potential-table" id="potential-table">
-                    <thead><tr><th>Номер</th><th>Менеджер</th><th>Комментарий</th><th>Дата добавления</th><th>НДЗ</th><th>Действия</th></tr></thead>
+                    <thead><tr><th>Номер</th><th>Комментарий</th><th>НДЗ</th><th>Действия</th><th>Дата добавления</th><th>Менеджер</th></tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
@@ -273,6 +291,7 @@
     </div>
 
     <div class="content" id="orders-panel" style="display:none;">
+        <!-- Заявки (без изменений) -->
         <div class="add-order-block">
             <div style="margin-bottom:5px;"><label>Дата заявки:</label><input type="date" id="order-date-input" /></div>
             <textarea id="new-orders-input" placeholder="Вставьте заявку или несколько (разделяйте пустой строкой)"></textarea>
@@ -305,6 +324,7 @@
         </div>
     </div>
     <div class="content" id="analytics-panel" style="display:none;">
+        <!-- Аналитика (без изменений) -->
         <h3 style="margin-bottom:6px;">📊 Общая</h3>
         <div class="sub-tabs" id="overall-sub-tabs">
             <div class="sub-tab active" data-mode="contractDate">По дате подписания</div>
@@ -368,6 +388,7 @@
     </div>
 
     <div class="content" id="payouts-panel" style="display:none;">
+        <!-- Выплаты (без изменений) -->
         <h3>💰 Задолженность <span id="total-debt-amount"></span></h3>
         <div class="analytics-block debt-table-wrapper" id="debt-block">
             <table class="debt-table" id="debt-table">
@@ -406,6 +427,7 @@
     </div>
 
     <div class="content" id="db-panel" style="display:none;">
+        <!-- База (без изменений) -->
         <div class="sub-tabs">
             <div class="sub-tab active" data-db="reserves">Запасы <span id="reserves-count"></span></div>
             <div class="sub-tab" data-db="recruits">Рекруты <span id="recruits-count"></span></div>
@@ -975,9 +997,27 @@
                 const lastNdzText = lastNdz ? ` (${formatDateTime(lastNdz)})` : '';
                 const dateTimeStr = po.dateAdded ? formatDateTime(po.dateAdded) : '';
                 const row = document.createElement('tr');
-                row.innerHTML = `<td><a href="tel:${po.phone}" class="phone-link">${escapeHtml(po.phone)}</a></td><td>${escapeHtml(manager)}</td><td><textarea class="comment-input" data-phone="${escapeHtml(po.phone)}" rows="1">${escapeHtml(po.comment || '')}</textarea></td><td>${dateTimeStr}</td><td>${ndzCount > 0 ? `<span class="ndz-counter">${ndzCount}</span><span class="ndz-last-time">${lastNdzText}</span>` : ''}</td><td><button class="success-potential-btn" data-phone="${escapeHtml(po.phone)}">Успешно</button><button class="fail-potential-btn" data-phone="${escapeHtml(po.phone)}">Провал</button><button class="ndz-potential-btn" data-phone="${escapeHtml(po.phone)}">НДЗ</button><button class="defer-potential-btn" data-phone="${escapeHtml(po.phone)}">⏳ Отложить</button><button class="base-potential-btn" data-phone="${escapeHtml(po.phone)}">🗄️ База</button></td>`;
+                row.innerHTML = `
+                    <td><a href="tel:${po.phone}" class="phone-link">${escapeHtml(po.phone)}</a></td>
+                    <td><textarea class="comment-input" data-phone="${escapeHtml(po.phone)}" rows="1">${escapeHtml(po.comment || '')}</textarea></td>
+                    <td>${ndzCount > 0 ? `<span class="ndz-counter">${ndzCount}</span><span class="ndz-last-time">${lastNdzText}</span>` : ''}</td>
+                    <td>
+                        <div class="potential-actions">
+                            <button class="success-potential-btn" data-phone="${escapeHtml(po.phone)}">✅ Успешно</button>
+                            <button class="defer-potential-btn" data-phone="${escapeHtml(po.phone)}">⏳ Отложить</button>
+                            <button class="ndz-potential-btn" data-phone="${escapeHtml(po.phone)}">📵 НДЗ</button>
+                            <button class="base-potential-btn" data-phone="${escapeHtml(po.phone)}">🗄️ База</button>
+                            <button class="fail-potential-btn" data-phone="${escapeHtml(po.phone)}">❌ Провал</button>
+                        </div>
+                    </td>
+                    <td class="col-date-added">${dateTimeStr}</td>
+                    <td class="col-manager">${escapeHtml(manager)}</td>
+                `;
                 const textarea = row.querySelector('textarea');
-                textarea.addEventListener('input', () => { textarea.style.height = 'auto'; textarea.style.height = textarea.scrollHeight + 'px'; });
+                textarea.addEventListener('input', () => {
+                    textarea.style.height = 'auto';
+                    textarea.style.height = textarea.scrollHeight + 'px';
+                });
                 tbody.appendChild(row);
             });
             const deferredCount = potentialCache.filter(p => p.status === 'deferred').length;
