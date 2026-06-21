@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Панель управления лидами v3.206</title>
+    <title>Панель управления лидами v3.208</title>
     <script type="importmap">
         { "imports": { "firebase/app": "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js", "firebase/firestore": "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js" } }
     </script>
@@ -183,13 +183,6 @@
         .base-order-btn { background: #8b5cf6 !important; color: white !important; border-color: #7c3aed !important; font-size: 10px; padding: 2px 5px; border-radius: 3px; cursor: pointer; }
         .dds-filters-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; padding: 6px 10px; background: var(--card-bg); border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
         .clear-calendar-filter-btn { padding: 2px 6px; font-size: 10px; background: #f1f5f9; border: 1px solid var(--border); border-radius: 3px; cursor: pointer; color: var(--text); margin-top: 4px; display: none; }
-        .calendar-toggle-btn { padding: 4px 8px; font-size: 12px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 4px; cursor: pointer; color: var(--text); white-space: nowrap; }
-        .orders-calendar-popup { display: none; position: absolute; right: 0; top: 100%; z-index: 100; background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 8px; margin-top: 4px; }
-        .orders-calendar-popup.visible { display: block; }
-        @media (min-width: 768px) {
-            .orders-calendar-popup { position: static; display: block !important; box-shadow: none; border: none; padding: 0; margin-top: 0; }
-            .calendar-toggle-btn { display: none; }
-        }
     </style>
 </head>
 <body>
@@ -211,7 +204,6 @@
     </div>
 
     <div class="content" id="lids-panel">
-        <!-- Лиды (без изменений) -->
         <div class="search-row"><textarea id="search-phones" placeholder="Вставьте номера, каждый с новой строки"></textarea><button id="search-btn">Найти</button></div>
         <div class="manager-header">
             <h3 style="margin:0;">👥 Менеджеры</h3>
@@ -238,11 +230,11 @@
         </div>
         <div id="columns-container" class="columns-container"></div>
         <div class="potential-widget" id="potential-widget">
-            <!-- потенциалки -->
             <div style="display:flex; align-items:center; gap: 6px; margin-bottom: 6px;">
                 <h3 style="margin:0;">📌 Потенциальные заявки <span id="potential-count"></span></h3>
                 <button id="copy-all-potential" class="copy-all-potential-btn">📋 Копировать все номера</button>
                 <button id="toggle-deferred-btn" class="deferred-toggle">📅 Отложенные (<span id="deferred-count">0</span>)</button>
+                <button id="sales-scripts-btn" class="copy-all-potential-btn" style="background:#f0fdf4; border-color:#86efac; color:#166534;">📜 Скрипты</button>
             </div>
             <div class="potential-table-wrapper">
                 <table class="potential-table" id="potential-table">
@@ -288,7 +280,6 @@
         </div>
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
             <h3>📦 Константин <span id="orders-count"></span></h3>
-            <!-- Календарь убран -->
         </div>
         <div class="orders-filters-row">
             <div class="filter-group"><label>Дата с:</label><input type="date" id="order-filter-date-from" /></div>
@@ -302,14 +293,11 @@
             <div class="filter-group"><label>Контракт:</label><select id="order-filter-contract"><option value="">Все</option><option value="Да">Да</option><option value="Нет">Нет (пусто)</option></select></div>
             <div class="filter-group"><label>🔍 Текст заявки:</label><input type="text" id="order-filter-text" placeholder="Введите текст..." /></div>
         </div>
-        <div class="orders-content-row">
-            <div class="orders-table-wrapper" id="orders-table-wrapper">
-                <table class="orders-table" id="orders-table">
-                    <thead><tr><th>Заявка</th><th>Действия</th><th>Дата заявки</th><th>Менеджер</th><th>Контракт</th><th>Осн. сумма</th><th>Бонус</th><th>Дата подписания</th><th>Срок (дней)</th></tr></thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-            <!-- Календарь убран -->
+        <div class="orders-table-wrapper" id="orders-table-wrapper">
+            <table class="orders-table" id="orders-table">
+                <thead><tr><th>Заявка</th><th>Действия</th><th>Дата заявки</th><th>Менеджер</th><th>Контракт</th><th>Осн. сумма</th><th>Бонус</th><th>Дата подписания</th><th>Срок (дней)</th></tr></thead>
+                <tbody></tbody>
+            </table>
         </div>
         <div class="amocrm-form-container">
             <h3>📋 Форма передачи заявок</h3>
@@ -317,7 +305,6 @@
         </div>
     </div>
     <div class="content" id="analytics-panel" style="display:none;">
-        <!-- Аналитика без изменений -->
         <h3 style="margin-bottom:6px;">📊 Общая</h3>
         <div class="sub-tabs" id="overall-sub-tabs">
             <div class="sub-tab active" data-mode="contractDate">По дате подписания</div>
@@ -381,7 +368,6 @@
     </div>
 
     <div class="content" id="payouts-panel" style="display:none;">
-        <!-- Выплаты без изменений -->
         <h3>💰 Задолженность <span id="total-debt-amount"></span></h3>
         <div class="analytics-block debt-table-wrapper" id="debt-block">
             <table class="debt-table" id="debt-table">
@@ -420,7 +406,6 @@
     </div>
 
     <div class="content" id="db-panel" style="display:none;">
-        <!-- База без изменений -->
         <div class="sub-tabs">
             <div class="sub-tab active" data-db="reserves">Запасы <span id="reserves-count"></span></div>
             <div class="sub-tab" data-db="recruits">Рекруты <span id="recruits-count"></span></div>
@@ -508,6 +493,17 @@
         </div>
     </div>
 
+    <div id="scripts-modal" class="modal" style="display:none;">
+        <div class="modal-content" style="max-width:600px;">
+            <h3>📜 Скрипты для продаж</h3>
+            <textarea id="scripts-textarea" style="width:100%; height:300px; padding:10px; font-family: inherit; font-size:12px; border-radius:6px; border:1px solid var(--border); background:var(--card-bg); color:var(--text); resize:vertical;"></textarea>
+            <div style="text-align:right; margin-top:10px;">
+                <button id="save-scripts-btn" style="padding:5px 12px; background:var(--primary); color:white; border:none; border-radius:4px; cursor:pointer; margin-right:6px;">💾 Сохранить</button>
+                <button id="close-scripts-btn" style="padding:5px 12px; background:#e2e8f0; border:1px solid var(--border); border-radius:4px; cursor:pointer; color:var(--text);">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from 'firebase/app';
         import { getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, deleteDoc, query, orderBy, where, limit } from 'firebase/firestore';
@@ -533,6 +529,7 @@
         const managersRef = collection(db, 'managers');
         const savedStatsRef = collection(db, 'savedStatsRows');
         const screenshotsRef = collection(db, 'screenshots');
+        const salesScriptsRef = collection(db, 'salesScripts');
 
         const VK_TOKEN = "vk1.a.8AX6RXkXgWNFA0Wz14kvGvvo2TSJ8Gaz0ufKaHr6vPuVC9lPPwLzUaEizGfxuwdn3E2G2TiegDHJRK8U1HqCY7j6ueGxALvbYglleS2eLsOaVTs5srDYBKOPC3a-ImjUbzpvb5ASf4BQi3ZvovOh3y8oPTpYT09FFPyCijZbpVYIGU_l052iNSOvVRRJlpL2x7djMEwaJRE-BhXQezsIOQ";
         const VK_USER_ID = "1106968465";
@@ -547,6 +544,7 @@
         let managersList = [];
         let savedStatsRows = [];
         let screenshotsCache = [];
+        let salesScriptsText = '';
 
         let ordersLoaded = false;
         let analyticsLoaded = false;
@@ -581,6 +579,7 @@
                 if (data.managers) managersList = data.managers;
                 if (data.savedStatsRows) savedStatsRows = data.savedStatsRows;
                 if (data.screenshots) screenshotsCache = data.screenshots;
+                if (data.salesScriptsText) salesScriptsText = data.salesScriptsText;
                 ordersLoaded = true; analyticsLoaded = true; payoutsLoaded = true; dbLoaded = true;
             } catch(e) {}
         }
@@ -629,7 +628,8 @@
             const data = {
                 columns: columnsCache, orders: ordersCache, potentialOrders: potentialCache,
                 dds: ddsCache, contractPayouts: contractPayoutsCache, reserves: reservesCache,
-                recruits: recruitsCache, managers: managersList, savedStatsRows, screenshots: screenshotsCache
+                recruits: recruitsCache, managers: managersList, savedStatsRows, screenshots: screenshotsCache,
+                salesScriptsText: salesScriptsText
             };
             localStorage.setItem('crm-autosave', JSON.stringify(data));
             const el = document.getElementById('auto-save-status');
@@ -661,9 +661,10 @@
         async function loadLidsData() {
             setSyncStatus('syncing');
             try {
-                const [colsSnap, potSnap] = await Promise.all([
+                const [colsSnap, potSnap, scriptSnap] = await Promise.all([
                     getDocs(columnsRef),
-                    getDocs(potentialRef)
+                    getDocs(potentialRef),
+                    getDoc(doc(salesScriptsRef, 'current'))
                 ]);
                 colsSnap.forEach(d => columnsCache[d.id] = d.data().phones || []);
                 for (const name of managersList) if (!columnsCache[name]) columnsCache[name] = [];
@@ -673,6 +674,11 @@
                     if (!data.ndzHistory && data.ndzCount > 0) data.ndzHistory = [];
                     potentialCache.push({ phone: d.id, ...data });
                 });
+                if (scriptSnap.exists()) {
+                    salesScriptsText = scriptSnap.data().text || '';
+                } else {
+                    salesScriptsText = '';
+                }
                 await processDeferredReactivations();
                 setSyncStatus('online');
             } catch(e) { console.error(e); setSyncStatus('offline'); }
@@ -832,6 +838,11 @@
         }
         async function deleteSavedStatsRow(id) { await deleteDoc(doc(savedStatsRef, id)); savedStatsRows = savedStatsRows.filter(r => r.id !== id); autoSave(); }
         async function saveManagers() { await setDoc(doc(managersRef, 'list'), { list: managersList }); autoSave(); }
+        async function saveSalesScripts(text) {
+            salesScriptsText = text;
+            await setDoc(doc(salesScriptsRef, 'current'), { text });
+            autoSave();
+        }
 
         async function addToReserves(comment, phone) {
             const now = new Date().toISOString();
@@ -839,6 +850,7 @@
             const item = { text, dateAdded: now, reason: '' };
             await saveReserve(item);
         }
+
         // ========== РЕНДЕРИНГ ==========
         function renderColumns() {
             const container = document.getElementById('columns-container');
@@ -1642,42 +1654,76 @@
             }
         });
 
-        // Потенциалки
+        // ★ ОПТИМИСТИЧНОЕ ОБНОВЛЕНИЕ ДЛЯ ПОТЕНЦИАЛОК ★
         document.getElementById('potential-table')?.addEventListener('click', async (e) => {
             const btn = e.target.closest('button');
             if (!btn) return;
             const phone = btn.dataset.phone;
             if (!phone) return;
+
+            const row = btn.closest('tr');
             const po = potentialCache.find(p => p.phone === phone && p.status === 'active');
             if (!po) return;
+
+            if (row) row.style.display = 'none';
+
             if (btn.classList.contains('success-potential-btn')) {
-                const text = `${po.comment ? po.comment + ' ' : ''}${phone}`;
-                const manager = findManagerByPhone(phone) || '';
-                const newOrder = { text, dateAdded: new Date().toISOString(), manager, success: '', mainAmount: '', bonusAmount: '' };
-                await saveOrder(newOrder);
                 potentialCache = potentialCache.filter(p => p.phone !== phone || p.status !== 'active');
-                await deletePotentialOrder(phone);
-                renderPotentialWidget();
-                if (ordersLoaded) { await loadOrdersData(getOrdersFilters()); renderOrders(); }
+                (async () => {
+                    try {
+                        const text = `${po.comment ? po.comment + ' ' : ''}${po.phone}`;
+                        const manager = findManagerByPhone(po.phone) || '';
+                        const newOrder = { text, dateAdded: new Date().toISOString(), manager, success: '', mainAmount: '', bonusAmount: '' };
+                        await saveOrder(newOrder);
+                        await deletePotentialOrder(phone);
+                        if (ordersLoaded) {
+                            await loadOrdersData(getOrdersFilters());
+                            renderOrders();
+                        }
+                    } catch (e) {
+                        if (row) row.style.display = '';
+                        potentialCache.push(po);
+                        renderPotentialWidget();
+                        alert('Ошибка при сохранении. Проверьте подключение.');
+                    }
+                })();
             } else if (btn.classList.contains('fail-potential-btn')) {
                 potentialCache = potentialCache.filter(p => p.phone !== phone || p.status !== 'active');
-                await deletePotentialOrder(phone);
-                renderPotentialWidget();
+                (async () => {
+                    try {
+                        await deletePotentialOrder(phone);
+                    } catch (e) {
+                        if (row) row.style.display = '';
+                        potentialCache.push(po);
+                        renderPotentialWidget();
+                        alert('Ошибка при сохранении. Проверьте подключение.');
+                    }
+                })();
             } else if (btn.classList.contains('ndz-potential-btn')) {
+                if (row) row.style.display = '';
                 po.ndzCount = (po.ndzCount || 0) + 1;
                 if (!po.ndzHistory) po.ndzHistory = [];
                 po.ndzHistory.push(new Date().toISOString());
                 await savePotentialOrder(po);
                 renderPotentialWidget();
             } else if (btn.classList.contains('defer-potential-btn')) {
+                if (row) row.style.display = '';
                 document.getElementById('defer-date-input').value = '';
                 document.getElementById('defer-modal').style.display = 'flex';
                 document.getElementById('confirm-defer-btn').dataset.phone = phone;
             } else if (btn.classList.contains('base-potential-btn')) {
-                await addToReserves(po.comment || '', phone);
                 potentialCache = potentialCache.filter(p => p.phone !== phone || p.status !== 'active');
-                await deletePotentialOrder(phone);
-                renderPotentialWidget();
+                (async () => {
+                    try {
+                        await addToReserves(po.comment || '', phone);
+                        await deletePotentialOrder(phone);
+                    } catch (e) {
+                        if (row) row.style.display = '';
+                        potentialCache.push(po);
+                        renderPotentialWidget();
+                        alert('Ошибка при сохранении. Проверьте подключение.');
+                    }
+                })();
             }
         });
 
@@ -1717,6 +1763,23 @@
                 renderDeferredCalendar();
                 renderDeferredList();
             }
+        });
+
+        // ★ СКРИПТЫ ★
+        document.getElementById('sales-scripts-btn')?.addEventListener('click', () => {
+            document.getElementById('scripts-textarea').value = salesScriptsText;
+            document.getElementById('scripts-modal').style.display = 'flex';
+        });
+
+        document.getElementById('close-scripts-btn')?.addEventListener('click', () => {
+            document.getElementById('scripts-modal').style.display = 'none';
+        });
+
+        document.getElementById('save-scripts-btn')?.addEventListener('click', async () => {
+            const text = document.getElementById('scripts-textarea').value;
+            await saveSalesScripts(text);
+            document.getElementById('scripts-modal').style.display = 'none';
+            alert('Скрипты сохранены');
         });
 
         document.getElementById('deferred-list')?.addEventListener('click', async (e) => {
@@ -2259,7 +2322,8 @@
             const data = {
                 columns: columnsCache, orders: ordersCache, potentialOrders: potentialCache,
                 dds: ddsCache, contractPayouts: contractPayoutsCache, reserves: reservesCache,
-                recruits: recruitsCache, managers: managersList, savedStatsRows, screenshots: screenshotsCache
+                recruits: recruitsCache, managers: managersList, savedStatsRows, screenshots: screenshotsCache,
+                salesScriptsText: salesScriptsText
             };
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
             const a = document.createElement('a');
@@ -2349,6 +2413,10 @@
                         if (imported.screenshots)
                             for (const s of imported.screenshots)
                                 await addDoc(screenshotsRef, s);
+                        if (imported.salesScriptsText) {
+                            salesScriptsText = imported.salesScriptsText;
+                            await setDoc(doc(salesScriptsRef, 'current'), { text: salesScriptsText });
+                        }
                         alert('Импорт выполнен. Перезагрузите страницу.');
                         location.reload();
                     } catch (ex) {
@@ -2391,6 +2459,7 @@
                 if (data.managers) managersList = data.managers;
                 if (data.savedStatsRows) savedStatsRows = data.savedStatsRows;
                 if (data.screenshots) screenshotsCache = data.screenshots;
+                if (data.salesScriptsText) salesScriptsText = data.salesScriptsText;
                 ordersLoaded = true; analyticsLoaded = true; payoutsLoaded = true; dbLoaded = true;
                 renderColumns();
                 renderPotentialWidget();
