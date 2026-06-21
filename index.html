@@ -2,8 +2,8 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Панель управления лидами v3.212</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Панель управления лидами v3.214</title>
     <script type="importmap">
         { "imports": { "firebase/app": "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js", "firebase/firestore": "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js" } }
     </script>
@@ -59,9 +59,7 @@
         .potential-table th, .potential-table td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: center; vertical-align: middle; }
         .potential-table th { background: #f8fafc; font-weight: 600; color: var(--text); position: sticky; top: 0; z-index: 2; }
         body.dark .potential-table th { background: #475569; }
-        /* Номер и комментарий по левому краю, остальное по центру */
         .potential-table td:nth-child(1), .potential-table td:nth-child(2) { text-align: left; }
-        /* Комментарий – шире на 50% */
         .potential-table td:nth-child(2) { min-width: 180px; }
         .potential-table td textarea.comment-input { width: 100%; min-height: 60px; padding: 4px; border: 1px solid #ccc; border-radius: 3px; background: var(--card-bg); color: var(--text); font-size: 11px; resize: vertical; word-wrap: break-word; overflow-wrap: break-word; font-family: inherit; }
         .potential-table button { padding: 2px 5px; margin-right: 2px; border-radius: 3px; border: 1px solid #ccc; background: white; cursor: pointer; font-size: 10px; color: #1e293b; }
@@ -185,13 +183,14 @@
         .amocrm-form-iframe { width: 100%; height: 140px; border: 1px solid var(--border); border-radius: 8px; }
         .dds-filters-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; padding: 6px 10px; background: var(--card-bg); border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
         .clear-calendar-filter-btn { padding: 2px 6px; font-size: 10px; background: #f1f5f9; border: 1px solid var(--border); border-radius: 3px; cursor: pointer; color: var(--text); margin-top: 4px; display: none; }
-        /* ===== НОВЫЕ СТИЛИ ДЛЯ ПОТЕНЦИАЛОК ===== */
+        /* ===== КНОПКИ ДЕЙСТВИЙ (АДАПТИВНЫЕ) ===== */
         .potential-actions { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; justify-content: center; }
         .potential-actions button {
             font-size: 10px; padding: 3px 7px; border-radius: 4px;
             border: 1px solid #ccc; background: white; cursor: pointer;
             white-space: nowrap; display: inline-flex; align-items: center; gap: 3px;
             color: #1e293b;
+            /* на десктопе ширина по содержимому */
         }
         body.dark .potential-actions button { background: #334155; color: #f1f5f9; border-color: #64748b; }
         .potential-actions button.base-potential-btn { background: white; color: #1e293b; border-color: #ccc; }
@@ -204,6 +203,7 @@
             .potential-actions button {
                 width: auto; justify-content: center;
                 padding: 4px 4px; font-size: 9px;
+                min-width: 80px; /* на телефоне все одинаковой ширины */
             }
         }
     </style>
@@ -606,7 +606,6 @@
                 ordersLoaded = true; analyticsLoaded = true; payoutsLoaded = true; dbLoaded = true;
             } catch(e) {}
         }
-
         function parseAmount(str) { return parseFloat((str||'0').toString().replace(/[^\d.,]/g, '').replace(',', '.')) || 0; }
         function escapeHtml(text) { const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }; return String(text).replace(/[&<>"']/g, m => map[m]); }
         async function copyToClipboard(text) { try { await navigator.clipboard.writeText(text); } catch { const tmp = document.createElement('textarea'); tmp.value = text; document.body.appendChild(tmp); tmp.select(); document.execCommand('copy'); document.body.removeChild(tmp); } }
@@ -1515,7 +1514,6 @@
             setElVal(dateFromId, bounds.firstDay);
             setElVal(dateToId, bounds.lastDay);
         }
-
         // ========== ОБРАБОТЧИКИ СОБЫТИЙ ==========
         document.getElementById('refresh-btn')?.addEventListener('click', async () => {
             const activeTab = document.querySelector('.tab.active')?.dataset.tab;
