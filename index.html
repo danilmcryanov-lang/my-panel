@@ -3,15 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Панель управления лидами v3.214</title>
+    <title>Панель управления лидами v3.215</title>
     <script type="importmap">
         { "imports": { "firebase/app": "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js", "firebase/firestore": "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js" } }
     </script>
     <style>
-        :root { --bg: #f4f6fb; --card-bg: #ffffff; --text: #1e293b; --border: #e2e8f0; --primary: #3b82f6; --status-ndz: #f59e0b; --status-fail: #ef4444; --status-order: #10b981; --defer-bg: #fef9c3; }
-        body.dark { --bg: #1e293b; --card-bg: #334155; --text: #f1f5f9; --border: #475569; --primary: #60a5fa; --defer-bg: #854d0e; }
+        :root {
+            --bg: #f4f6fb; --card-bg: #ffffff; --text: #1e293b; --border: #e2e8f0;
+            --primary: #3b82f6; --primary-hover: #2563eb;
+            --status-ndz: #f59e0b; --status-fail: #ef4444; --status-order: #10b981;
+            --defer-bg: #fef9c3;
+            --btn-bg: #f1f5f9; --btn-border: #cbd5e1; --btn-text: #334155;
+            --btn-hover-bg: #e2e8f0;
+        }
+        body.dark {
+            --bg: #1e293b; --card-bg: #334155; --text: #f1f5f9; --border: #475569;
+            --primary: #60a5fa; --defer-bg: #854d0e;
+            --btn-bg: #475569; --btn-border: #64748b; --btn-text: #e2e8f0;
+            --btn-hover-bg: #556271;
+        }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); transition: background 0.3s, color 0.3s; }
+
+        /* Единый стиль для всех обычных кнопок */
+        .btn {
+            padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500;
+            background: var(--btn-bg); color: var(--btn-text); border: 1px solid var(--btn-border);
+            white-space: nowrap; transition: background 0.15s; display: inline-flex; align-items: center; gap: 4px;
+        }
+        .btn:hover { background: var(--btn-hover-bg); }
+        .btn.primary { background: var(--primary); color: white; border-color: var(--primary); }
+        .btn.primary:hover { background: var(--primary-hover); }
+        .btn.danger { background: #fee2e2; color: #b91c1c; border-color: #fecaca; }
+        body.dark .btn.danger { background: #7f1d1d; color: #fca5a5; border-color: #991b1b; }
+        .btn.small { padding: 3px 8px; font-size: 10px; border-radius: 4px; }
+        .btn.xsmall { padding: 2px 6px; font-size: 9px; border-radius: 3px; }
+
         .tabs-bar { position: sticky; top: 0; z-index: 998; background: var(--bg); padding: 6px 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
         .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
         .tab { padding: 6px 12px; background: #e2e8f0; border-radius: 6px; cursor: pointer; font-weight: 500; transition: 0.2s; font-size: 12px; color: #1e293b; }
@@ -36,8 +63,7 @@
         .settings-dropdown { position: relative; display: inline-block; }
         .settings-dropdown-content { display: none; position: absolute; background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 1000; padding: 4px; min-width: 180px; right: 0; }
         .settings-dropdown-content button { display: block; width: 100%; padding: 4px 8px; background: transparent; border: none; cursor: pointer; text-align: left; font-size: 11px; color: var(--text); }
-        .settings-dropdown-content button:hover { background: #f1f5f9; }
-        body.dark .settings-dropdown-content button:hover { background: #475569; }
+        .settings-dropdown-content button:hover { background: var(--btn-hover-bg); }
         .columns-container { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-start; }
         .column { background: var(--card-bg); border-radius: 8px; padding: 5px; min-width: 200px; max-width: 250px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); display: flex; flex-direction: column; gap: 2px; }
         .column-header { display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 12px; color: var(--text); }
@@ -51,8 +77,6 @@
         .add-phones { display: flex; flex-direction: column; gap: 2px; margin-top: 3px; border-top: 1px solid var(--border); padding-top: 3px; }
         .add-phones textarea { resize: vertical; min-height: 35px; font-size: 11px; padding: 3px; border-radius: 4px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text); }
         .add-phones button { padding: 3px 6px; background: var(--primary); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 500; font-size: 10px; }
-        .copy-btn { padding: 1px 4px; font-size: 9px; background: #f1f5f9; border: 1px solid var(--border); border-radius: 3px; cursor: pointer; color: var(--text); }
-        .delete-all-btn { padding: 1px 4px; font-size: 9px; background: #fee2e2; border: 1px solid #fecaca; border-radius: 3px; cursor: pointer; color: #b91c1c; margin-left: 3px; }
         .potential-widget { margin-top: 18px; background: var(--card-bg); border-radius: 10px; padding: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); overflow-x: auto; }
         .potential-table-wrapper { max-height: 55vh; overflow-y: auto; margin-bottom: 8px; border: 1px solid var(--border); border-radius: 6px; }
         .potential-table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 750px; }
@@ -62,19 +86,26 @@
         .potential-table td:nth-child(1), .potential-table td:nth-child(2) { text-align: left; }
         .potential-table td:nth-child(2) { min-width: 180px; }
         .potential-table td textarea.comment-input { width: 100%; min-height: 60px; padding: 4px; border: 1px solid #ccc; border-radius: 3px; background: var(--card-bg); color: var(--text); font-size: 11px; resize: vertical; word-wrap: break-word; overflow-wrap: break-word; font-family: inherit; }
-        .potential-table button { padding: 2px 5px; margin-right: 2px; border-radius: 3px; border: 1px solid #ccc; background: white; cursor: pointer; font-size: 10px; color: #1e293b; }
         .ndz-counter { background: var(--status-ndz); color: white; border-radius: 8px; padding: 1px 5px; font-size: 9px; font-weight: bold; }
         .ndz-last-time { font-size: 9px; color: #b45309; margin-left: 2px; }
         .deferred-row { background: var(--defer-bg); }
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center; }
         .modal-content { background: var(--card-bg); padding: 12px; border-radius: 10px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; color: var(--text); }
-        .orders-filters-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; background: var(--card-bg); border-radius: 8px; padding: 6px 10px; margin-bottom: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
-        .orders-content-row { display: flex; gap: 12px; align-items: flex-start; position: relative; }
+        .orders-filters-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; background: var(--card-bg); border-radius: 8px; padding: 6px 10px; margin-bottom: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); display: none; }
+        .orders-filters-row.visible { display: flex; }
         .orders-table-wrapper { background: var(--card-bg); border-radius: 8px; padding: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); max-height: 60vh; overflow: auto; flex: 1; min-width: 0; }
         .orders-table { width: 100%; border-collapse: collapse; font-size: 11px; }
         .orders-table th, .orders-table td { padding: 5px 7px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
         .orders-table th { background: #f8fafc; font-weight: 600; position: sticky; top: 0; z-index: 2; color: var(--text); }
         body.dark .orders-table th { background: #475569; }
+        .orders-table th:nth-child(1) { width: 40%; }
+        .orders-table th:nth-child(2) { width: 12%; }
+        .orders-table th:nth-child(3) { width: 10%; }
+        .orders-table th:nth-child(4) { width: 10%; }
+        .orders-table th:nth-child(5) { width: 6%; }
+        .orders-table th:nth-child(6) { width: 8%; }
+        .orders-table th:nth-child(7) { width: 6%; }
+        .orders-table th:nth-child(8) { width: 8%; }
         .orders-table select, .orders-table input[type="text"], .orders-table input[type="date"] { font-size: 10px; padding: 1px 3px; border-radius: 3px; border: 1px solid #ccc; background: var(--card-bg); color: var(--text); }
         .add-order-block { margin-bottom: 12px; background: var(--card-bg); padding: 10px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
         .add-order-block textarea { width: 100%; min-height: 60px; font-size: 12px; padding: 5px; border-radius: 4px; border: 1px solid var(--border); resize: vertical; background: var(--card-bg); color: var(--text); }
@@ -90,8 +121,7 @@
         .dds-table td:last-child { border-left: 2px solid var(--border); }
         .dds-table td { position: relative; }
         .dds-table .editable-dds { cursor: pointer; min-height: 18px; padding: 2px 4px; border-radius: 3px; display: block; }
-        .dds-table .editable-dds:hover { background: #f1f5f9; }
-        body.dark .dds-table .editable-dds:hover { background: #475569; }
+        .dds-table .editable-dds:hover { background: var(--btn-hover-bg); }
         .dds-table textarea, .dds-table input { width: 100%; padding: 2px; border: 1px solid #ccc; border-radius: 3px; font-size: 11px; background: var(--card-bg); color: var(--text); }
         .dds-table textarea { resize: vertical; min-height: 30px; }
         .add-dds-block { margin-top: 12px; background: var(--card-bg); padding: 10px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
@@ -105,8 +135,7 @@
         .reserves-table th, .recruits-table th { background: #f8fafc; font-weight: 600; color: var(--text); position: sticky; top: 0; z-index: 2; white-space: nowrap; }
         body.dark .reserves-table th, body.dark .recruits-table th { background: #475569; }
         .reserves-table .editable-text, .recruits-table .editable-text { cursor: pointer; min-height: 18px; padding: 2px 4px; border-radius: 3px; white-space: pre-wrap; display: inline-block; }
-        .reserves-table .editable-text:hover, .recruits-table .editable-text:hover { background: #f1f5f9; }
-        body.dark .reserves-table .editable-text:hover, body.dark .recruits-table .editable-text:hover { background: #475569; }
+        .reserves-table .editable-text:hover, .recruits-table .editable-text:hover { background: var(--btn-hover-bg); }
         .add-db-block { margin-bottom: 12px; background: var(--card-bg); padding: 10px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
         .add-db-block textarea { width: 100%; min-height: 60px; font-size: 12px; padding: 5px; border-radius: 4px; border: 1px solid var(--border); resize: vertical; background: var(--card-bg); color: var(--text); }
         .add-db-block button { margin-top: 5px; padding: 4px 8px; background: var(--primary); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 500; font-size: 12px; }
@@ -127,28 +156,21 @@
         .confirm-box button { margin: 6px 3px; padding: 5px 14px; border-radius: 4px; cursor: pointer; border: none; }
         .confirm-yes { background: #ef4444; color: white; }
         .confirm-no { background: #e2e8f0; color: #1e293b; }
-        .copy-all-potential-btn { margin-left: 8px; padding: 2px 8px; font-size: 11px; background: #f1f5f9; border: 1px solid var(--border); border-radius: 3px; cursor: pointer; color: var(--text); }
         .theme-toggle, .refresh-btn { background: none; border: 1px solid var(--border); border-radius: 4px; padding: 3px 6px; cursor: pointer; font-size: 14px; color: var(--text); }
         .auto-save-indicator { font-size: 9px; color: #64748b; margin-left: 6px; }
         .auto-import-indicator { font-size: 9px; color: #10b981; margin-left: 6px; display: none; }
         .auto-import-indicator.show { display: inline; }
-        .deferred-toggle { margin-left: 8px; padding: 2px 8px; font-size: 11px; background: #fef9c3; border: 1px solid #facc15; border-radius: 3px; cursor: pointer; }
-        body.dark .deferred-toggle { background: #854d0e; border-color: #a16207; color: #fef9c3; }
-        .deferred-list { background: var(--card-bg); border-radius: 8px; padding: 8px; margin-top: 10px; overflow-x: auto; }
-        .deferred-list table { width: 100%; border-collapse: collapse; font-size: 11px; }
-        .deferred-list th, .deferred-list td { padding: 4px 6px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: middle; }
-        .deferred-list th { background: #f1f5f9; position: sticky; top: 0; }
-        body.dark .deferred-list th { background: #475569; }
-        .deferred-calendar { display: inline-block; background: var(--card-bg); border-radius: 6px; padding: 6px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .deferred-calendar table { border-collapse: collapse; font-size: 11px; }
-        .deferred-calendar th, .deferred-calendar td { text-align: center; padding: 2px 4px; }
-        .deferred-calendar td { cursor: pointer; border-radius: 4px; }
-        .deferred-calendar td:hover { background: #e2e8f0; }
-        .deferred-calendar .today { background: var(--primary); color: white; }
-        .deferred-calendar .has-deferred { font-weight: bold; color: #b45309; }
-        .deferred-calendar .selected { background: #fef3c7; }
-        .calendar-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; font-size: 12px; font-weight: 600; }
-        .calendar-nav button { background: none; border: 1px solid var(--border); border-radius: 3px; cursor: pointer; padding: 2px 6px; color: var(--text); }
+        .sort-btn { padding: 2px 6px; font-size: 10px; background: #f1f5f9; border: 1px solid var(--border); border-radius: 3px; cursor: pointer; color: var(--text); }
+        .sort-btn.active { background: var(--primary); color: white; }
+        .recruits-checkbox { width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary); }
+        .amocrm-form-container { margin-top: 15px; background: var(--card-bg); border-radius: 10px; padding: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); max-width: 500px; }
+        .amocrm-form-container h3 { margin-bottom: 4px; font-size: 12px; }
+        .amocrm-form-iframe { width: 100%; height: 140px; border: 1px solid var(--border); border-radius: 8px; }
+        .dds-filters-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; padding: 6px 10px; background: var(--card-bg); border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+        /* Кнопки действий в таблицах - вертикально */
+        .potential-actions, .orders-actions { display: flex; flex-direction: column; gap: 3px; align-items: stretch; }
+        .potential-actions .btn, .orders-actions .btn { justify-content: center; width: 100%; }
+        .copy-all-potential-btn, .sales-scripts-btn, .deferred-toggle { margin-left: 8px; white-space: nowrap; }
         .screen-block { margin-top: 20px; }
         .screen-area { border: 2px dashed var(--border); border-radius: 8px; padding: 16px; text-align: center; color: #64748b; background: var(--bg); cursor: pointer; margin-bottom: 8px; }
         .screen-area:focus { outline: none; }
@@ -164,7 +186,6 @@
         .draggable-row.dragging { opacity: 0.5; }
         .current-stats-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding: 6px 10px; background: var(--card-bg); border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); font-size: 12px; }
         .current-stats-row .stat-item { flex: 1; text-align: center; }
-        .current-stats-row button { padding: 2px 8px; background: var(--primary); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; white-space: nowrap; }
         .hide-col-btn { margin-left: 4px; background: none; border: none; color: #ef4444; cursor: pointer; font-weight: bold; font-size: 12px; padding: 0 4px; }
         .hidden-col { display: none; }
         .show-all-cols-btn { margin-top: 6px; padding: 3px 10px; background: #f1f5f9; border: 1px solid var(--border); border-radius: 4px; cursor: pointer; font-size: 11px; color: var(--text); }
@@ -175,36 +196,19 @@
         .db-filters-row .filter-group { display: flex; align-items: center; gap: 4px; }
         .db-filters-row .filter-group label { font-size: 11px; font-weight: 500; white-space: nowrap; }
         .db-filters-row .filter-group select { font-size: 11px; padding: 2px 5px; border-radius: 4px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text); }
-        .sort-btn { padding: 2px 6px; font-size: 10px; background: #f1f5f9; border: 1px solid var(--border); border-radius: 3px; cursor: pointer; color: var(--text); }
-        .sort-btn.active { background: var(--primary); color: white; }
-        .recruits-checkbox { width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary); }
-        .amocrm-form-container { margin-top: 15px; background: var(--card-bg); border-radius: 10px; padding: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); max-width: 500px; }
-        .amocrm-form-container h3 { margin-bottom: 4px; font-size: 12px; }
-        .amocrm-form-iframe { width: 100%; height: 140px; border: 1px solid var(--border); border-radius: 8px; }
-        .dds-filters-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; padding: 6px 10px; background: var(--card-bg); border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
-        .clear-calendar-filter-btn { padding: 2px 6px; font-size: 10px; background: #f1f5f9; border: 1px solid var(--border); border-radius: 3px; cursor: pointer; color: var(--text); margin-top: 4px; display: none; }
-        /* ===== КНОПКИ ДЕЙСТВИЙ (АДАПТИВНЫЕ) ===== */
-        .potential-actions { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; justify-content: center; }
-        .potential-actions button {
-            font-size: 10px; padding: 3px 7px; border-radius: 4px;
-            border: 1px solid #ccc; background: white; cursor: pointer;
-            white-space: nowrap; display: inline-flex; align-items: center; gap: 3px;
-            color: #1e293b;
-            /* на десктопе ширина по содержимому */
-        }
-        body.dark .potential-actions button { background: #334155; color: #f1f5f9; border-color: #64748b; }
-        .potential-actions button.base-potential-btn { background: white; color: #1e293b; border-color: #ccc; }
-        body.dark .potential-actions button.base-potential-btn { background: #334155; color: #f1f5f9; border-color: #64748b; }
 
         @media (max-width: 600px) {
+            .tab { padding: 4px 8px; font-size: 11px; }
+            .columns-container { display: none; }
+            .columns-container.visible { display: flex; }
+            #toggle-managers-btn { display: inline-block !important; margin-left: 0; }
             .potential-table { min-width: auto; }
             .potential-table th, .potential-table td { padding: 4px 3px; font-size: 10px; }
-            .potential-actions { flex-direction: column; gap: 4px; }
-            .potential-actions button {
-                width: auto; justify-content: center;
-                padding: 4px 4px; font-size: 9px;
-                min-width: 80px; /* на телефоне все одинаковой ширины */
-            }
+            .potential-actions, .orders-actions { flex-direction: column; gap: 3px; }
+            .potential-actions .btn, .orders-actions .btn { width: 100%; padding: 4px 4px; font-size: 9px; }
+            .copy-all-potential-btn, .sales-scripts-btn, .deferred-toggle { font-size: 9px; padding: 2px 6px; }
+            .tabs-bar { flex-direction: column; align-items: flex-start; }
+            .tabs-bar > div:last-child { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
         }
     </style>
 </head>
@@ -217,22 +221,23 @@
             <div class="tab" data-tab="payouts">💸 Выплаты</div>
             <div class="tab db-tab" data-tab="db">🗄️ База</div>
         </div>
-        <div style="display: flex; align-items: center; gap: 6px;">
-            <span class="auto-import-indicator" id="auto-import-status">📥 Автоимпорт...</span>
-            <span class="sync-indicator" id="sync-status" title="Статус синхронизации">📴 Оффлайн</span>
+        <div>
             <button class="refresh-btn" id="refresh-btn" title="Обновить текущий раздел">🔄</button>
             <button class="theme-toggle" id="theme-toggle" title="Переключить тему">☀️</button>
+            <span class="sync-indicator" id="sync-status" title="Статус синхронизации">📴 Оффлайн</span>
             <span class="auto-save-indicator" id="auto-save-status"></span>
+            <span class="auto-import-indicator" id="auto-import-status">📥 Автоимпорт...</span>
         </div>
     </div>
 
     <div class="content" id="lids-panel">
-        <div class="search-row"><textarea id="search-phones" placeholder="Вставьте номера, каждый с новой строки"></textarea><button id="search-btn">Найти</button></div>
+        <div class="search-row"><textarea id="search-phones" placeholder="Вставьте номера, каждый с новой строки"></textarea><button class="btn primary" id="search-btn">Найти</button></div>
         <div class="manager-header">
             <h3 style="margin:0;">👥 Менеджеры</h3>
-            <button id="filters-toggle-btn" class="filters-toggle" style="margin-left:6px;">🔽 Фильтры</button>
+            <button id="filters-toggle-btn" class="btn small">🔽 Фильтры</button>
+            <button id="toggle-managers-btn" style="display:none;" class="btn small primary">👥 Показать менеджеров</button>
             <div class="settings-dropdown">
-                <button class="settings-toggle" id="settings-toggle-btn">⚙️</button>
+                <button class="settings-toggle btn small" id="settings-toggle-btn">⚙️</button>
                 <div class="settings-dropdown-content" id="settings-dropdown">
                     <button id="add-manager-menu-btn">➕ Добавить менеджера</button>
                     <button onclick="window.exportData()">💾 Экспорт всей базы</button>
@@ -248,16 +253,16 @@
             <div class="filter-group"><label>Дата с:</label><input type="date" id="filter-date-from" /></div>
             <div class="filter-group"><label>по:</label><input type="date" id="filter-date-to" /></div>
             <div class="filter-group"><label>Статусы:</label><div class="status-filters" id="status-checkboxes"></div></div>
-            <button id="apply-filters" style="padding:3px 8px; background:var(--primary); color:white; border:none; border-radius:4px; cursor:pointer;">Применить</button>
-            <button id="clear-filters" style="padding:3px 8px; background:#e2e8f0; border:1px solid var(--border); border-radius:4px; cursor:pointer; color:var(--text);">Сбросить</button>
+            <button id="apply-filters" class="btn small primary">Применить</button>
+            <button id="clear-filters" class="btn small">Сбросить</button>
         </div>
         <div id="columns-container" class="columns-container"></div>
         <div class="potential-widget" id="potential-widget">
-            <div style="display:flex; align-items:center; gap: 6px; margin-bottom: 6px;">
-                <h3 style="margin:0;">📌 Потенциальные заявки <span id="potential-count"></span></h3>
-                <button id="copy-all-potential" class="copy-all-potential-btn">📋 Копировать все номера</button>
-                <button id="toggle-deferred-btn" class="deferred-toggle">📅 Отложенные (<span id="deferred-count">0</span>)</button>
-                <button id="sales-scripts-btn" class="copy-all-potential-btn" style="background:#f0fdf4; border-color:#86efac; color:#166534;">📜 Скрипты</button>
+            <div style="display:flex; align-items:center; gap: 6px; margin-bottom: 6px; flex-wrap: wrap;">
+                <h3 style="margin:0; white-space: nowrap;">📌 Потенциальные заявки <span id="potential-count"></span></h3>
+                <button id="copy-all-potential" class="btn xsmall">📋 Копировать все</button>
+                <button id="toggle-deferred-btn" class="btn xsmall deferred-toggle">📅 Отложенные (<span id="deferred-count">0</span>)</button>
+                <button id="sales-scripts-btn" class="btn xsmall">📜 Скрипты</button>
             </div>
             <div class="potential-table-wrapper">
                 <table class="potential-table" id="potential-table">
@@ -268,14 +273,14 @@
             <div class="manual-add-potential">
                 <input type="text" id="manual-phone" placeholder="Номер телефона" />
                 <input type="text" id="manual-comment" placeholder="Комментарий" style="flex:1;" />
-                <button id="add-manual-potential">➕ Добавить вручную</button>
+                <button id="add-manual-potential" class="btn small primary">➕ Добавить вручную</button>
             </div>
             <div id="deferred-list" class="deferred-list" style="display: none;">
                 <div style="display: flex; align-items: flex-start; gap: 10px; flex-wrap: wrap;">
                     <div style="flex:1; min-width:250px; order:0;">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <h4 id="deferred-list-title">⏳ Отложенные заявки</h4>
-                            <button id="clear-deferred-filter" style="padding:2px 6px; font-size:11px; display:none;">Показать все</button>
+                            <button id="clear-deferred-filter" class="btn xsmall" style="display:none;">Показать все</button>
                         </div>
                         <table id="deferred-table">
                             <thead><tr><th>Номер</th><th>Комментарий</th><th>Дата отложена</th><th>Действия</th></tr></thead>
@@ -284,9 +289,9 @@
                     </div>
                     <div id="deferred-calendar" class="deferred-calendar" style="order:1;">
                         <div class="calendar-nav" id="calendar-nav">
-                            <button id="cal-prev">←</button>
+                            <button id="cal-prev" class="btn xsmall">←</button>
                             <span id="cal-month-label"></span>
-                            <button id="cal-next">→</button>
+                            <button id="cal-next" class="btn xsmall">→</button>
                         </div>
                         <div id="cal-grid"></div>
                     </div>
@@ -299,26 +304,27 @@
         <div class="add-order-block">
             <div style="margin-bottom:5px;"><label>Дата заявки:</label><input type="date" id="order-date-input" /></div>
             <textarea id="new-orders-input" placeholder="Вставьте заявку или несколько (разделяйте пустой строкой)"></textarea>
-            <button id="add-orders-btn">➕ Добавить заявки</button>
+            <button id="add-orders-btn" class="btn primary">➕ Добавить заявки</button>
         </div>
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-            <h3>📦 Константин <span id="orders-count"></span></h3>
+            <h3>📦 Заявки Константин <span id="orders-count"></span></h3>
+            <button id="orders-filters-toggle-btn" class="btn small">🔽 Фильтры</button>
         </div>
-        <div class="orders-filters-row">
+        <div class="orders-filters-row" id="orders-filters-row">
             <div class="filter-group"><label>Дата с:</label><input type="date" id="order-filter-date-from" /></div>
             <div class="filter-group"><label>по:</label><input type="date" id="order-filter-date-to" /></div>
-            <div class="quick-buttons">
-                <button id="order-filter-this-week" style="padding:3px 6px; background:#f1f5f9; border:1px solid var(--border); border-radius:4px; cursor:pointer; color:var(--text);">Эта неделя</button>
-                <button id="order-filter-this-month" style="padding:3px 6px; background:#f1f5f9; border:1px solid var(--border); border-radius:4px; cursor:pointer; color:var(--text);">Этот месяц</button>
-                <button id="order-filter-last-month" style="padding:3px 6px; background:#f1f5f9; border:1px solid var(--border); border-radius:4px; cursor:pointer; color:var(--text);">Прошлый месяц</button>
-                <button id="order-filter-all-time" style="padding:3px 6px; background:#f1f5f9; border:1px solid var(--border); border-radius:4px; cursor:pointer; color:var(--text);">Всё время</button>
+            <div class="quick-buttons" style="display:flex;gap:4px;flex-wrap:wrap;">
+                <button id="order-filter-this-week" class="btn xsmall">Эта неделя</button>
+                <button id="order-filter-this-month" class="btn xsmall">Этот месяц</button>
+                <button id="order-filter-last-month" class="btn xsmall">Прошлый месяц</button>
+                <button id="order-filter-all-time" class="btn xsmall">Всё время</button>
             </div>
             <div class="filter-group"><label>Контракт:</label><select id="order-filter-contract"><option value="">Все</option><option value="Да">Да</option><option value="Нет">Нет (пусто)</option></select></div>
             <div class="filter-group"><label>🔍 Текст заявки:</label><input type="text" id="order-filter-text" placeholder="Введите текст..." /></div>
         </div>
         <div class="orders-table-wrapper" id="orders-table-wrapper">
             <table class="orders-table" id="orders-table">
-                <thead><tr><th>Заявка</th><th>Действия</th><th>Дата заявки</th><th>Менеджер</th><th>Контракт</th><th>Осн. сумма</th><th>Бонус</th><th>Дата подписания</th><th>Срок (дней)</th></tr></thead>
+                <thead><tr><th>Заявка</th><th>Действия</th><th>Дата заявки</th><th>Менеджер</th><th>Контракт</th><th>Осн. сумма</th><th>Бонус</th><th>Дата подписания</th></tr></thead>
                 <tbody></tbody>
             </table>
         </div>
@@ -327,6 +333,7 @@
             <iframe src="https://forms.amocrm.ru/rzlvmcv" class="amocrm-form-iframe" frameborder="0"></iframe>
         </div>
     </div>
+
     <div class="content" id="analytics-panel" style="display:none;">
         <h3 style="margin-bottom:6px;">📊 Общая</h3>
         <div class="sub-tabs" id="overall-sub-tabs">
@@ -336,20 +343,20 @@
         <div id="overall-contractDate-panel"><div class="analytics-filters" id="stats-filters">
             <div class="filter-group"><label>Дата с:</label><input type="date" id="stats-date-from" /></div>
             <div class="filter-group"><label>по:</label><input type="date" id="stats-date-to" /></div>
-            <button id="stats-this-week" style="padding:3px 6px; background:#f1f5f9; border:1px solid var(--border); border-radius:4px; cursor:pointer; color:var(--text);">Эта неделя</button>
-            <button id="stats-this-month" style="padding:3px 6px; background:#f1f5f9; border:1px solid var(--border); border-radius:4px; cursor:pointer; color:var(--text);">Этот месяц</button>
-            <button id="stats-last-month" style="padding:3px 6px; background:#f1f5f9; border:1px solid var(--border); border-radius:4px; cursor:pointer; color:var(--text);">Прошлый месяц</button>
-            <button id="stats-all-time" style="padding:3px 6px; background:#f1f5f9; border:1px solid var(--border); border-radius:4px; cursor:pointer; color:var(--text);">Всё время</button>
-            <button id="add-saved-stats-row-btn" class="add-saved-row-btn" title="Закрепить текущий период" style="display:none;">+</button>
+            <button id="stats-this-week" class="btn xsmall">Эта неделя</button>
+            <button id="stats-this-month" class="btn xsmall">Этот месяц</button>
+            <button id="stats-last-month" class="btn xsmall">Прошлый месяц</button>
+            <button id="stats-all-time" class="btn xsmall">Всё время</button>
+            <button id="add-saved-stats-row-btn" class="btn xsmall" title="Закрепить текущий период" style="display:none;">+</button>
         </div></div>
         <div id="overall-leadDate-panel" style="display:none;"><div class="analytics-filters">
             <div class="filter-group"><label>Дата с:</label><input type="date" id="stats-lead-date-from" /></div>
             <div class="filter-group"><label>по:</label><input type="date" id="stats-lead-date-to" /></div>
-            <button id="stats-lead-this-week" style="padding:3px 6px; background:#f1f5f9; border:1px solid var(--border); border-radius:4px; cursor:pointer; color:var(--text);">Эта неделя</button>
-            <button id="stats-lead-this-month" style="padding:3px 6px; background:#f1f5f9; border:1px solid var(--border); border-radius:4px; cursor:pointer; color:var(--text);">Этот месяц</button>
-            <button id="stats-lead-last-month" style="padding:3px 6px; background:#f1f5f9; border:1px solid var(--border); border-radius:4px; cursor:pointer; color:var(--text);">Прошлый месяц</button>
-            <button id="stats-lead-all-time" style="padding:3px 6px; background:#f1f5f9; border:1px solid var(--border); border-radius:4px; cursor:pointer; color:var(--text);">Всё время</button>
-            <button id="add-saved-stats-row-btn-lead" class="add-saved-row-btn" title="Закрепить текущий период" style="display:none;">+</button>
+            <button id="stats-lead-this-week" class="btn xsmall">Эта неделя</button>
+            <button id="stats-lead-this-month" class="btn xsmall">Этот месяц</button>
+            <button id="stats-lead-last-month" class="btn xsmall">Прошлый месяц</button>
+            <button id="stats-lead-all-time" class="btn xsmall">Всё время</button>
+            <button id="add-saved-stats-row-btn-lead" class="btn xsmall" title="Закрепить текущий период" style="display:none;">+</button>
         </div></div>
         <div id="current-stats-row" class="current-stats-row"></div>
         <div class="analytics-block">
@@ -367,18 +374,18 @@
         <div id="managers-contractDate-panel"><div class="analytics-filters" id="managers-stats-filters">
             <div class="filter-group"><label>Дата с:</label><input type="date" id="managers-date-from" /></div>
             <div class="filter-group"><label>по:</label><input type="date" id="managers-date-to" /></div>
-            <button id="managers-this-week" style="padding:3px 6px; background:#f1f5f9; border:1px solid var(--border); border-radius:4px; cursor:pointer; color:var(--text);">Эта неделя</button>
-            <button id="managers-this-month" style="padding:3px 6px; background:#f1f5f9; border:1px solid var(--border); border-radius:4px; cursor:pointer; color:var(--text);">Этот месяц</button>
-            <button id="managers-last-month" style="padding:3px 6px; background:#f1f5f9; border:1px solid var(--border); border-radius:4px; cursor:pointer; color:var(--text);">Прошлый месяц</button>
-            <button id="managers-all-time" style="padding:3px 6px; background:#f1f5f9; border:1px solid var(--border); border-radius:4px; cursor:pointer; color:var(--text);">Всё время</button>
+            <button id="managers-this-week" class="btn xsmall">Эта неделя</button>
+            <button id="managers-this-month" class="btn xsmall">Этот месяц</button>
+            <button id="managers-last-month" class="btn xsmall">Прошлый месяц</button>
+            <button id="managers-all-time" class="btn xsmall">Всё время</button>
         </div></div>
         <div id="managers-leadDate-panel" style="display:none;"><div class="analytics-filters">
             <div class="filter-group"><label>Дата с:</label><input type="date" id="managers-lead-date-from" /></div>
             <div class="filter-group"><label>по:</label><input type="date" id="managers-lead-date-to" /></div>
-            <button id="managers-lead-this-week" style="padding:3px 6px; background:#f1f5f9; border:1px solid var(--border); border-radius:4px; cursor:pointer; color:var(--text);">Эта неделя</button>
-            <button id="managers-lead-this-month" style="padding:3px 6px; background:#f1f5f9; border:1px solid var(--border); border-radius:4px; cursor:pointer; color:var(--text);">Этот месяц</button>
-            <button id="managers-lead-last-month" style="padding:3px 6px; background:#f1f5f9; border:1px solid var(--border); border-radius:4px; cursor:pointer; color:var(--text);">Прошлый месяц</button>
-            <button id="managers-lead-all-time" style="padding:3px 6px; background:#f1f5f9; border:1px solid var(--border); border-radius:4px; cursor:pointer; color:var(--text);">Всё время</button>
+            <button id="managers-lead-this-week" class="btn xsmall">Эта неделя</button>
+            <button id="managers-lead-this-month" class="btn xsmall">Этот месяц</button>
+            <button id="managers-lead-last-month" class="btn xsmall">Прошлый месяц</button>
+            <button id="managers-lead-all-time" class="btn xsmall">Всё время</button>
         </div></div>
         <div class="analytics-block"><table class="analytics-table" id="managers-stats-table"><thead><tr id="managers-header-row"></tr></thead><tbody></tbody></table></div>
         <div class="screen-block">
@@ -423,7 +430,7 @@
                 <input type="date" id="dds-date-input-new" />
                 <textarea id="dds-method-input" placeholder="Как принимал"></textarea>
                 <input type="text" id="dds-total-input" placeholder="Итого вышло (₽)" />
-                <button id="add-dds-row-btn">➕ Добавить</button>
+                <button id="add-dds-row-btn" class="btn primary">➕ Добавить</button>
             </div>
         </div>
     </div>
@@ -437,7 +444,7 @@
             <div class="add-db-block">
                 <div class="date-row"><label>Дата заявки:</label><input type="date" id="reserves-date-input" /></div>
                 <textarea id="new-reserves-input" placeholder="Вставьте заявку или несколько (разделяйте пустой строкой)"></textarea>
-                <button id="add-reserves-btn">➕ Добавить заявки</button>
+                <button id="add-reserves-btn" class="btn primary">➕ Добавить заявки</button>
             </div>
             <div class="db-filters-row" id="reserves-filters-row">
                 <div class="filter-group">
@@ -468,7 +475,7 @@
         <div id="recruits-panel" style="display:none; overflow-x: auto;">
             <div class="add-db-block">
                 <textarea id="new-recruits-input" placeholder="Вставьте заявку или несколько (разделяйте пустой строкой)"></textarea>
-                <button id="add-recruits-btn">➕ Добавить заявки</button>
+                <button id="add-recruits-btn" class="btn primary">➕ Добавить заявки</button>
             </div>
             <div class="db-filters-row" id="recruits-filters-row">
                 <div class="filter-group">
@@ -498,7 +505,7 @@
         <div class="modal-content">
             <h3>Результаты поиска</h3>
             <div id="search-results"></div>
-            <button id="close-modal" style="margin-top:8px; padding:3px 8px;">Закрыть</button>
+            <button id="close-modal" class="btn small" style="margin-top:8px;">Закрыть</button>
         </div>
     </div>
 
@@ -510,8 +517,8 @@
                 <input type="date" id="defer-date-input" style="width:100%; padding:5px; margin-top:4px;" />
             </div>
             <div style="text-align:right;">
-                <button id="cancel-defer-btn" style="padding:4px 10px; margin-right:6px;">Отмена</button>
-                <button id="confirm-defer-btn" style="padding:4px 10px; background:var(--primary); color:white; border:none; border-radius:4px;">Отложить</button>
+                <button id="cancel-defer-btn" class="btn small">Отмена</button>
+                <button id="confirm-defer-btn" class="btn small primary">Отложить</button>
             </div>
         </div>
     </div>
@@ -521,12 +528,11 @@
             <h3>📜 Скрипты для продаж</h3>
             <textarea id="scripts-textarea" style="width:100%; height:300px; padding:10px; font-family: inherit; font-size:12px; border-radius:6px; border:1px solid var(--border); background:var(--card-bg); color:var(--text); resize:vertical;"></textarea>
             <div style="text-align:right; margin-top:10px;">
-                <button id="save-scripts-btn" style="padding:5px 12px; background:var(--primary); color:white; border:none; border-radius:4px; cursor:pointer; margin-right:6px;">💾 Сохранить</button>
-                <button id="close-scripts-btn" style="padding:5px 12px; background:#e2e8f0; border:1px solid var(--border); border-radius:4px; cursor:pointer; color:var(--text);">Закрыть</button>
+                <button id="save-scripts-btn" class="btn primary">💾 Сохранить</button>
+                <button id="close-scripts-btn" class="btn">Закрыть</button>
             </div>
         </div>
     </div>
-
     <script type="module">
         import { initializeApp } from 'firebase/app';
         import { getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, deleteDoc, query, orderBy, where, limit } from 'firebase/firestore';
@@ -587,6 +593,9 @@
         const AUTO_IMPORT_MANAGER = 'Вероника';
         const AUTO_IMPORT_STORAGE_KEY = 'crm_auto_import_phones';
         let hiddenColumns = JSON.parse(localStorage.getItem('hiddenColumns') || '[]');
+
+        // Флаг блокировки для предотвращения дублирования при ошибках
+        let potentialActionLock = new Set();
 
         const saved = localStorage.getItem('crm-autosave');
         if (saved) {
@@ -898,7 +907,7 @@
                 const zakazkiCount = filteredPhones.filter(item => item.status === 'Заявка').length;
                 const colDiv = document.createElement('div');
                 colDiv.className = 'column';
-                colDiv.innerHTML = `<div class="column-header"><span title="Двойной клик для переименования">${escapeHtml(colName)} (${totalLeads} лд, ${zakazkiCount} зав)</span><div><button class="copy-btn" title="Копировать видимые номера">📋</button><button class="delete-all-btn" title="Удалить отфильтрованные лиды">🗑️</button></div></div><div class="phone-list"></div><div class="add-phones"><textarea placeholder="Вставьте номера"></textarea><button>➕ Добавить</button></div>`;
+                colDiv.innerHTML = `<div class="column-header"><span title="Двойной клик для переименования">${escapeHtml(colName)} (${totalLeads} лд, ${zakazkiCount} зав)</span><div><button class="btn xsmall copy-btn" title="Копировать видимые номера">📋</button><button class="btn xsmall danger delete-all-btn" title="Удалить отфильтрованные лиды">🗑️</button></div></div><div class="phone-list"></div><div class="add-phones"><textarea placeholder="Вставьте номера"></textarea><button class="btn xsmall primary">➕ Добавить</button></div>`;
                 const copyBtn = colDiv.querySelector('.copy-btn');
                 copyBtn.addEventListener('click', async () => { const numbers = filteredPhones.map(p => p.phone).join('\n'); await copyToClipboard(numbers); copyBtn.textContent = '✅'; setTimeout(() => { copyBtn.textContent = '📋'; }, 1000); });
                 const deleteAllBtn = colDiv.querySelector('.delete-all-btn');
@@ -1003,11 +1012,11 @@
                     <td><textarea class="comment-input" data-phone="${escapeHtml(po.phone)}" rows="1">${escapeHtml(po.comment || '')}</textarea></td>
                     <td>
                         <div class="potential-actions">
-                            <button class="success-potential-btn" data-phone="${escapeHtml(po.phone)}">✅ Успешно</button>
-                            <button class="fail-potential-btn" data-phone="${escapeHtml(po.phone)}">❌ Провал</button>
-                            <button class="ndz-potential-btn" data-phone="${escapeHtml(po.phone)}">📵 НДЗ</button>
-                            <button class="defer-potential-btn" data-phone="${escapeHtml(po.phone)}">⏳ Отложить</button>
-                            <button class="base-potential-btn" data-phone="${escapeHtml(po.phone)}">🗄️ База</button>
+                            <button class="btn xsmall success-potential-btn" data-phone="${escapeHtml(po.phone)}">✅ Успешно</button>
+                            <button class="btn xsmall fail-potential-btn" data-phone="${escapeHtml(po.phone)}">❌ Провал</button>
+                            <button class="btn xsmall ndz-potential-btn" data-phone="${escapeHtml(po.phone)}">📵 НДЗ</button>
+                            <button class="btn xsmall defer-potential-btn" data-phone="${escapeHtml(po.phone)}">⏳ Отложить</button>
+                            <button class="btn xsmall base-potential-btn" data-phone="${escapeHtml(po.phone)}">🗄️ База</button>
                         </div>
                     </td>
                     <td>${ndzCount > 0 ? `<span class="ndz-counter">${ndzCount}</span><span class="ndz-last-time">${lastNdzText}</span>` : ''}</td>
@@ -1022,7 +1031,8 @@
                 tbody.appendChild(row);
             });
             const deferredCount = potentialCache.filter(p => p.status === 'deferred').length;
-            document.getElementById('deferred-count').textContent = deferredCount;
+            const deferredCountEl = document.getElementById('deferred-count');
+            if(deferredCountEl) deferredCountEl.textContent = deferredCount;
             if (document.getElementById('deferred-list')?.style.display === 'block') {
                 renderDeferredCalendar();
                 renderDeferredList();
@@ -1058,10 +1068,19 @@
             filtered.sort((a,b) => new Date(b.dateAdded) - new Date(a.dateAdded));
             document.getElementById('orders-count').textContent = `(${filtered.length})`;
             filtered.forEach(order => {
-                let duration = '';
-                if (order.success === 'Да' && order.dateAdded && order.contractDate) duration = Math.ceil((new Date(order.contractDate + 'T00:00:00') - new Date(order.dateAdded)) / (1000*60*60*24));
                 const row = document.createElement('tr');
-                row.innerHTML = `<td><span class="editable-order-text" data-id="${order.id}" style="cursor:pointer; white-space:pre-wrap;">${escapeHtml(order.text)}</span></td><td><button class="copy-order-btn" data-text="${order.text.replace(/"/g, '&quot;')}">📋</button> <button class="base-order-btn" data-id="${order.id}" data-text="${order.text.replace(/"/g, '&quot;')}">🗄️ База</button> <button class="delete-order-btn" data-id="${order.id}">✕</button></td><td><input type="date" class="order-date-input" value="${(order.dateAdded||'').substring(0,10)}" data-id="${order.id}" style="width:100%;" /></td><td><select class="manager-select" data-id="${order.id}" style="width:100%;">${managersList.map(m => `<option value="${escapeHtml(m)}" ${order.manager===m?'selected':''}>${escapeHtml(m)}</option>`).join('')}<option value="" ${!order.manager?'selected':''}>Не найден</option></select></td><td><select class="success-select" data-id="${order.id}"><option value="" ${!order.success?'selected':''}>—</option><option value="Да" ${order.success==='Да'?'selected':''}>Да</option></select></td><td><input type="text" class="order-main-amount" value="${escapeHtml(order.mainAmount||'')}" data-id="${order.id}" style="width:70px; display:${order.success==='Да'?'inline-block':'none'};" /></td><td><input type="text" class="order-bonus-amount" value="${escapeHtml(order.bonusAmount||'')}" data-id="${order.id}" style="width:70px; display:${order.success==='Да'?'inline-block':'none'};" /></td><td><input type="date" class="order-contract-date" value="${order.contractDate||''}" data-id="${order.id}" style="width:100px; display:${order.success==='Да'?'inline-block':'none'};" /></td><td style="display:${order.success==='Да'?'table-cell':'none'};">${duration||'—'}</td>`;
+                row.innerHTML = `<td><span class="editable-order-text" data-id="${order.id}" style="cursor:pointer; white-space:pre-wrap;">${escapeHtml(order.text)}</span></td>
+                <td><div class="orders-actions">
+                    <button class="btn xsmall copy-order-btn" data-text="${order.text.replace(/"/g, '&quot;')}">📋 Копировать</button>
+                    <button class="btn xsmall base-order-btn" data-id="${order.id}" data-text="${order.text.replace(/"/g, '&quot;')}">🗄️ База</button>
+                    <button class="btn xsmall danger delete-order-btn" data-id="${order.id}">✕ Удалить</button>
+                </div></td>
+                <td><input type="date" class="order-date-input" value="${(order.dateAdded||'').substring(0,10)}" data-id="${order.id}" style="width:100%;" /></td>
+                <td><select class="manager-select" data-id="${order.id}" style="width:100%;">${managersList.map(m => `<option value="${escapeHtml(m)}" ${order.manager===m?'selected':''}>${escapeHtml(m)}</option>`).join('')}<option value="" ${!order.manager?'selected':''}>Не найден</option></select></td>
+                <td><select class="success-select" data-id="${order.id}"><option value="" ${!order.success?'selected':''}>—</option><option value="Да" ${order.success==='Да'?'selected':''}>Да</option></select></td>
+                <td><input type="text" class="order-main-amount" value="${escapeHtml(order.mainAmount||'')}" data-id="${order.id}" style="width:70px; display:${order.success==='Да'?'inline-block':'none'};" /></td>
+                <td><input type="text" class="order-bonus-amount" value="${escapeHtml(order.bonusAmount||'')}" data-id="${order.id}" style="width:70px; display:${order.success==='Да'?'inline-block':'none'};" /></td>
+                <td><input type="date" class="order-contract-date" value="${order.contractDate||''}" data-id="${order.id}" style="width:100px; display:${order.success==='Да'?'inline-block':'none'};" /></td>`;
                 tbody.appendChild(row);
             });
         }
@@ -1109,7 +1128,7 @@
                     (!hiddenColumns.includes('sum')?`<span class="stat-item">Сумма: ${mainStats.contractSum.toLocaleString('ru-RU')} ₽</span>`:'') +
                     (!hiddenColumns.includes('avgDur')?`<span class="stat-item">Ср. срок: ${mainStats.avgDur}</span>`:'') +
                     (!hiddenColumns.includes('avgCheck')?`<span class="stat-item">Ср. чек: ${mainStats.avgCheck}</span>`:'') +
-                    `<button id="add-current-stats-btn">+</button>`;
+                    `<button id="add-current-stats-btn" class="btn xsmall primary">+</button>`;
             }
             const addBtn = document.getElementById('add-current-stats-btn');
             if(addBtn) addBtn.addEventListener('click', async () => {
@@ -1164,7 +1183,7 @@
 
         function createStatsRow(label,stats,isMain=false,savedId=null) {
             const row=document.createElement('tr');
-            row.innerHTML=`<td class="col-period">${label}</td><td class="col-leads">${stats.totalLeads}</td><td class="col-orders">${stats.totalOrders}</td><td class="col-cvOL">${stats.cvOL}%</td><td class="col-contracts">${stats.contractCount}</td><td class="col-cvCO">${stats.cvCO}%</td><td class="col-sum">${stats.contractSum.toLocaleString('ru-RU')} ₽</td><td class="col-avgDur">${stats.avgDur}</td><td class="col-avgCheck">${stats.avgCheck}</td>`+(isMain?'<td class="col-actions"></td>':`<td class="col-actions"><button class="delete-saved-row-btn" data-id="${savedId}">✕</button></td>`);
+            row.innerHTML=`<td class="col-period">${label}</td><td class="col-leads">${stats.totalLeads}</td><td class="col-orders">${stats.totalOrders}</td><td class="col-cvOL">${stats.cvOL}%</td><td class="col-contracts">${stats.contractCount}</td><td class="col-cvCO">${stats.cvCO}%</td><td class="col-sum">${stats.contractSum.toLocaleString('ru-RU')} ₽</td><td class="col-avgDur">${stats.avgDur}</td><td class="col-avgCheck">${stats.avgCheck}</td>`+(isMain?'<td class="col-actions"></td>':`<td class="col-actions"><button class="btn xsmall danger delete-saved-row-btn" data-id="${savedId}">✕</button></td>`);
             return row;
         }
 
@@ -1175,7 +1194,6 @@
             if(range.to&&d>range.to)return false;
             return true;
         }
-
         function renderManagersStats() {
             const mode=document.querySelector('#managers-sub-tabs .sub-tab.active')?.dataset.mode||'contractDate';
             const headerRow = document.getElementById('managers-header-row');
@@ -1216,7 +1234,7 @@
                 const val=parseAmount(item.total);
                 total+=val;
                 const row=document.createElement('tr');
-                row.innerHTML=`<td><span class="editable-dds" data-field="partner" data-id="${item.id}">${escapeHtml(item.partner||'')||'&nbsp;'}</span></td><td><span class="editable-dds" data-field="sum" data-id="${item.id}">${escapeHtml(item.sum||'')||'&nbsp;'}</span></td><td><span class="editable-dds" data-field="contracts" data-id="${item.id}">${escapeHtml(item.contracts||'')||'&nbsp;'}</span></td><td><input type="date" class="dds-date" value="${item.date||''}" data-id="${item.id}" /></td><td><span class="editable-dds" data-field="method" data-id="${item.id}">${escapeHtml(item.method||'')||'&nbsp;'}</span></td><td style="border-left:2px solid var(--border);"><span class="editable-dds" data-field="total" data-id="${item.id}">${escapeHtml(item.total||'')||'&nbsp;'}</span></td><td><button class="delete-dds-btn" data-id="${item.id}" style="cursor:pointer;">✕</button></td>`;
+                row.innerHTML=`<td><span class="editable-dds" data-field="partner" data-id="${item.id}">${escapeHtml(item.partner||'')||'&nbsp;'}</span></td><td><span class="editable-dds" data-field="sum" data-id="${item.id}">${escapeHtml(item.sum||'')||'&nbsp;'}</span></td><td><span class="editable-dds" data-field="contracts" data-id="${item.id}">${escapeHtml(item.contracts||'')||'&nbsp;'}</span></td><td><input type="date" class="dds-date" value="${item.date||''}" data-id="${item.id}" /></td><td><span class="editable-dds" data-field="method" data-id="${item.id}">${escapeHtml(item.method||'')||'&nbsp;'}</span></td><td style="border-left:2px solid var(--border);"><span class="editable-dds" data-field="total" data-id="${item.id}">${escapeHtml(item.total||'')||'&nbsp;'}</span></td><td><button class="delete-dds-btn" data-id="${item.id}" style="cursor:pointer;background:none;border:none;color:#ef4444;">✕</button></td>`;
                 tbody.appendChild(row);
             });
             footer.innerHTML=`<tr><td colspan="5" style="text-align:right;font-weight:bold;">Сумма итого:</td><td style="border-left:2px solid var(--border);font-weight:bold;">${total.toLocaleString('ru-RU')} ₽</td><td></td></tr>`;
@@ -1271,7 +1289,7 @@
             if(countEl)countEl.textContent=filtered.length?`(${filtered.length})`:'';
             filtered.forEach(item=>{
                 const row=document.createElement('tr');
-                row.innerHTML=`<td><span class="editable-text" data-field="text" data-id="${item.id}">${escapeHtml(item.text||'')}</span></td><td><button class="copy-reserve-btn" data-text="${escapeHtml(item.text||'')}">📋</button> <button class="delete-reserve-btn" data-id="${item.id}">✕</button></td><td><input type="date" class="reserve-date" value="${item.dateAdded?item.dateAdded.substring(0,10):''}" data-id="${item.id}" /></td><td><select class="reserve-reason" data-id="${item.id}"><option value="">—</option><option value="Женщина" ${item.reason==='Женщина'?'selected':''}>Женщина</option><option value="Офицер" ${item.reason==='Офицер'?'selected':''}>Офицер</option><option value="Кат Д" ${item.reason==='Кат Д'?'selected':''}>Кат Д</option><option value="Кат В" ${item.reason==='Кат В'?'selected':''}>Кат В</option><option value="custom" ${item.reason&&!['Женщина','Офицер','Кат Д','Кат В'].includes(item.reason)?'selected':''}>Другое</option></select><input type="text" class="reserve-custom-reason" value="${item.reason&&!['Женщина','Офицер','Кат Д','Кат В'].includes(item.reason)?escapeHtml(item.reason):''}" data-id="${item.id}" style="display:${item.reason&&!['Женщина','Офицер','Кат Д','Кат В'].includes(item.reason)?'inline-block':'none'};margin-top:3px;" placeholder="Свой текст" /></td>`;
+                row.innerHTML=`<td><span class="editable-text" data-field="text" data-id="${item.id}">${escapeHtml(item.text||'')}</span></td><td><button class="btn xsmall copy-reserve-btn" data-text="${escapeHtml(item.text||'')}">📋</button> <button class="btn xsmall danger delete-reserve-btn" data-id="${item.id}">✕</button></td><td><input type="date" class="reserve-date" value="${item.dateAdded?item.dateAdded.substring(0,10):''}" data-id="${item.id}" /></td><td><select class="reserve-reason" data-id="${item.id}"><option value="">—</option><option value="Женщина" ${item.reason==='Женщина'?'selected':''}>Женщина</option><option value="Офицер" ${item.reason==='Офицер'?'selected':''}>Офицер</option><option value="Кат Д" ${item.reason==='Кат Д'?'selected':''}>Кат Д</option><option value="Кат В" ${item.reason==='Кат В'?'selected':''}>Кат В</option><option value="custom" ${item.reason&&!['Женщина','Офицер','Кат Д','Кат В'].includes(item.reason)?'selected':''}>Другое</option></select><input type="text" class="reserve-custom-reason" value="${item.reason&&!['Женщина','Офицер','Кат Д','Кат В'].includes(item.reason)?escapeHtml(item.reason):''}" data-id="${item.id}" style="display:${item.reason&&!['Женщина','Офицер','Кат Д','Кат В'].includes(item.reason)?'inline-block':'none'};margin-top:3px;" placeholder="Свой текст" /></td>`;
                 tbody.appendChild(row);
             });
         }
@@ -1294,7 +1312,7 @@
             if(countEl)countEl.textContent=filtered.length?`(${filtered.length})`:'';
             filtered.forEach(item=>{
                 const row=document.createElement('tr');
-                row.innerHTML=`<td><span class="editable-text" data-field="text" data-id="${item.id}">${escapeHtml(item.text||'')}</span></td><td><button class="copy-recruit-btn" data-text="${escapeHtml(item.text||'')}">📋</button> <button class="delete-recruit-btn" data-id="${item.id}">✕</button></td><td><input type="checkbox" class="recruits-checkbox reply-checkbox" data-id="${item.id}" ${item.reply?'checked':''} /></td>`;
+                row.innerHTML=`<td><span class="editable-text" data-field="text" data-id="${item.id}">${escapeHtml(item.text||'')}</span></td><td><button class="btn xsmall copy-recruit-btn" data-text="${escapeHtml(item.text||'')}">📋</button> <button class="btn xsmall danger delete-recruit-btn" data-id="${item.id}">✕</button></td><td><input type="checkbox" class="recruits-checkbox reply-checkbox" data-id="${item.id}" ${item.reply?'checked':''} /></td>`;
                 tbody.appendChild(row);
             });
         }
@@ -1442,7 +1460,7 @@
             deferred.forEach(po => {
                 const row = document.createElement('tr');
                 row.className = 'deferred-row';
-                row.innerHTML = `<td><a href="tel:${po.phone}" class="phone-link">${escapeHtml(po.phone)}</a></td><td>${escapeHtml(po.comment || '')}</td><td>${po.deferDate ? new Date(po.deferDate).toLocaleDateString('ru-RU') : ''}</td><td><button class="return-defer-btn" data-phone="${escapeHtml(po.phone)}">↩️ Вернуть сейчас</button> <button class="delete-defer-btn" data-phone="${escapeHtml(po.phone)}">✕</button></td>`;
+                row.innerHTML = `<td><a href="tel:${po.phone}" class="phone-link">${escapeHtml(po.phone)}</a></td><td>${escapeHtml(po.comment || '')}</td><td>${po.deferDate ? new Date(po.deferDate).toLocaleDateString('ru-RU') : ''}</td><td><button class="btn xsmall return-defer-btn" data-phone="${escapeHtml(po.phone)}">↩️ Вернуть сейчас</button> <button class="btn xsmall danger delete-defer-btn" data-phone="${escapeHtml(po.phone)}">✕</button></td>`;
                 tbody.appendChild(row);
             });
         }
@@ -1514,6 +1532,7 @@
             setElVal(dateFromId, bounds.firstDay);
             setElVal(dateToId, bounds.lastDay);
         }
+
         // ========== ОБРАБОТЧИКИ СОБЫТИЙ ==========
         document.getElementById('refresh-btn')?.addEventListener('click', async () => {
             const activeTab = document.querySelector('.tab.active')?.dataset.tab;
@@ -1583,6 +1602,32 @@
                     renderPotentialWidget();
                 }
             });
+        });
+
+        // Кнопка показать/скрыть менеджеров
+        document.getElementById('toggle-managers-btn')?.addEventListener('click', () => {
+            const container = document.getElementById('columns-container');
+            const btn = document.getElementById('toggle-managers-btn');
+            if (container.classList.contains('visible')) {
+                container.classList.remove('visible');
+                btn.textContent = '👥 Показать менеджеров';
+            } else {
+                container.classList.add('visible');
+                btn.textContent = '👥 Скрыть менеджеров';
+            }
+        });
+
+        // Кнопка показать/скрыть фильтры заявок
+        document.getElementById('orders-filters-toggle-btn')?.addEventListener('click', () => {
+            const row = document.getElementById('orders-filters-row');
+            const btn = document.getElementById('orders-filters-toggle-btn');
+            if (row.classList.contains('visible')) {
+                row.classList.remove('visible');
+                btn.textContent = '🔽 Фильтры';
+            } else {
+                row.classList.add('visible');
+                btn.textContent = '🔼 Скрыть фильтры';
+            }
         });
 
         // Поиск
@@ -1695,57 +1740,64 @@
             }
         });
 
-        // ★ ОПТИМИСТИЧНОЕ ОБНОВЛЕНИЕ ДЛЯ ПОТЕНЦИАЛОК ★
+        // ★ ОПТИМИСТИЧНОЕ ОБНОВЛЕНИЕ ДЛЯ ПОТЕНЦИАЛОК С БЛОКИРОВКОЙ ПОВТОРНЫХ КЛИКОВ ★
         document.getElementById('potential-table')?.addEventListener('click', async (e) => {
             const btn = e.target.closest('button');
             if (!btn) return;
             const phone = btn.dataset.phone;
             if (!phone) return;
 
+            // Блокировка повторных кликов
+            if (potentialActionLock.has(phone)) return;
+
             const row = btn.closest('tr');
             const po = potentialCache.find(p => p.phone === phone && p.status === 'active');
             if (!po) return;
 
+            // Ставим блокировку
+            potentialActionLock.add(phone);
             if (row) row.style.display = 'none';
 
             if (btn.classList.contains('success-potential-btn')) {
                 potentialCache = potentialCache.filter(p => p.phone !== phone || p.status !== 'active');
-                (async () => {
-                    try {
+                try {
+                    // Проверяем, нет ли уже такого в заявках (защита от дублей)
+                    const alreadyExists = ordersCache.some(o => o.text && o.text.includes(phone));
+                    if (!alreadyExists) {
                         const text = `${po.comment ? po.comment + ' ' : ''}${po.phone}`;
                         const manager = findManagerByPhone(po.phone) || '';
                         const newOrder = { text, dateAdded: new Date().toISOString(), manager, success: '', mainAmount: '', bonusAmount: '' };
                         await saveOrder(newOrder);
-                        await deletePotentialOrder(phone);
                         if (ordersLoaded) {
                             await loadOrdersData(getOrdersFilters());
                             renderOrders();
                         }
-                    } catch (e) {
-                        if (row) row.style.display = '';
-                        potentialCache.push(po);
-                        renderPotentialWidget();
-                        alert('Ошибка при сохранении. Проверьте подключение.');
                     }
-                })();
+                    await deletePotentialOrder(phone);
+                } catch (e) {
+                    if (row) row.style.display = '';
+                    potentialCache.push(po);
+                    renderPotentialWidget();
+                    alert('Ошибка при сохранении. Проверьте подключение.');
+                }
             } else if (btn.classList.contains('fail-potential-btn')) {
                 potentialCache = potentialCache.filter(p => p.phone !== phone || p.status !== 'active');
-                (async () => {
-                    try {
-                        await deletePotentialOrder(phone);
-                    } catch (e) {
-                        if (row) row.style.display = '';
-                        potentialCache.push(po);
-                        renderPotentialWidget();
-                        alert('Ошибка при сохранении. Проверьте подключение.');
-                    }
-                })();
+                try {
+                    await deletePotentialOrder(phone);
+                } catch (e) {
+                    if (row) row.style.display = '';
+                    potentialCache.push(po);
+                    renderPotentialWidget();
+                    alert('Ошибка при сохранении. Проверьте подключение.');
+                }
             } else if (btn.classList.contains('ndz-potential-btn')) {
                 if (row) row.style.display = '';
                 po.ndzCount = (po.ndzCount || 0) + 1;
                 if (!po.ndzHistory) po.ndzHistory = [];
                 po.ndzHistory.push(new Date().toISOString());
-                await savePotentialOrder(po);
+                try {
+                    await savePotentialOrder(po);
+                } catch(e) { alert('Ошибка при сохранении. Проверьте подключение.'); }
                 renderPotentialWidget();
             } else if (btn.classList.contains('defer-potential-btn')) {
                 if (row) row.style.display = '';
@@ -1754,18 +1806,19 @@
                 document.getElementById('confirm-defer-btn').dataset.phone = phone;
             } else if (btn.classList.contains('base-potential-btn')) {
                 potentialCache = potentialCache.filter(p => p.phone !== phone || p.status !== 'active');
-                (async () => {
-                    try {
-                        await addToReserves(po.comment || '', phone);
-                        await deletePotentialOrder(phone);
-                    } catch (e) {
-                        if (row) row.style.display = '';
-                        potentialCache.push(po);
-                        renderPotentialWidget();
-                        alert('Ошибка при сохранении. Проверьте подключение.');
-                    }
-                })();
+                try {
+                    await addToReserves(po.comment || '', phone);
+                    await deletePotentialOrder(phone);
+                } catch (e) {
+                    if (row) row.style.display = '';
+                    potentialCache.push(po);
+                    renderPotentialWidget();
+                    alert('Ошибка при сохранении. Проверьте подключение.');
+                }
             }
+
+            // Снимаем блокировку через небольшую задержку
+            setTimeout(() => { potentialActionLock.delete(phone); }, 1000);
         });
 
         document.getElementById('potential-table')?.addEventListener('blur', async (e) => {
@@ -1784,6 +1837,7 @@
             const po = potentialCache.find(p => p.phone === phone && p.status === 'active');
             if (po) { po.status = 'deferred'; po.deferDate = dateVal; await savePotentialOrder(po); renderPotentialWidget(); }
             document.getElementById('defer-modal').style.display = 'none';
+            potentialActionLock.delete(phone);
         });
 
         document.getElementById('copy-all-potential')?.addEventListener('click', async () => {
@@ -1792,7 +1846,7 @@
             await copyToClipboard(activePhones.join('\n'));
             const btn = document.getElementById('copy-all-potential');
             btn.textContent = '✅ Скопировано';
-            setTimeout(() => { btn.textContent = '📋 Копировать все номера'; }, 1500);
+            setTimeout(() => { btn.textContent = '📋 Копировать все'; }, 1500);
         });
 
         document.getElementById('toggle-deferred-btn')?.addEventListener('click', () => {
