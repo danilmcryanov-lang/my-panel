@@ -1,3 +1,1117 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Панель управления лидами v3.219</title>
+    <script type="importmap">
+        { "imports": { "firebase/app": "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js", "firebase/firestore": "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js" } }
+    </script>
+    <style>
+        :root {
+            --bg: #f4f6fb; --card-bg: #ffffff; --text: #1e293b; --border: #e2e8f0;
+            --primary: #3b82f6; --primary-hover: #2563eb;
+            --status-ndz: #f59e0b; --status-fail: #ef4444; --status-order: #10b981;
+            --defer-bg: #fef9c3;
+            --btn-bg: #f1f5f9; --btn-border: #cbd5e1; --btn-text: #334155;
+            --btn-hover-bg: #e2e8f0;
+        }
+        body.dark {
+            --bg: #1e293b; --card-bg: #334155; --text: #f1f5f9; --border: #475569;
+            --primary: #60a5fa; --defer-bg: #854d0e;
+            --btn-bg: #475569; --btn-border: #64748b; --btn-text: #e2e8f0;
+            --btn-hover-bg: #556271;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); transition: background 0.3s, color 0.3s; }
+
+        .btn {
+            padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500;
+            background: var(--btn-bg); color: var(--btn-text); border: 1px solid var(--btn-border);
+            white-space: nowrap; transition: background 0.15s; display: inline-flex; align-items: center; gap: 4px;
+        }
+        .btn:hover { background: var(--btn-hover-bg); }
+        .btn.primary { background: var(--primary); color: white; border-color: var(--primary); }
+        .btn.primary:hover { background: var(--primary-hover); }
+        .btn.danger { background: #fee2e2; color: #b91c1c; border-color: #fecaca; }
+        body.dark .btn.danger { background: #7f1d1d; color: #fca5a5; border-color: #991b1b; }
+        .btn.small { padding: 3px 8px; font-size: 10px; border-radius: 4px; }
+        .btn.xsmall { padding: 2px 6px; font-size: 9px; border-radius: 3px; }
+
+        .tabs-bar { position: sticky; top: 0; z-index: 998; background: var(--bg); padding: 6px 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px; }
+        .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+        .tab { padding: 6px 12px; background: #e2e8f0; border-radius: 6px; cursor: pointer; font-weight: 500; transition: 0.2s; font-size: 12px; color: #1e293b; }
+        body.dark .tab { background: #475569; color: #f1f5f9; }
+        .tab.active { background: var(--primary); color: white; }
+        .tab.db-tab { background: #e9eef3; color: #8899aa; border: 1px solid #ccd5dd; font-size: 11px; }
+        body.dark .tab.db-tab { background: #475569; color: #94a3b8; border-color: #64748b; }
+        .tab.db-tab.active { background: #b0bec5; color: white; }
+        .content { padding: 12px; }
+        .content h3 { font-size: 15px; margin-bottom: 4px; }
+        .search-row { display: flex; gap: 6px; align-items: stretch; margin-bottom: 6px; }
+        .search-row textarea { flex: 1; padding: 5px 8px; border-radius: 6px; border: 1px solid var(--border); font-family: inherit; font-size: 12px; resize: vertical; background: var(--card-bg); color: var(--text); }
+        .filters-panel { background: var(--card-bg); border-radius: 8px; padding: 6px 10px; margin-bottom: 10px; display: none; gap: 12px; flex-wrap: wrap; align-items: center; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+        .filters-panel.visible { display: flex; }
+        .filter-group { display: flex; align-items: center; gap: 4px; }
+        .filter-group label { font-size: 12px; font-weight: 500; white-space: nowrap; }
+        .filter-group input[type="date"], .filter-group select, .filter-group input[type="text"] { padding: 2px 5px; border-radius: 4px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text); font-size: 11px; }
+        .status-filters { display: flex; gap: 8px; flex-wrap: wrap; }
+        .status-filters label { font-size: 11px; display: flex; align-items: center; gap: 2px; cursor: pointer; }
+        .manager-header { display: flex; align-items: center; gap: 6px; margin: 12px 0 6px; flex-wrap: wrap; }
+        .columns-container { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-start; }
+        .column { background: var(--card-bg); border-radius: 8px; padding: 5px; min-width: 200px; max-width: 250px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); display: flex; flex-direction: column; gap: 2px; }
+        .column-header { display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 12px; color: var(--text); }
+        .column-header span { cursor: pointer; }
+        .phone-list { display: flex; flex-direction: column; gap: 2px; max-height: 160px; overflow-y: auto; }
+        .phone-item { display: flex; align-items: center; gap: 3px; background: #f8fafc; border-radius: 3px; padding: 2px 4px; font-size: 11px; flex-wrap: wrap; }
+        body.dark .phone-item { background: #475569; }
+        .phone-item select { font-size: 10px; padding: 1px 2px; border-radius: 3px; border: 1px solid #ccc; background: white; color: #1e293b; }
+        .phone-item.status-ndz { background: #fef3c7; } .phone-item.status-fail { background: #fee2e2; } .phone-item.status-order { background: #d1fae5; }
+        .phone-item .date-added { font-size: 9px; color: #64748b; white-space: nowrap; margin-right: 1px; }
+        .add-phones { display: flex; flex-direction: column; gap: 2px; margin-top: 3px; border-top: 1px solid var(--border); padding-top: 3px; }
+        .add-phones textarea { resize: vertical; min-height: 35px; font-size: 11px; padding: 3px; border-radius: 4px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text); }
+        .potential-widget { margin-top: 18px; background: var(--card-bg); border-radius: 10px; padding: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); overflow-x: auto; }
+        .potential-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+        .potential-header h3 { margin: 0; white-space: nowrap; }
+        .potential-header-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+        .potential-table-wrapper { max-height: 55vh; overflow-y: auto; margin-bottom: 8px; border: 1px solid var(--border); border-radius: 6px; }
+        .potential-table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 750px; }
+        .potential-table th, .potential-table td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: center; vertical-align: middle; }
+        .potential-table th { background: #f8fafc; font-weight: 600; color: var(--text); position: sticky; top: 0; z-index: 2; }
+        body.dark .potential-table th { background: #475569; }
+        .potential-table td:nth-child(1), .potential-table td:nth-child(2) { text-align: left; }
+        .potential-table td:nth-child(1) { white-space: nowrap; }
+        .potential-table td:nth-child(2) { min-width: 160px; }
+        .potential-table td textarea.comment-input { width: 100%; min-height: 60px; padding: 4px; border: 1px solid #ccc; border-radius: 3px; background: var(--card-bg); color: var(--text); font-size: 11px; resize: vertical; word-wrap: break-word; overflow-wrap: break-word; font-family: inherit; }
+        .ndz-counter { background: var(--status-ndz); color: white; border-radius: 8px; padding: 1px 5px; font-size: 9px; font-weight: bold; }
+        .ndz-last-time { font-size: 9px; color: #b45309; margin-left: 2px; }
+        .deferred-row { background: var(--defer-bg); }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center; }
+        .modal-content { background: var(--card-bg); padding: 12px; border-radius: 10px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; color: var(--text); }
+        .orders-filters-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; background: var(--card-bg); border-radius: 8px; padding: 6px 10px; margin-bottom: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); display: none; }
+        .orders-filters-row.visible { display: flex; }
+        .orders-table-wrapper { background: var(--card-bg); border-radius: 8px; padding: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); max-height: 60vh; overflow: auto; flex: 1; min-width: 0; }
+        .orders-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        .orders-table th, .orders-table td { padding: 5px 7px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+        .orders-table th { background: #f8fafc; font-weight: 600; position: sticky; top: 0; z-index: 2; color: var(--text); }
+        body.dark .orders-table th { background: #475569; }
+        .orders-table th:nth-child(1) { width: 42%; }
+        .orders-table th:nth-child(2) { width: 13%; }
+        .orders-table th:nth-child(3) { width: 10%; }
+        .orders-table th:nth-child(4) { width: 10%; }
+        .orders-table th:nth-child(5) { width: 6%; }
+        .orders-table th:nth-child(6) { width: 7%; }
+        .orders-table th:nth-child(7) { width: 5%; }
+        .orders-table th:nth-child(8) { width: 7%; }
+        .orders-table select, .orders-table input[type="text"], .orders-table input[type="date"] { font-size: 10px; padding: 1px 3px; border-radius: 3px; border: 1px solid #ccc; background: var(--card-bg); color: var(--text); }
+        .add-order-block { margin-bottom: 12px; background: var(--card-bg); padding: 10px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+        .add-order-block textarea { width: 100%; min-height: 60px; font-size: 12px; padding: 5px; border-radius: 4px; border: 1px solid var(--border); resize: vertical; background: var(--card-bg); color: var(--text); }
+        .phone-link { color: var(--primary); cursor: pointer; text-decoration: underline; }
+        .manual-add-potential { margin-top: 8px; display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+        .manual-add-potential input { padding: 4px 6px; border-radius: 4px; border: 1px solid var(--border); flex: 1 1 100px; background: var(--card-bg); color: var(--text); font-size: 11px; }
+        .analytics-block { background: var(--card-bg); border-radius: 10px; padding: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 16px; overflow-x: auto; }
+        .analytics-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 550px; }
+        .analytics-table th, .analytics-table td { padding: 6px; border-bottom: 1px solid var(--border); text-align: center; }
+        .analytics-table th { background: #f8fafc; color: var(--text); }
+        body.dark .analytics-table th { background: #475569; }
+        .dds-table td:last-child { border-left: 2px solid var(--border); }
+        .dds-table td { position: relative; }
+        .dds-table .editable-dds { cursor: pointer; min-height: 18px; padding: 2px 4px; border-radius: 3px; display: block; }
+        .dds-table .editable-dds:hover { background: var(--btn-hover-bg); }
+        .dds-table textarea, .dds-table input { width: 100%; padding: 2px; border: 1px solid #ccc; border-radius: 3px; font-size: 11px; background: var(--card-bg); color: var(--text); }
+        .dds-table textarea { resize: vertical; min-height: 30px; }
+        .add-dds-block { margin-top: 12px; background: var(--card-bg); padding: 10px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+        .add-dds-row { display: flex; gap: 6px; flex-wrap: wrap; }
+        .add-dds-row input, .add-dds-row textarea { padding: 4px 6px; border-radius: 4px; border: 1px solid var(--border); font-size: 11px; background: var(--card-bg); color: var(--text); flex: 1 1 120px; min-width: 80px; }
+        .add-dds-row textarea { resize: vertical; min-height: 30px; flex: 1 1 150px; }
+        .db-table-wrapper { max-height: 50vh; overflow-y: auto; border-radius: 8px; border: 1px solid var(--border); }
+        .reserves-table, .recruits-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        .reserves-table th, .reserves-table td, .recruits-table th, .recruits-table td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: middle; }
+        .reserves-table th, .recruits-table th { background: #f8fafc; font-weight: 600; color: var(--text); position: sticky; top: 0; z-index: 2; white-space: nowrap; }
+        body.dark .reserves-table th, body.dark .recruits-table th { background: #475569; }
+        .reserves-table .editable-text, .recruits-table .editable-text { cursor: pointer; min-height: 18px; padding: 2px 4px; border-radius: 3px; white-space: pre-wrap; display: inline-block; }
+        .reserves-table .editable-text:hover, .recruits-table .editable-text:hover { background: var(--btn-hover-bg); }
+        .add-db-block { margin-bottom: 12px; background: var(--card-bg); padding: 10px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+        .add-db-block textarea { width: 100%; min-height: 60px; font-size: 12px; padding: 5px; border-radius: 4px; border: 1px solid var(--border); resize: vertical; background: var(--card-bg); color: var(--text); }
+        .add-db-block .date-row { margin-bottom: 5px; }
+        .add-db-block .date-row label { font-size: 12px; font-weight: 500; margin-right: 4px; }
+        .debt-table-wrapper { max-height: 50vh; overflow-y: auto; border-radius: 8px; border: 1px solid var(--border); }
+        .debt-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        .debt-table th, .debt-table td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: center; vertical-align: middle; }
+        .debt-table th { background: #f8fafc; font-weight: 600; color: var(--text); position: sticky; top: 0; z-index: 2; }
+        body.dark .debt-table th { background: #475569; }
+        .sub-tabs { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+        .sub-tab { padding: 5px 10px; background: #e2e8f0; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 12px; color: #1e293b; }
+        body.dark .sub-tab { background: #475569; color: #f1f5f9; }
+        .sub-tab.active { background: var(--primary); color: white; }
+        .analytics-filters { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: nowrap; overflow-x: auto; white-space: nowrap; }
+        .confirm-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center; }
+        .confirm-box { background: var(--card-bg); padding: 15px; border-radius: 8px; max-width: 340px; text-align: center; color: var(--text); }
+        .confirm-box button { margin: 6px 3px; padding: 5px 14px; border-radius: 4px; cursor: pointer; border: none; }
+        .confirm-yes { background: #ef4444; color: white; }
+        .confirm-no { background: #e2e8f0; color: #1e293b; }
+        .top-actions { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+        .icon-btn { background: none; border: 1px solid var(--border); border-radius: 4px; padding: 3px 6px; cursor: pointer; font-size: 14px; color: var(--text); }
+        .auto-save-indicator { font-size: 9px; color: #64748b; margin-left: 2px; white-space: nowrap; }
+        .auto-import-indicator { font-size: 9px; color: #10b981; margin-left: 2px; display: none; white-space: nowrap; }
+        .auto-import-indicator.show { display: inline; }
+        .sort-btn { padding: 2px 6px; font-size: 10px; background: #f1f5f9; border: 1px solid var(--border); border-radius: 3px; cursor: pointer; color: var(--text); }
+        .sort-btn.active { background: var(--primary); color: white; }
+        .recruits-checkbox { width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary); }
+        .amocrm-form-container { margin-top: 15px; background: var(--card-bg); border-radius: 10px; padding: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); max-width: 500px; }
+        .amocrm-form-container h3 { margin-bottom: 4px; font-size: 12px; }
+        .amocrm-form-iframe { width: 100%; height: 140px; border: 1px solid var(--border); border-radius: 8px; }
+        .dds-filters-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; padding: 6px 10px; background: var(--card-bg); border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+        .potential-actions, .orders-actions { display: flex; flex-direction: column; gap: 3px; align-items: stretch; }
+        .potential-actions .btn, .orders-actions .btn { justify-content: center; width: 100%; }
+        .screen-block { margin-top: 20px; }
+        .screen-area { border: 2px dashed var(--border); border-radius: 8px; padding: 16px; text-align: center; color: #64748b; background: var(--bg); cursor: pointer; margin-bottom: 8px; }
+        .screen-area:focus { outline: none; }
+        .screen-thumbs { display: flex; gap: 8px; flex-wrap: wrap; }
+        .screen-thumb { position: relative; width: 100px; height: 100px; background-size: cover; background-position: center; border-radius: 6px; border: 1px solid var(--border); cursor: pointer; }
+        .screen-thumb .delete-screen { position: absolute; top: -6px; right: -6px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 12px; line-height: 18px; text-align: center; cursor: pointer; }
+        .screen-thumb .screen-date { position: absolute; bottom: 2px; left: 2px; font-size: 8px; color: #fff; background: rgba(0,0,0,0.5); padding: 1px 3px; border-radius: 2px; pointer-events: none; line-height: 1.2; }
+        .screen-fullview { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; display: flex; align-items: center; justify-content: center; overflow: auto; }
+        .screen-fullview img { max-width: 90vw; max-height: 90vh; object-fit: contain; display: block; }
+        .screen-fullview .screen-close-btn { position: fixed; top: 20px; right: 30px; background: rgba(255,255,255,0.3); color: white; border: none; border-radius: 50%; width: 36px; height: 36px; font-size: 20px; line-height: 36px; text-align: center; cursor: pointer; z-index: 10001; }
+        .screen-fullview .screen-open-new { position: fixed; top: 20px; right: 80px; background: var(--primary); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; z-index: 10001; }
+        .draggable-row { cursor: grab; }
+        .draggable-row.dragging { opacity: 0.5; }
+        .current-stats-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding: 6px 10px; background: var(--card-bg); border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); font-size: 12px; }
+        .current-stats-row .stat-item { flex: 1; text-align: center; }
+        .hide-col-btn { margin-left: 4px; background: none; border: none; color: #ef4444; cursor: pointer; font-weight: bold; font-size: 12px; padding: 0 4px; }
+        .hidden-col { display: none; }
+        .show-all-cols-btn { margin-top: 6px; padding: 3px 10px; background: #f1f5f9; border: 1px solid var(--border); border-radius: 4px; cursor: pointer; font-size: 11px; color: var(--text); }
+        body.dark .show-all-cols-btn { background: #475569; }
+        .sync-indicator { font-size: 9px; color: #10b981; margin-left: 2px; white-space: nowrap; }
+        .sync-indicator.syncing { color: #f59e0b; }
+        .db-filters-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; padding: 6px 10px; background: var(--card-bg); border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+        .db-filters-row .filter-group { display: flex; align-items: center; gap: 4px; }
+        .db-filters-row .filter-group label { font-size: 11px; font-weight: 500; white-space: nowrap; }
+        .db-filters-row .filter-group select { font-size: 11px; padding: 2px 5px; border-radius: 4px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text); }
+        .settings-dropdown { position: relative; display: inline-block; }
+        .settings-dropdown-content { display: none; position: absolute; background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 1000; padding: 4px; min-width: 180px; right: 0; }
+        .settings-dropdown-content button { display: block; width: 100%; padding: 4px 8px; background: transparent; border: none; cursor: pointer; text-align: left; font-size: 11px; color: var(--text); }
+        .settings-dropdown-content button:hover { background: var(--btn-hover-bg); }
+
+        /* Единый блок заголовка с кнопками */
+        .section-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+        .section-header h3 { margin: 0; white-space: nowrap; }
+        .section-header-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+
+        .amocrm-modal-iframe { width: 100%; height: 400px; border: 1px solid var(--border); border-radius: 8px; }
+
+        @media (max-width: 600px) {
+            .tab { padding: 4px 8px; font-size: 11px; }
+            .tabs { gap: 4px; }
+            .tab.db-tab { font-size: 10px; padding: 4px 7px; }
+            .tabs-bar { padding: 4px 8px; gap: 6px; }
+            .columns-container { display: none; }
+            .columns-container.visible { display: flex; }
+            #toggle-managers-btn { display: inline-block !important; margin-left: 0; }
+            .potential-table { min-width: auto; }
+            .potential-table th, .potential-table td { padding: 4px 3px; font-size: 10px; }
+            .potential-table td:nth-child(2) { min-width: 100px; max-width: 120px; }
+            .potential-table td textarea.comment-input { min-height: 40px; font-size: 10px; }
+            .potential-actions, .orders-actions { flex-direction: column; gap: 3px; }
+            .potential-actions .btn, .orders-actions .btn { width: 100%; padding: 4px 4px; font-size: 9px; }
+            .potential-header { flex-direction: column; align-items: flex-start; gap: 4px; }
+            .potential-header-btns { width: 100%; }
+            .manager-header { flex-direction: row; flex-wrap: wrap; }
+            .manager-header h3 { width: 100%; margin-bottom: 2px; }
+            .section-header { flex-direction: column; align-items: flex-start; gap: 6px; margin-bottom: 10px; }
+            .section-header h3 { width: 100%; }
+            .section-header-btns { width: 100%; }
+            .tabs-bar { flex-direction: column; align-items: stretch; }
+            .tabs-bar > .top-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; justify-content: flex-start; }
+            #amocrm-form-btn { display: inline-flex !important; }
+            .amocrm-form-container { display: none; }
+            .amocrm-modal-iframe { height: 350px; }
+        }
+        @media (min-width: 601px) {
+            #amocrm-form-btn { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="tabs-bar">
+        <div class="tabs">
+            <div class="tab active" data-tab="lids">👥 Лиды</div>
+            <div class="tab" data-tab="orders">📦 Заявки</div>
+            <div class="tab" data-tab="analytics">📊 Аналитика</div>
+            <div class="tab" data-tab="payouts">💸 Выплаты</div>
+            <div class="tab db-tab" data-tab="db">🗄️ База</div>
+        </div>
+        <div class="top-actions">
+            <button class="icon-btn" id="refresh-btn" title="Обновить текущий раздел">🔄</button>
+            <div class="settings-dropdown">
+                <button class="icon-btn settings-toggle" id="settings-toggle-btn" title="Настройки">⚙️</button>
+                <div class="settings-dropdown-content" id="settings-dropdown">
+                    <button id="add-manager-menu-btn">➕ Добавить менеджера</button>
+                    <button onclick="window.exportData()">💾 Экспорт всей базы</button>
+                    <button onclick="window.exportOrders()">📦 Экспорт заявок</button>
+                    <button onclick="window.exportPayouts()">💰 Экспорт выплат</button>
+                    <button onclick="window.exportDB()">🗄️ Экспорт базы</button>
+                    <button onclick="window.importData()">📂 Импорт базы (JSON)</button>
+                    <button id="load-autosave-btn">🔄 Загрузить автосохранение</button>
+                </div>
+            </div>
+            <button class="icon-btn theme-toggle" id="theme-toggle" title="Переключить тему">☀️</button>
+            <span class="sync-indicator" id="sync-status" title="Статус синхронизации">📴 Оффлайн</span>
+            <span class="auto-save-indicator" id="auto-save-status"></span>
+            <span class="auto-import-indicator" id="auto-import-status">📥 Автоимпорт...</span>
+        </div>
+    </div>
+
+    <div class="content" id="lids-panel">
+        <div class="search-row"><textarea id="search-phones" placeholder="Вставьте номера, каждый с новой строки"></textarea><button class="btn primary" id="search-btn">Найти</button></div>
+        <div class="manager-header">
+            <h3 style="margin:0;">👥 Менеджеры</h3>
+            <button id="toggle-managers-btn" style="display:none;" class="btn small primary">👥 Показать менеджеров</button>
+            <button id="filters-toggle-btn" class="btn small">🔽 Фильтры</button>
+        </div>
+        <div class="filters-panel" id="filters-panel">
+            <div class="filter-group"><label>Дата с:</label><input type="date" id="filter-date-from" /></div>
+            <div class="filter-group"><label>по:</label><input type="date" id="filter-date-to" /></div>
+            <div class="filter-group"><label>Статусы:</label><div class="status-filters" id="status-checkboxes"></div></div>
+            <button id="apply-filters" class="btn small primary">Применить</button>
+            <button id="clear-filters" class="btn small">Сбросить</button>
+        </div>
+        <div id="columns-container" class="columns-container"></div>
+        <div class="potential-widget" id="potential-widget">
+            <div class="potential-header">
+                <h3>📌 Потенциальные заявки <span id="potential-count"></span></h3>
+                <div class="potential-header-btns">
+                    <button id="copy-all-potential" class="btn xsmall">📋 Копировать все</button>
+                    <button id="toggle-deferred-btn" class="btn xsmall">📅 Отложенные<span id="deferred-count"></span></button>
+                    <button id="sales-scripts-btn" class="btn xsmall">📜 Скрипты</button>
+                </div>
+            </div>
+            <div class="potential-table-wrapper">
+                <table class="potential-table" id="potential-table">
+                    <thead><tr><th>Номер</th><th>Комментарий</th><th>Действия</th><th>НДЗ</th><th>Дата добавления</th><th>Менеджер</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div class="manual-add-potential">
+                <input type="text" id="manual-phone" placeholder="Номер телефона" />
+                <input type="text" id="manual-comment" placeholder="Комментарий" style="flex:1;" />
+                <button id="add-manual-potential" class="btn small primary">➕ Добавить вручную</button>
+            </div>
+            <div id="deferred-list" class="deferred-list" style="display: none;">
+                <div style="display: flex; align-items: flex-start; gap: 10px; flex-wrap: wrap;">
+                    <div style="flex:1; min-width:250px; order:0;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <h4 id="deferred-list-title">⏳ Отложенные заявки</h4>
+                            <button id="clear-deferred-filter" class="btn xsmall" style="display:none;">Показать все</button>
+                        </div>
+                        <table id="deferred-table">
+                            <thead><tr><th>Номер</th><th>Комментарий</th><th>Дата отложена</th><th>Действия</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <div id="deferred-calendar" class="deferred-calendar" style="order:1;">
+                        <div class="calendar-nav" id="calendar-nav">
+                            <button id="cal-prev" class="btn xsmall">←</button>
+                            <span id="cal-month-label"></span>
+                            <button id="cal-next" class="btn xsmall">→</button>
+                        </div>
+                        <div id="cal-grid"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="content" id="orders-panel" style="display:none;">
+        <div class="add-order-block">
+            <div style="margin-bottom:5px;"><label>Дата заявки:</label><input type="date" id="order-date-input" /></div>
+            <textarea id="new-orders-input" placeholder="Вставьте заявку или несколько (разделяйте пустой строкой)"></textarea>
+            <button id="add-orders-btn" class="btn primary">➕ Добавить заявки</button>
+        </div>
+        <div class="section-header">
+            <h3>📦 Заявки Константин <span id="orders-count"></span></h3>
+            <div class="section-header-btns">
+                <button id="orders-filters-toggle-btn" class="btn small">🔽 Фильтры</button>
+                <button id="amocrm-form-btn" class="btn small">📋 Форма</button>
+            </div>
+        </div>
+        <div class="orders-filters-row" id="orders-filters-row">
+            <div class="filter-group"><label>Дата с:</label><input type="date" id="order-filter-date-from" /></div>
+            <div class="filter-group"><label>по:</label><input type="date" id="order-filter-date-to" /></div>
+            <div class="quick-buttons" style="display:flex;gap:4px;flex-wrap:wrap;">
+                <button id="order-filter-this-week" class="btn xsmall">Эта неделя</button>
+                <button id="order-filter-this-month" class="btn xsmall">Этот месяц</button>
+                <button id="order-filter-last-month" class="btn xsmall">Прошлый месяц</button>
+                <button id="order-filter-all-time" class="btn xsmall">Всё время</button>
+            </div>
+            <div class="filter-group"><label>Контракт:</label><select id="order-filter-contract"><option value="">Все</option><option value="Да">Да</option><option value="Нет">Нет (пусто)</option></select></div>
+            <div class="filter-group"><label>🔍 Текст заявки:</label><input type="text" id="order-filter-text" placeholder="Введите текст..." /></div>
+        </div>
+        <div class="orders-table-wrapper" id="orders-table-wrapper">
+            <table class="orders-table" id="orders-table">
+                <thead><tr><th>Заявка</th><th>Действия</th><th>Дата заявки</th><th>Менеджер</th><th>Контракт</th><th>Осн. сумма</th><th>Бонус</th><th>Дата подписания</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <div class="amocrm-form-container">
+            <h3>📋 Форма передачи заявок</h3>
+            <iframe src="https://forms.amocrm.ru/rzlvmcv" class="amocrm-form-iframe" frameborder="0"></iframe>
+        </div>
+    </div>
+
+    <div class="content" id="analytics-panel" style="display:none;">
+        <h3 style="margin-bottom:6px;">📊 Общая</h3>
+        <div class="sub-tabs" id="overall-sub-tabs">
+            <div class="sub-tab active" data-mode="contractDate">По дате подписания</div>
+            <div class="sub-tab" data-mode="leadDate">По дате заявки</div>
+        </div>
+        <div id="overall-contractDate-panel"><div class="analytics-filters" id="stats-filters">
+            <div class="filter-group"><label>Дата с:</label><input type="date" id="stats-date-from" /></div>
+            <div class="filter-group"><label>по:</label><input type="date" id="stats-date-to" /></div>
+            <button id="stats-this-week" class="btn xsmall">Эта неделя</button>
+            <button id="stats-this-month" class="btn xsmall">Этот месяц</button>
+            <button id="stats-last-month" class="btn xsmall">Прошлый месяц</button>
+            <button id="stats-all-time" class="btn xsmall">Всё время</button>
+            <button id="add-saved-stats-row-btn" class="btn xsmall" title="Закрепить текущий период" style="display:none;">+</button>
+        </div></div>
+        <div id="overall-leadDate-panel" style="display:none;"><div class="analytics-filters">
+            <div class="filter-group"><label>Дата с:</label><input type="date" id="stats-lead-date-from" /></div>
+            <div class="filter-group"><label>по:</label><input type="date" id="stats-lead-date-to" /></div>
+            <button id="stats-lead-this-week" class="btn xsmall">Эта неделя</button>
+            <button id="stats-lead-this-month" class="btn xsmall">Этот месяц</button>
+            <button id="stats-lead-last-month" class="btn xsmall">Прошлый месяц</button>
+            <button id="stats-lead-all-time" class="btn xsmall">Всё время</button>
+            <button id="add-saved-stats-row-btn-lead" class="btn xsmall" title="Закрепить текущий период" style="display:none;">+</button>
+        </div></div>
+        <div id="current-stats-row" class="current-stats-row"></div>
+        <div class="analytics-block">
+            <table class="analytics-table" id="overall-stats-table">
+                <thead><tr id="overall-header-row"></tr></thead>
+                <tbody id="overall-stats-tbody"></tbody>
+            </table>
+            <button class="show-all-cols-btn" id="show-all-cols-btn" style="display:none;">Показать все столбцы</button>
+        </div>
+        <h3 style="margin: 20px 0 6px;">👥 Менеджеры</h3>
+        <div class="sub-tabs" id="managers-sub-tabs">
+            <div class="sub-tab active" data-mode="contractDate">По дате подписания</div>
+            <div class="sub-tab" data-mode="leadDate">По дате заявки</div>
+        </div>
+        <div id="managers-contractDate-panel"><div class="analytics-filters" id="managers-stats-filters">
+            <div class="filter-group"><label>Дата с:</label><input type="date" id="managers-date-from" /></div>
+            <div class="filter-group"><label>по:</label><input type="date" id="managers-date-to" /></div>
+            <button id="managers-this-week" class="btn xsmall">Эта неделя</button>
+            <button id="managers-this-month" class="btn xsmall">Этот месяц</button>
+            <button id="managers-last-month" class="btn xsmall">Прошлый месяц</button>
+            <button id="managers-all-time" class="btn xsmall">Всё время</button>
+        </div></div>
+        <div id="managers-leadDate-panel" style="display:none;"><div class="analytics-filters">
+            <div class="filter-group"><label>Дата с:</label><input type="date" id="managers-lead-date-from" /></div>
+            <div class="filter-group"><label>по:</label><input type="date" id="managers-lead-date-to" /></div>
+            <button id="managers-lead-this-week" class="btn xsmall">Эта неделя</button>
+            <button id="managers-lead-this-month" class="btn xsmall">Этот месяц</button>
+            <button id="managers-lead-last-month" class="btn xsmall">Прошлый месяц</button>
+            <button id="managers-lead-all-time" class="btn xsmall">Всё время</button>
+        </div></div>
+        <div class="analytics-block"><table class="analytics-table" id="managers-stats-table"><thead><tr id="managers-header-row"></tr></thead><tbody></tbody></table></div>
+        <div class="screen-block">
+            <h3>🖼️ АмоЦрм</h3>
+            <div class="screen-area" id="screen-drop-zone" tabindex="0">
+                Нажмите сюда и вставьте скриншот (Ctrl+V)<br>или кликните для вставки
+            </div>
+            <div class="screen-thumbs" id="screen-thumbs"></div>
+        </div>
+    </div>
+
+    <div class="content" id="payouts-panel" style="display:none;">
+        <h3>💰 Задолженность <span id="total-debt-amount"></span></h3>
+        <div class="analytics-block debt-table-wrapper" id="debt-block">
+            <table class="debt-table" id="debt-table">
+                <thead><tr><th>Заявка</th><th>Дата подписания</th><th>Осн. сумма</th><th>Выпл. осн.</th><th>Дата / Срок осн.</th><th>Бонус</th><th>Выпл. бонус</th><th>Дата / Срок бонус</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <h3 style="margin-top: 20px;">🧾 ДДС</h3>
+        <div class="dds-filters-row" id="dds-filters-row">
+            <div class="filter-group">
+                <label>Сортировка по дате:</label>
+                <button class="sort-btn active" id="dds-sort-desc" data-sort="desc">↓ По убыванию</button>
+                <button class="sort-btn" id="dds-sort-asc" data-sort="asc">↑ По возрастанию</button>
+            </div>
+        </div>
+        <div class="analytics-block" id="dds-block">
+            <table class="analytics-table dds-table" id="dds-table">
+                <thead>
+                    <tr><th class="narrow">Партнер</th><th class="narrow">Сумма (₽)</th><th class="narrow">Кол-во контрактов</th><th>Дата выплаты</th><th class="wide">Как принимал</th><th class="narrow" style="border-left: 2px solid var(--border);">Итого вышло (₽)</th><th></th></tr>
+                </thead>
+                <tbody></tbody>
+                <tfoot id="dds-footer"></tfoot>
+            </table>
+        </div>
+        <div class="add-dds-block">
+            <div class="add-dds-row">
+                <input type="text" id="dds-partner-input" placeholder="Партнер" />
+                <input type="text" id="dds-sum-input" placeholder="Сумма (₽)" />
+                <input type="text" id="dds-contracts-input" placeholder="Контракты" />
+                <input type="date" id="dds-date-input-new" />
+                <textarea id="dds-method-input" placeholder="Как принимал"></textarea>
+                <input type="text" id="dds-total-input" placeholder="Итого вышло (₽)" />
+                <button id="add-dds-row-btn" class="btn primary">➕ Добавить</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="content" id="db-panel" style="display:none;">
+        <div class="sub-tabs">
+            <div class="sub-tab active" data-db="reserves">Запасы <span id="reserves-count"></span></div>
+            <div class="sub-tab" data-db="recruits">Рекруты <span id="recruits-count"></span></div>
+        </div>
+        <div id="reserves-panel" style="overflow-x: auto;">
+            <div class="add-db-block">
+                <div class="date-row"><label>Дата заявки:</label><input type="date" id="reserves-date-input" /></div>
+                <textarea id="new-reserves-input" placeholder="Вставьте заявку или несколько (разделяйте пустой строкой)"></textarea>
+                <button id="add-reserves-btn" class="btn primary">➕ Добавить заявки</button>
+            </div>
+            <div class="db-filters-row" id="reserves-filters-row">
+                <div class="filter-group">
+                    <label>Сортировка по дате:</label>
+                    <button class="sort-btn active" id="reserves-sort-desc" data-sort="desc">↓ По убыванию</button>
+                    <button class="sort-btn" id="reserves-sort-asc" data-sort="asc">↑ По возрастанию</button>
+                </div>
+                <div class="filter-group">
+                    <label>Причина:</label>
+                    <select id="reserves-reason-filter">
+                        <option value="">Все</option>
+                        <option value="Женщина">Женщина</option>
+                        <option value="Офицер">Офицер</option>
+                        <option value="Кат Д">Кат Д</option>
+                        <option value="Кат В">Кат В</option>
+                        <option value="other">Другое</option>
+                        <option value="none">Без причины</option>
+                    </select>
+                </div>
+            </div>
+            <div class="db-table-wrapper">
+                <table class="reserves-table" id="reserves-table">
+                    <thead><tr><th style="width:50%;">Заявка</th><th style="width:15%;">Действия</th><th style="width:15%;">Дата заявки</th><th style="width:20%;">Причина</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+        <div id="recruits-panel" style="display:none; overflow-x: auto;">
+            <div class="add-db-block">
+                <textarea id="new-recruits-input" placeholder="Вставьте заявку или несколько (разделяйте пустой строкой)"></textarea>
+                <button id="add-recruits-btn" class="btn primary">➕ Добавить заявки</button>
+            </div>
+            <div class="db-filters-row" id="recruits-filters-row">
+                <div class="filter-group">
+                    <label>Сортировка по дате:</label>
+                    <button class="sort-btn active" id="recruits-sort-desc" data-sort="desc">↓ По убыванию</button>
+                    <button class="sort-btn" id="recruits-sort-asc" data-sort="asc">↑ По возрастанию</button>
+                </div>
+                <div class="filter-group">
+                    <label>Отписал:</label>
+                    <select id="recruits-reply-filter">
+                        <option value="">Все</option>
+                        <option value="yes">Да (отписал)</option>
+                        <option value="no">Нет (не отписал)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="db-table-wrapper">
+                <table class="recruits-table" id="recruits-table">
+                    <thead><tr><th style="width:60%;">Заявка</th><th style="width:20%;">Действия</th><th style="width:20%;">Отписал</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="search-modal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <h3>Результаты поиска</h3>
+            <div id="search-results"></div>
+            <button id="close-modal" class="btn small" style="margin-top:8px;">Закрыть</button>
+        </div>
+    </div>
+
+    <div id="defer-modal" class="modal" style="display:none;">
+        <div class="modal-content" style="max-width:350px;">
+            <h3>Отложить заявку</h3>
+            <div style="margin:10px 0;">
+                <label>На какую дату отложить?</label>
+                <input type="date" id="defer-date-input" style="width:100%; padding:5px; margin-top:4px;" />
+            </div>
+            <div style="text-align:right;">
+                <button id="cancel-defer-btn" class="btn small">Отмена</button>
+                <button id="confirm-defer-btn" class="btn small primary">Отложить</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="scripts-modal" class="modal" style="display:none;">
+        <div class="modal-content" style="max-width:600px;">
+            <h3>📜 Скрипты для продаж</h3>
+            <textarea id="scripts-textarea" style="width:100%; height:300px; padding:10px; font-family: inherit; font-size:12px; border-radius:6px; border:1px solid var(--border); background:var(--card-bg); color:var(--text); resize:vertical;"></textarea>
+            <div style="text-align:right; margin-top:10px;">
+                <button id="save-scripts-btn" class="btn primary">💾 Сохранить</button>
+                <button id="close-scripts-btn" class="btn">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="amocrm-modal" class="modal" style="display:none;">
+        <div class="modal-content" style="max-width:520px;">
+            <h3>📋 Форма передачи заявок</h3>
+            <iframe src="https://forms.amocrm.ru/rzlvmcv" class="amocrm-modal-iframe" frameborder="0"></iframe>
+            <div style="text-align:right; margin-top:10px;">
+                <button id="close-amocrm-btn" class="btn">Закрыть</button>
+            </div>
+        </div>
+    </div>
+    <script type="module">
+        import { initializeApp } from 'firebase/app';
+        import { getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, deleteDoc, query, orderBy, where, limit } from 'firebase/firestore';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAkl5rvje0xwveLk14rWAjdupp9LJuCNl8",
+            authDomain: "myleadspanel.firebaseapp.com",
+            projectId: "myleadspanel",
+            storageBucket: "myleadspanel.firebasestorage.app",
+            messagingSenderId: "354681046821",
+            appId: "1:354681046821:web:00e92514242b8eee10fccc"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const columnsRef = collection(db, 'columns');
+        const ordersRef = collection(db, 'orders');
+        const potentialRef = collection(db, 'potentialOrders');
+        const ddsRef = collection(db, 'dds');
+        const contractPayoutsRef = collection(db, 'contractPayouts');
+        const reservesRef = collection(db, 'reserves');
+        const recruitsRef = collection(db, 'recruits');
+        const managersRef = collection(db, 'managers');
+        const savedStatsRef = collection(db, 'savedStatsRows');
+        const screenshotsRef = collection(db, 'screenshots');
+        const salesScriptsRef = collection(db, 'salesScripts');
+
+        let columnsCache = {};
+        let ordersCache = [];
+        let potentialCache = [];
+        let ddsCache = [];
+        let contractPayoutsCache = {};
+        let reservesCache = [];
+        let recruitsCache = [];
+        let managersList = [];
+        let savedStatsRows = [];
+        let screenshotsCache = [];
+        let salesScriptsText = '';
+
+        let ordersLoaded = false;
+        let analyticsLoaded = false;
+        let payoutsLoaded = false;
+        let dbLoaded = false;
+
+        let selectedDeferredDate = null;
+        let calendarYear = new Date().getFullYear();
+        let calendarMonth = new Date().getMonth();
+
+        let reservesSortOrder = 'desc';
+        let reservesReasonFilter = '';
+        let recruitsSortOrder = 'desc';
+        let recruitsReplyFilter = '';
+        let ddsSortOrder = 'desc';
+
+        const AUTO_IMPORT_MANAGER = 'Вероника';
+        const AUTO_IMPORT_STORAGE_KEY = 'crm_auto_import_phones';
+        let hiddenColumns = JSON.parse(localStorage.getItem('hiddenColumns') || '[]');
+
+        const saved = localStorage.getItem('crm-autosave');
+        if (saved) {
+            try {
+                const data = JSON.parse(saved);
+                if (data.columns) columnsCache = data.columns;
+                if (data.orders) ordersCache = data.orders;
+                if (data.potentialOrders) potentialCache = data.potentialOrders;
+                if (data.dds) ddsCache = data.dds;
+                if (data.contractPayouts) contractPayoutsCache = data.contractPayouts;
+                if (data.reserves) reservesCache = data.reserves;
+                if (data.recruits) recruitsCache = data.recruits;
+                if (data.managers) managersList = data.managers;
+                if (data.savedStatsRows) savedStatsRows = data.savedStatsRows;
+                if (data.screenshots) screenshotsCache = data.screenshots;
+                if (data.salesScriptsText) salesScriptsText = data.salesScriptsText;
+                ordersLoaded = true; analyticsLoaded = true; payoutsLoaded = true; dbLoaded = true;
+            } catch(e) {}
+        }
+        function parseAmount(str) { return parseFloat((str||'0').toString().replace(/[^\d.,]/g, '').replace(',', '.')) || 0; }
+        function escapeHtml(text) { const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }; return String(text).replace(/[&<>"']/g, m => map[m]); }
+        async function copyToClipboard(text) { try { await navigator.clipboard.writeText(text); } catch { const tmp = document.createElement('textarea'); tmp.value = text; document.body.appendChild(tmp); tmp.select(); document.execCommand('copy'); document.body.removeChild(tmp); } }
+        function formatDateTime(isoString) {
+            const date = new Date(isoString);
+            const months = ['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
+            const day = String(date.getDate()).padStart(2,'0');
+            const month = String(date.getMonth() + 1).padStart(2,'0');
+            const year = date.getFullYear();
+            const hours = String(date.getHours()).padStart(2,'0');
+            const minutes = String(date.getMinutes()).padStart(2,'0');
+            return `${day}.${month}.${year} ${hours}:${minutes}`;
+        }
+        function formatDateRange(dateFrom, dateTo) {
+            if (!dateFrom && !dateTo) return '';
+            const months = ['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
+            const format = (d) => { if (!d) return '…'; const parts = d.split('-'); return `${parseInt(parts[2])} ${months[parseInt(parts[1])-1]}` + (parts[0] !== new Date().getFullYear().toString() ? ` ${parts[0]}` : ''); };
+            return `${format(dateFrom)} – ${format(dateTo)}`;
+        }
+        function getMonthBounds(year, month) {
+            const firstDay = `${year}-${String(month).padStart(2,'0')}-01`;
+            const nextMonth = month === 12 ? 1 : month + 1;
+            const nextYear = month === 12 ? year + 1 : year;
+            const lastDayDate = new Date(`${nextYear}-${String(nextMonth).padStart(2,'0')}-01`);
+            lastDayDate.setDate(lastDayDate.getDate() - 1);
+            return { firstDay, lastDay: lastDayDate.toISOString().slice(0,10) };
+        }
+        function showConfirm(message, onYes) {
+            const modal = document.createElement('div'); modal.className = 'confirm-modal';
+            modal.innerHTML = `<div class="confirm-box"><p style="margin-bottom:10px;">${message}</p><button class="confirm-yes">Да</button><button class="confirm-no">Нет</button></div>`;
+            document.body.appendChild(modal);
+            modal.querySelector('.confirm-yes').onclick = () => { document.body.removeChild(modal); onYes?.(); };
+            modal.querySelector('.confirm-no').onclick = () => document.body.removeChild(modal);
+        }
+        function setSyncStatus(status) {
+            const el = document.getElementById('sync-status');
+            if (status === 'syncing') { el.textContent = '🔄 Загрузка...'; el.classList.add('syncing'); }
+            else if (status === 'online') { el.textContent = '⚡ Готово'; el.classList.remove('syncing'); }
+            else if (status === 'offline') { el.textContent = '📴 Оффлайн'; el.classList.remove('syncing'); }
+        }
+        function setElVal(id, val) { const el = document.getElementById(id); if (el) el.value = val; }
+        function autoSave() {
+            const data = {
+                columns: columnsCache, orders: ordersCache, potentialOrders: potentialCache,
+                dds: ddsCache, contractPayouts: contractPayoutsCache, reserves: reservesCache,
+                recruits: recruitsCache, managers: managersList, savedStatsRows, screenshots: screenshotsCache,
+                salesScriptsText: salesScriptsText
+            };
+            localStorage.setItem('crm-autosave', JSON.stringify(data));
+            const el = document.getElementById('auto-save-status');
+            if (el) { el.textContent = '💾 Автосохранение'; setTimeout(() => { if(el) el.textContent = ''; }, 2000); }
+        }
+        setInterval(autoSave, 300000);
+
+        async function checkAutoImport() {
+            const raw = localStorage.getItem(AUTO_IMPORT_STORAGE_KEY);
+            if (!raw) return;
+            const phones = raw.split('\n').map(s => s.trim()).filter(s => /^\+7\d{10}$/.test(s));
+            if (phones.length === 0) { localStorage.removeItem(AUTO_IMPORT_STORAGE_KEY); return; }
+            if (!columnsCache[AUTO_IMPORT_MANAGER]) columnsCache[AUTO_IMPORT_MANAGER] = [];
+            const managerPhones = columnsCache[AUTO_IMPORT_MANAGER] || [];
+            const existingPhones = new Set(managerPhones.map(p => p.phone));
+            const newPhones = phones.filter(p => !existingPhones.has(p));
+            if (newPhones.length === 0) { localStorage.removeItem(AUTO_IMPORT_STORAGE_KEY); return; }
+            const now = new Date().toISOString();
+            newPhones.forEach(phone => { managerPhones.push({ phone, status: '', dateAdded: now }); });
+            await saveColumn(AUTO_IMPORT_MANAGER, managerPhones);
+            localStorage.removeItem(AUTO_IMPORT_STORAGE_KEY);
+            renderColumns();
+            renderPotentialWidget();
+        }
+        setInterval(checkAutoImport, 3000);
+        setTimeout(checkAutoImport, 1000);
+
+        async function loadLidsData() {
+            setSyncStatus('syncing');
+            try {
+                const [colsSnap, potSnap, scriptSnap] = await Promise.all([
+                    getDocs(columnsRef),
+                    getDocs(potentialRef),
+                    getDoc(doc(salesScriptsRef, 'current'))
+                ]);
+                colsSnap.forEach(d => columnsCache[d.id] = d.data().phones || []);
+                for (const name of managersList) if (!columnsCache[name]) columnsCache[name] = [];
+                potentialCache = [];
+                potSnap.forEach(d => {
+                    const data = d.data();
+                    if (!data.ndzHistory && data.ndzCount > 0) data.ndzHistory = [];
+                    potentialCache.push({ phone: d.id, ...data });
+                });
+                if (scriptSnap.exists()) {
+                    salesScriptsText = scriptSnap.data().text || '';
+                } else {
+                    salesScriptsText = '';
+                }
+                await processDeferredReactivations();
+                setSyncStatus('online');
+            } catch(e) { console.error(e); setSyncStatus('offline'); }
+        }
+
+        async function loadOrdersData(filters = {}) {
+            setSyncStatus('syncing');
+            try {
+                let q = query(ordersRef, orderBy('dateAdded', 'desc'));
+                if (filters.dateFrom) q = query(q, where('dateAdded', '>=', filters.dateFrom));
+                if (filters.dateTo) {
+                    const toDate = new Date(filters.dateTo);
+                    toDate.setDate(toDate.getDate() + 1);
+                    q = query(q, where('dateAdded', '<', toDate.toISOString().slice(0,10)));
+                }
+                const snap = await getDocs(q);
+                ordersCache = [];
+                snap.forEach(d => ordersCache.push({ id: d.id, ...d.data() }));
+                setSyncStatus('online');
+            } catch(e) { console.error(e); setSyncStatus('offline'); }
+        }
+
+        async function loadAnalyticsData() {
+            setSyncStatus('syncing');
+            try {
+                const [ordSnap, manSnap, statsSnap, scrSnap] = await Promise.all([
+                    getDocs(query(ordersRef, orderBy('dateAdded', 'desc'))),
+                    getDocs(managersRef),
+                    getDocs(savedStatsRef),
+                    getDocs(screenshotsRef)
+                ]);
+                ordersCache = [];
+                ordSnap.forEach(d => ordersCache.push({ id: d.id, ...d.data() }));
+                manSnap.forEach(d => { const list = d.data().list || []; if (list.length) managersList = list; });
+                savedStatsRows = [];
+                statsSnap.forEach(d => savedStatsRows.push({ id: d.id, ...d.data() }));
+                savedStatsRows.sort((a,b) => (a.order||0)-(b.order||0));
+                screenshotsCache = [];
+                scrSnap.forEach(d => screenshotsCache.push({ id: d.id, ...d.data() }));
+                analyticsLoaded = true;
+                setSyncStatus('online');
+            } catch(e) { console.error(e); setSyncStatus('offline'); }
+        }
+
+        async function loadPayoutsData() {
+            setSyncStatus('syncing');
+            try {
+                const [ddsSnap, cpSnap, ordSnap] = await Promise.all([
+                    getDocs(ddsRef),
+                    getDocs(contractPayoutsRef),
+                    getDocs(query(ordersRef, where('success', '==', 'Да')))
+                ]);
+                ddsCache = [];
+                ddsSnap.forEach(d => ddsCache.push({ id: d.id, ...d.data() }));
+                contractPayoutsCache = {};
+                cpSnap.forEach(d => contractPayoutsCache[d.id] = d.data());
+                ordersCache = [];
+                ordSnap.forEach(d => ordersCache.push({ id: d.id, ...d.data() }));
+                payoutsLoaded = true;
+                setSyncStatus('online');
+            } catch(e) { console.error(e); setSyncStatus('offline'); }
+        }
+
+        async function loadDBData() {
+            setSyncStatus('syncing');
+            try {
+                const resSnap = await getDocs(query(reservesRef, orderBy('dateAdded', 'desc'), limit(200)));
+                reservesCache = [];
+                resSnap.forEach(d => reservesCache.push({ id: d.id, ...d.data() }));
+
+                const recSnap = await getDocs(collection(db, 'recruits'));
+                recruitsCache = [];
+                const updates = [];
+                recSnap.forEach(d => {
+                    const data = d.data();
+                    if (!data.dateAdded) {
+                        data.dateAdded = new Date().toISOString();
+                        updates.push(setDoc(doc(recruitsRef, d.id), data, { merge: true }));
+                    }
+                    recruitsCache.push({ id: d.id, ...data });
+                });
+                if (updates.length > 0) await Promise.all(updates);
+                dbLoaded = true;
+                setSyncStatus('online');
+            } catch(e) { console.error(e); setSyncStatus('offline'); }
+        }
+
+        async function processDeferredReactivations() {
+            const today = new Date().toISOString().slice(0,10);
+            for (const po of potentialCache) {
+                if (po.status === 'deferred' && po.deferDate && po.deferDate <= today) {
+                    po.status = 'active';
+                    po.deferDate = null;
+                    await savePotentialOrder(po);
+                }
+            }
+        }
+
+        function findManagerByPhone(phone) {
+            for (const [colName, phones] of Object.entries(columnsCache)) {
+                if (phones.some(p => p.phone === phone)) return colName;
+            }
+            return null;
+        }
+
+        async function saveColumn(name, phones) { columnsCache[name] = phones; await setDoc(doc(columnsRef, name), { phones }); autoSave(); }
+        async function saveOrder(order, oldDate = null) {
+            if (order.id) {
+                await setDoc(doc(ordersRef, order.id), order);
+            } else {
+                const ref = await addDoc(ordersRef, order);
+                order.id = ref.id;
+            }
+            autoSave();
+        }
+        async function deleteOrder(id) {
+            await deleteDoc(doc(ordersRef, id));
+            if (contractPayoutsCache[id]) {
+                await deleteDoc(doc(contractPayoutsRef, id));
+                delete contractPayoutsCache[id];
+            }
+            autoSave();
+        }
+        async function savePotentialOrder(po) { await setDoc(doc(potentialRef, po.phone), po); autoSave(); }
+        async function deletePotentialOrder(phone) { await deleteDoc(doc(potentialRef, phone)); autoSave(); }
+        async function saveDDS(item) {
+            if (item.id) await setDoc(doc(ddsRef, item.id), item);
+            else { const ref = await addDoc(ddsRef, item); item.id = ref.id; }
+            autoSave();
+        }
+        async function deleteDDS(id) { await deleteDoc(doc(ddsRef, id)); autoSave(); }
+        async function saveContractPayout(orderId, data) { contractPayoutsCache[orderId] = data; await setDoc(doc(contractPayoutsRef, orderId), data); autoSave(); }
+        async function deleteContractPayout(orderId) { delete contractPayoutsCache[orderId]; await deleteDoc(doc(contractPayoutsRef, orderId)); autoSave(); }
+        async function saveReserve(item) {
+            if (item.id) await setDoc(doc(reservesRef, item.id), item);
+            else { const ref = await addDoc(reservesRef, item); item.id = ref.id; }
+            autoSave();
+        }
+        async function deleteReserve(id) { await deleteDoc(doc(reservesRef, id)); autoSave(); }
+        async function saveRecruit(item) {
+            if (item.id) await setDoc(doc(recruitsRef, item.id), item);
+            else { const ref = await addDoc(recruitsRef, item); item.id = ref.id; }
+            autoSave();
+        }
+        async function deleteRecruit(id) { await deleteDoc(doc(recruitsRef, id)); autoSave(); }
+        async function saveScreenshot(item) {
+            if (item.id) await setDoc(doc(screenshotsRef, item.id), item);
+            else { const ref = await addDoc(screenshotsRef, item); item.id = ref.id; }
+            autoSave();
+        }
+        async function deleteScreenshot(id) { await deleteDoc(doc(screenshotsRef, id)); screenshotsCache = screenshotsCache.filter(s => s.id !== id); autoSave(); }
+        async function saveSavedStatsRow(row) {
+            if (row.id) await setDoc(doc(savedStatsRef, row.id), row);
+            else { const ref = await addDoc(savedStatsRef, row); row.id = ref.id; }
+            autoSave();
+        }
+        async function deleteSavedStatsRow(id) { await deleteDoc(doc(savedStatsRef, id)); savedStatsRows = savedStatsRows.filter(r => r.id !== id); autoSave(); }
+        async function saveManagers() { await setDoc(doc(managersRef, 'list'), { list: managersList }); autoSave(); }
+        async function saveSalesScripts(text) {
+            salesScriptsText = text;
+            await setDoc(doc(salesScriptsRef, 'current'), { text });
+            autoSave();
+        }
+
+        async function addToReserves(comment, phone) {
+            const now = new Date().toISOString();
+            const text = comment ? `${comment} ${phone}` : phone;
+            const item = { text, dateAdded: now, reason: '' };
+            await saveReserve(item);
+        }
+
+        // ========== РЕНДЕРИНГ ==========
+        function renderColumns() {
+            const container = document.getElementById('columns-container');
+            if(!container) return;
+            container.innerHTML = '';
+            const filters = getActiveFilters();
+            buildStatusCheckboxes();
+            for (const colName of managersList) {
+                const phones = columnsCache[colName] || [];
+                const filteredPhones = phones.filter(item => {
+                    const { dateFrom, dateTo, statuses } = filters;
+                    if (dateFrom || dateTo) {
+                        if (!item.dateAdded) return false;
+                        const itemDate = item.dateAdded.substring(0,10);
+                        if (dateFrom && itemDate < dateFrom) return false;
+                        if (dateTo && itemDate > dateTo) return false;
+                    }
+                    if (statuses.length > 0 && !statuses.includes(item.status || '')) return false;
+                    return true;
+                });
+                const totalLeads = filteredPhones.length;
+                const zakazkiCount = filteredPhones.filter(item => item.status === 'Заявка').length;
+                const colDiv = document.createElement('div');
+                colDiv.className = 'column';
+                colDiv.innerHTML = `<div class="column-header"><span title="Двойной клик для переименования">${escapeHtml(colName)} (${totalLeads} лд, ${zakazkiCount} зав)</span><div><button class="btn xsmall copy-btn" title="Копировать видимые номера">📋</button><button class="btn xsmall danger delete-all-btn" title="Удалить отфильтрованные лиды">🗑️</button></div></div><div class="phone-list"></div><div class="add-phones"><textarea placeholder="Вставьте номера"></textarea><button class="btn xsmall primary">➕ Добавить</button></div>`;
+                const copyBtn = colDiv.querySelector('.copy-btn');
+                copyBtn.addEventListener('click', async () => { const numbers = filteredPhones.map(p => p.phone).join('\n'); await copyToClipboard(numbers); copyBtn.textContent = '✅'; setTimeout(() => { copyBtn.textContent = '📋'; }, 1000); });
+                const deleteAllBtn = colDiv.querySelector('.delete-all-btn');
+                deleteAllBtn.addEventListener('click', () => {
+                    if (filteredPhones.length === 0) return;
+                    showConfirm(`Удалить ${filteredPhones.length} отфильтрованных лидов менеджера ${colName}?`, async () => {
+                        const remaining = phones.filter(p => !filteredPhones.includes(p));
+                        columnsCache[colName] = remaining;
+                        await saveColumn(colName, remaining);
+                        renderColumns();
+                    });
+                });
+                const listDiv = colDiv.querySelector('.phone-list');
+                filteredPhones.forEach(item => {
+                    const origIdx = phones.indexOf(item);
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = `phone-item${item.status==='НДЗ'?' status-ndz':''}${item.status==='Провал'?' status-fail':''}${item.status==='Заявка'?' status-order':''}`;
+                    const dateStr = item.dateAdded ? new Date(item.dateAdded).toLocaleDateString('ru-RU') : '';
+                    itemDiv.innerHTML = `<span class="date-added">${dateStr}</span><a href="tel:${item.phone}" class="phone-link">${escapeHtml(item.phone)}</a><select><option value="">—</option><option value="НДЗ" ${item.status==='НДЗ'?'selected':''}>НДЗ</option><option value="Провал" ${item.status==='Провал'?'selected':''}>Провал</option><option value="Заявка" ${item.status==='Заявка'?'selected':''}>Заявка</option></select><button class="delete-lead-btn" style="background:none;border:none;color:#ef4444;cursor:pointer;">✕</button>`;
+                    const statusSelect = itemDiv.querySelector('select');
+                    const deleteBtn = itemDiv.querySelector('.delete-lead-btn');
+                    statusSelect.addEventListener('change', async () => {
+                        phones[origIdx].status = statusSelect.value;
+                        await saveColumn(colName, phones);
+                        if (statusSelect.value === 'Заявка') {
+                            if (!potentialCache.find(p => p.phone === item.phone && p.status === 'active')) {
+                                const newPo = { phone: item.phone, comment: '', dateAdded: new Date().toISOString(), ndzCount: 0, ndzHistory: [], status: 'active' };
+                                potentialCache.push(newPo);
+                                await savePotentialOrder(newPo);
+                            }
+                        }
+                        renderColumns();
+                        renderPotentialWidget();
+                    });
+                    deleteBtn.addEventListener('click', async () => {
+                        showConfirm('Удалить номер?', async () => {
+                            phones.splice(origIdx, 1);
+                            await saveColumn(colName, phones);
+                            renderColumns();
+                        });
+                    });
+                    listDiv.appendChild(itemDiv);
+                });
+                const addDiv = colDiv.querySelector('.add-phones');
+                addDiv.querySelector('button').addEventListener('click', async () => {
+                    const lines = addDiv.querySelector('textarea').value.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+                    if (!lines.length) return;
+                    const now = new Date().toISOString();
+                    lines.forEach(phone => phones.push({ phone, status: '', dateAdded: now }));
+                    await saveColumn(colName, phones);
+                    renderColumns();
+                });
+                container.appendChild(colDiv);
+            }
+        }
+
+        function getActiveFilters() {
+            const dateFrom = document.getElementById('filter-date-from')?.value;
+            const dateTo = document.getElementById('filter-date-to')?.value;
+            const checkboxes = document.querySelectorAll('#status-checkboxes input[type="checkbox"]');
+            const statuses = [];
+            checkboxes.forEach(cb => { if (cb.checked) statuses.push(cb.value); });
+            return { dateFrom: dateFrom || null, dateTo: dateTo || null, statuses };
+        }
+
+        function buildStatusCheckboxes() {
+            const statusSet = new Set(['НДЗ', 'Провал', 'Заявка']);
+            for (const phones of Object.values(columnsCache)) {
+                for (const item of phones) {
+                    if (item.status && item.status !== 'успешные') statusSet.add(item.status);
+                }
+            }
+            const container = document.getElementById('status-checkboxes');
+            if(container) {
+                container.innerHTML = '';
+                for (const s of statusSet) {
+                    const label = document.createElement('label');
+                    label.innerHTML = `<input type="checkbox" value="${escapeHtml(s)}"> ${escapeHtml(s)}`;
+                    container.appendChild(label);
+                }
+            }
+        }
+
+        function renderPotentialWidget() {
+            potentialCache.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
+            const tbody = document.querySelector('#potential-table tbody');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+            const visible = potentialCache.filter(po => po.status === 'active');
+            const countEl = document.getElementById('potential-count');
+            if(countEl) countEl.textContent = visible.length > 0 ? `(${visible.length})` : '';
+            visible.forEach(po => {
+                const manager = findManagerByPhone(po.phone) || '—';
+                const ndzCount = po.ndzCount || 0;
+                const ndzHistory = po.ndzHistory || [];
+                const lastNdz = ndzHistory.length > 0 ? ndzHistory[ndzHistory.length - 1] : null;
+                const lastNdzText = lastNdz ? ` (${formatDateTime(lastNdz)})` : '';
+                const dateTimeStr = po.dateAdded ? formatDateTime(po.dateAdded) : '';
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td style="text-align:left;"><a href="tel:${po.phone}" class="phone-link">${escapeHtml(po.phone)}</a></td>
+                    <td><textarea class="comment-input" data-phone="${escapeHtml(po.phone)}" rows="1">${escapeHtml(po.comment || '')}</textarea></td>
+                    <td>
+                        <div class="potential-actions">
+                            <button class="btn xsmall success-potential-btn" data-phone="${escapeHtml(po.phone)}">✅ Успешно</button>
+                            <button class="btn xsmall fail-potential-btn" data-phone="${escapeHtml(po.phone)}">❌ Провал</button>
+                            <button class="btn xsmall ndz-potential-btn" data-phone="${escapeHtml(po.phone)}">📵 НДЗ</button>
+                            <button class="btn xsmall defer-potential-btn" data-phone="${escapeHtml(po.phone)}">⏳ Отложить</button>
+                            <button class="btn xsmall base-potential-btn" data-phone="${escapeHtml(po.phone)}">🗄️ База</button>
+                        </div>
+                    </td>
+                    <td>${ndzCount > 0 ? `<span class="ndz-counter">${ndzCount}</span><span class="ndz-last-time">${lastNdzText}</span>` : ''}</td>
+                    <td>${dateTimeStr}</td>
+                    <td>${escapeHtml(manager)}</td>
+                `;
+                const textarea = row.querySelector('textarea');
+                textarea.addEventListener('input', () => {
+                    textarea.style.height = 'auto';
+                    textarea.style.height = textarea.scrollHeight + 'px';
+                });
+                tbody.appendChild(row);
+            });
+            const deferredCount = potentialCache.filter(p => p.status === 'deferred').length;
+            const deferredCountEl = document.getElementById('deferred-count');
+            if(deferredCountEl) deferredCountEl.textContent = deferredCount > 0 ? ` (${deferredCount})` : '';
+            if (document.getElementById('deferred-list')?.style.display === 'block') {
+                renderDeferredCalendar();
+                renderDeferredList();
+            }
+        }
+
+        function getOrdersFilters() {
+            return {
+                dateFrom: document.getElementById('order-filter-date-from')?.value || '',
+                dateTo: document.getElementById('order-filter-date-to')?.value || '',
+                contract: document.getElementById('order-filter-contract')?.value || '',
+                searchText: (document.getElementById('order-filter-text')?.value || '').trim().toLowerCase()
+            };
+        }
+
+        function renderOrders() {
+            const filters = getOrdersFilters();
+            const tbody = document.querySelector('#orders-table tbody');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+            let filtered = ordersCache.filter(order => {
+                if (filters.dateFrom || filters.dateTo) {
+                    if (!order.dateAdded) return false;
+                    const d = order.dateAdded.substring(0,10);
+                    if (filters.dateFrom && d < filters.dateFrom) return false;
+                    if (filters.dateTo && d > filters.dateTo) return false;
+                }
+                if (filters.contract === 'Да' && order.success !== 'Да') return false;
+                if (filters.contract === 'Нет' && order.success !== '') return false;
+                if (filters.searchText) return (order.text || '').toLowerCase().includes(filters.searchText);
+                return true;
+            });
+            filtered.sort((a,b) => new Date(b.dateAdded) - new Date(a.dateAdded));
+            document.getElementById('orders-count').textContent = `(${filtered.length})`;
+            filtered.forEach(order => {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td><span class="editable-order-text" data-id="${order.id}" style="cursor:pointer; white-space:pre-wrap;">${escapeHtml(order.text)}</span></td>
+                <td><div class="orders-actions">
+                    <button class="btn xsmall copy-order-btn" data-text="${order.text.replace(/"/g, '&quot;')}">📋 Копировать</button>
+                    <button class="btn xsmall base-order-btn" data-id="${order.id}" data-text="${order.text.replace(/"/g, '&quot;')}">🗄️ База</button>
+                    <button class="btn xsmall danger delete-order-btn" data-id="${order.id}">✕ Удалить</button>
+                </div></td>
+                <td><input type="date" class="order-date-input" value="${(order.dateAdded||'').substring(0,10)}" data-id="${order.id}" style="width:100%;" /></td>
+                <td><select class="manager-select" data-id="${order.id}" style="width:100%;">${managersList.map(m => `<option value="${escapeHtml(m)}" ${order.manager===m?'selected':''}>${escapeHtml(m)}</option>`).join('')}<option value="" ${!order.manager?'selected':''}>Не найден</option></select></td>
+                <td><select class="success-select" data-id="${order.id}"><option value="" ${!order.success?'selected':''}>—</option><option value="Да" ${order.success==='Да'?'selected':''}>Да</option></select></td>
+                <td><input type="text" class="order-main-amount" value="${escapeHtml(order.mainAmount||'')}" data-id="${order.id}" style="width:70px; display:${order.success==='Да'?'inline-block':'none'};" /></td>
+                <td><input type="text" class="order-bonus-amount" value="${escapeHtml(order.bonusAmount||'')}" data-id="${order.id}" style="width:70px; display:${order.success==='Да'?'inline-block':'none'};" /></td>
+                <td><input type="date" class="order-contract-date" value="${order.contractDate||''}" data-id="${order.id}" style="width:100px; display:${order.success==='Да'?'inline-block':'none'};" /></td>`;
+                tbody.appendChild(row);
+            });
+        }
         function renderOverallStats() {
             const thead = document.getElementById('overall-header-row');
             if(!thead) return;
