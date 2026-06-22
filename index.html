@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Панель управления лидами v3.215</title>
+    <title>Панель управления лидами v3.216</title>
     <script type="importmap">
         { "imports": { "firebase/app": "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js", "firebase/firestore": "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js" } }
     </script>
@@ -39,7 +39,7 @@
         .btn.small { padding: 3px 8px; font-size: 10px; border-radius: 4px; }
         .btn.xsmall { padding: 2px 6px; font-size: 9px; border-radius: 3px; }
 
-        .tabs-bar { position: sticky; top: 0; z-index: 998; background: var(--bg); padding: 6px 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+        .tabs-bar { position: sticky; top: 0; z-index: 998; background: var(--bg); padding: 6px 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px; }
         .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
         .tab { padding: 6px 12px; background: #e2e8f0; border-radius: 6px; cursor: pointer; font-weight: 500; transition: 0.2s; font-size: 12px; color: #1e293b; }
         body.dark .tab { background: #475569; color: #f1f5f9; }
@@ -60,10 +60,6 @@
         .status-filters { display: flex; gap: 8px; flex-wrap: wrap; }
         .status-filters label { font-size: 11px; display: flex; align-items: center; gap: 2px; cursor: pointer; }
         .manager-header { display: flex; align-items: center; gap: 6px; margin: 12px 0 6px; flex-wrap: wrap; }
-        .settings-dropdown { position: relative; display: inline-block; }
-        .settings-dropdown-content { display: none; position: absolute; background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 1000; padding: 4px; min-width: 180px; right: 0; }
-        .settings-dropdown-content button { display: block; width: 100%; padding: 4px 8px; background: transparent; border: none; cursor: pointer; text-align: left; font-size: 11px; color: var(--text); }
-        .settings-dropdown-content button:hover { background: var(--btn-hover-bg); }
         .columns-container { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-start; }
         .column { background: var(--card-bg); border-radius: 8px; padding: 5px; min-width: 200px; max-width: 250px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); display: flex; flex-direction: column; gap: 2px; }
         .column-header { display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 12px; color: var(--text); }
@@ -78,6 +74,9 @@
         .add-phones textarea { resize: vertical; min-height: 35px; font-size: 11px; padding: 3px; border-radius: 4px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text); }
         .add-phones button { padding: 3px 6px; background: var(--primary); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 500; font-size: 10px; }
         .potential-widget { margin-top: 18px; background: var(--card-bg); border-radius: 10px; padding: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); overflow-x: auto; }
+        .potential-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+        .potential-header h3 { margin: 0; white-space: nowrap; }
+        .potential-header-btns { display: flex; gap: 6px; flex-wrap: wrap; }
         .potential-table-wrapper { max-height: 55vh; overflow-y: auto; margin-bottom: 8px; border: 1px solid var(--border); border-radius: 6px; }
         .potential-table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 750px; }
         .potential-table th, .potential-table td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: center; vertical-align: middle; }
@@ -98,14 +97,14 @@
         .orders-table th, .orders-table td { padding: 5px 7px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
         .orders-table th { background: #f8fafc; font-weight: 600; position: sticky; top: 0; z-index: 2; color: var(--text); }
         body.dark .orders-table th { background: #475569; }
-        .orders-table th:nth-child(1) { width: 40%; }
-        .orders-table th:nth-child(2) { width: 12%; }
+        .orders-table th:nth-child(1) { width: 42%; }
+        .orders-table th:nth-child(2) { width: 13%; }
         .orders-table th:nth-child(3) { width: 10%; }
         .orders-table th:nth-child(4) { width: 10%; }
         .orders-table th:nth-child(5) { width: 6%; }
-        .orders-table th:nth-child(6) { width: 8%; }
-        .orders-table th:nth-child(7) { width: 6%; }
-        .orders-table th:nth-child(8) { width: 8%; }
+        .orders-table th:nth-child(6) { width: 7%; }
+        .orders-table th:nth-child(7) { width: 5%; }
+        .orders-table th:nth-child(8) { width: 7%; }
         .orders-table select, .orders-table input[type="text"], .orders-table input[type="date"] { font-size: 10px; padding: 1px 3px; border-radius: 3px; border: 1px solid #ccc; background: var(--card-bg); color: var(--text); }
         .add-order-block { margin-bottom: 12px; background: var(--card-bg); padding: 10px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
         .add-order-block textarea { width: 100%; min-height: 60px; font-size: 12px; padding: 5px; border-radius: 4px; border: 1px solid var(--border); resize: vertical; background: var(--card-bg); color: var(--text); }
@@ -156,9 +155,10 @@
         .confirm-box button { margin: 6px 3px; padding: 5px 14px; border-radius: 4px; cursor: pointer; border: none; }
         .confirm-yes { background: #ef4444; color: white; }
         .confirm-no { background: #e2e8f0; color: #1e293b; }
-        .theme-toggle, .refresh-btn { background: none; border: 1px solid var(--border); border-radius: 4px; padding: 3px 6px; cursor: pointer; font-size: 14px; color: var(--text); }
-        .auto-save-indicator { font-size: 9px; color: #64748b; margin-left: 6px; }
-        .auto-import-indicator { font-size: 9px; color: #10b981; margin-left: 6px; display: none; }
+        .top-actions { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+        .icon-btn { background: none; border: 1px solid var(--border); border-radius: 4px; padding: 3px 6px; cursor: pointer; font-size: 14px; color: var(--text); }
+        .auto-save-indicator { font-size: 9px; color: #64748b; margin-left: 2px; white-space: nowrap; }
+        .auto-import-indicator { font-size: 9px; color: #10b981; margin-left: 2px; display: none; white-space: nowrap; }
         .auto-import-indicator.show { display: inline; }
         .sort-btn { padding: 2px 6px; font-size: 10px; background: #f1f5f9; border: 1px solid var(--border); border-radius: 3px; cursor: pointer; color: var(--text); }
         .sort-btn.active { background: var(--primary); color: white; }
@@ -170,7 +170,6 @@
         /* Кнопки действий в таблицах - вертикально */
         .potential-actions, .orders-actions { display: flex; flex-direction: column; gap: 3px; align-items: stretch; }
         .potential-actions .btn, .orders-actions .btn { justify-content: center; width: 100%; }
-        .copy-all-potential-btn, .sales-scripts-btn, .deferred-toggle { margin-left: 8px; white-space: nowrap; }
         .screen-block { margin-top: 20px; }
         .screen-area { border: 2px dashed var(--border); border-radius: 8px; padding: 16px; text-align: center; color: #64748b; background: var(--bg); cursor: pointer; margin-bottom: 8px; }
         .screen-area:focus { outline: none; }
@@ -190,15 +189,22 @@
         .hidden-col { display: none; }
         .show-all-cols-btn { margin-top: 6px; padding: 3px 10px; background: #f1f5f9; border: 1px solid var(--border); border-radius: 4px; cursor: pointer; font-size: 11px; color: var(--text); }
         body.dark .show-all-cols-btn { background: #475569; }
-        .sync-indicator { font-size: 9px; color: #10b981; margin-left: 6px; }
+        .sync-indicator { font-size: 9px; color: #10b981; margin-left: 2px; white-space: nowrap; }
         .sync-indicator.syncing { color: #f59e0b; }
         .db-filters-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; padding: 6px 10px; background: var(--card-bg); border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
         .db-filters-row .filter-group { display: flex; align-items: center; gap: 4px; }
         .db-filters-row .filter-group label { font-size: 11px; font-weight: 500; white-space: nowrap; }
         .db-filters-row .filter-group select { font-size: 11px; padding: 2px 5px; border-radius: 4px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text); }
+        .settings-dropdown { position: relative; display: inline-block; }
+        .settings-dropdown-content { display: none; position: absolute; background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 1000; padding: 4px; min-width: 180px; right: 0; }
+        .settings-dropdown-content button { display: block; width: 100%; padding: 4px 8px; background: transparent; border: none; cursor: pointer; text-align: left; font-size: 11px; color: var(--text); }
+        .settings-dropdown-content button:hover { background: var(--btn-hover-bg); }
 
         @media (max-width: 600px) {
             .tab { padding: 4px 8px; font-size: 11px; }
+            .tabs { gap: 4px; }
+            .tab.db-tab { font-size: 10px; padding: 4px 7px; }
+            .tabs-bar { padding: 4px 8px; gap: 6px; }
             .columns-container { display: none; }
             .columns-container.visible { display: flex; }
             #toggle-managers-btn { display: inline-block !important; margin-left: 0; }
@@ -206,9 +212,12 @@
             .potential-table th, .potential-table td { padding: 4px 3px; font-size: 10px; }
             .potential-actions, .orders-actions { flex-direction: column; gap: 3px; }
             .potential-actions .btn, .orders-actions .btn { width: 100%; padding: 4px 4px; font-size: 9px; }
-            .copy-all-potential-btn, .sales-scripts-btn, .deferred-toggle { font-size: 9px; padding: 2px 6px; }
-            .tabs-bar { flex-direction: column; align-items: flex-start; }
-            .tabs-bar > div:last-child { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+            .potential-header { flex-direction: column; align-items: flex-start; gap: 4px; }
+            .potential-header-btns { width: 100%; }
+            .manager-header { flex-direction: row; flex-wrap: wrap; }
+            .manager-header h3 { width: 100%; margin-bottom: 2px; }
+            .tabs-bar { flex-direction: column; align-items: stretch; }
+            .tabs-bar > .top-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; justify-content: flex-start; }
         }
     </style>
 </head>
@@ -221,23 +230,10 @@
             <div class="tab" data-tab="payouts">💸 Выплаты</div>
             <div class="tab db-tab" data-tab="db">🗄️ База</div>
         </div>
-        <div>
-            <button class="refresh-btn" id="refresh-btn" title="Обновить текущий раздел">🔄</button>
-            <button class="theme-toggle" id="theme-toggle" title="Переключить тему">☀️</button>
-            <span class="sync-indicator" id="sync-status" title="Статус синхронизации">📴 Оффлайн</span>
-            <span class="auto-save-indicator" id="auto-save-status"></span>
-            <span class="auto-import-indicator" id="auto-import-status">📥 Автоимпорт...</span>
-        </div>
-    </div>
-
-    <div class="content" id="lids-panel">
-        <div class="search-row"><textarea id="search-phones" placeholder="Вставьте номера, каждый с новой строки"></textarea><button class="btn primary" id="search-btn">Найти</button></div>
-        <div class="manager-header">
-            <h3 style="margin:0;">👥 Менеджеры</h3>
-            <button id="filters-toggle-btn" class="btn small">🔽 Фильтры</button>
-            <button id="toggle-managers-btn" style="display:none;" class="btn small primary">👥 Показать менеджеров</button>
+        <div class="top-actions">
+            <button class="icon-btn" id="refresh-btn" title="Обновить текущий раздел">🔄</button>
             <div class="settings-dropdown">
-                <button class="settings-toggle btn small" id="settings-toggle-btn">⚙️</button>
+                <button class="icon-btn settings-toggle" id="settings-toggle-btn" title="Настройки">⚙️</button>
                 <div class="settings-dropdown-content" id="settings-dropdown">
                     <button id="add-manager-menu-btn">➕ Добавить менеджера</button>
                     <button onclick="window.exportData()">💾 Экспорт всей базы</button>
@@ -248,6 +244,19 @@
                     <button id="load-autosave-btn">🔄 Загрузить автосохранение</button>
                 </div>
             </div>
+            <button class="icon-btn theme-toggle" id="theme-toggle" title="Переключить тему">☀️</button>
+            <span class="sync-indicator" id="sync-status" title="Статус синхронизации">📴 Оффлайн</span>
+            <span class="auto-save-indicator" id="auto-save-status"></span>
+            <span class="auto-import-indicator" id="auto-import-status">📥 Автоимпорт...</span>
+        </div>
+    </div>
+
+    <div class="content" id="lids-panel">
+        <div class="search-row"><textarea id="search-phones" placeholder="Вставьте номера, каждый с новой строки"></textarea><button class="btn primary" id="search-btn">Найти</button></div>
+        <div class="manager-header">
+            <h3 style="margin:0;">👥 Менеджеры</h3>
+            <button id="toggle-managers-btn" style="display:none;" class="btn small primary">👥 Показать менеджеров</button>
+            <button id="filters-toggle-btn" class="btn small">🔽 Фильтры</button>
         </div>
         <div class="filters-panel" id="filters-panel">
             <div class="filter-group"><label>Дата с:</label><input type="date" id="filter-date-from" /></div>
@@ -258,11 +267,13 @@
         </div>
         <div id="columns-container" class="columns-container"></div>
         <div class="potential-widget" id="potential-widget">
-            <div style="display:flex; align-items:center; gap: 6px; margin-bottom: 6px; flex-wrap: wrap;">
-                <h3 style="margin:0; white-space: nowrap;">📌 Потенциальные заявки <span id="potential-count"></span></h3>
-                <button id="copy-all-potential" class="btn xsmall">📋 Копировать все</button>
-                <button id="toggle-deferred-btn" class="btn xsmall deferred-toggle">📅 Отложенные (<span id="deferred-count">0</span>)</button>
-                <button id="sales-scripts-btn" class="btn xsmall">📜 Скрипты</button>
+            <div class="potential-header">
+                <h3>📌 Потенциальные заявки <span id="potential-count"></span></h3>
+                <div class="potential-header-btns">
+                    <button id="copy-all-potential" class="btn xsmall">📋 Копировать все</button>
+                    <button id="toggle-deferred-btn" class="btn xsmall">📅 Отложенные (<span id="deferred-count">0</span>)</button>
+                    <button id="sales-scripts-btn" class="btn xsmall">📜 Скрипты</button>
+                </div>
             </div>
             <div class="potential-table-wrapper">
                 <table class="potential-table" id="potential-table">
@@ -597,6 +608,7 @@
         // Флаг блокировки для предотвращения дублирования при ошибках
         let potentialActionLock = new Set();
 
+        // Загружаем автосохранение при старте
         const saved = localStorage.getItem('crm-autosave');
         if (saved) {
             try {
@@ -1740,7 +1752,7 @@
             }
         });
 
-        // ★ ОПТИМИСТИЧНОЕ ОБНОВЛЕНИЕ ДЛЯ ПОТЕНЦИАЛОК С БЛОКИРОВКОЙ ПОВТОРНЫХ КЛИКОВ ★
+        // ★ ОПТИМИСТИЧНОЕ ОБНОВЛЕНИЕ ДЛЯ ПОТЕНЦИАЛОК ★
         document.getElementById('potential-table')?.addEventListener('click', async (e) => {
             const btn = e.target.closest('button');
             if (!btn) return;
@@ -1768,28 +1780,27 @@
                         const manager = findManagerByPhone(po.phone) || '';
                         const newOrder = { text, dateAdded: new Date().toISOString(), manager, success: '', mainAmount: '', bonusAmount: '' };
                         await saveOrder(newOrder);
-                        if (ordersLoaded) {
-                            await loadOrdersData(getOrdersFilters());
-                            renderOrders();
-                        }
+                        // Обновляем кеш заявок локально, чтобы не грузить с сервера
+                        ordersCache.unshift(newOrder);
                     }
-                    await deletePotentialOrder(phone);
+                    try { await deletePotentialOrder(phone); } catch(delErr) { console.warn('Удаление потенциальной не сработало, но заявка сохранена'); }
+                    renderPotentialWidget();
+                    renderOrders();
                 } catch (e) {
                     if (row) row.style.display = '';
                     potentialCache.push(po);
                     renderPotentialWidget();
-                    alert('Ошибка при сохранении. Проверьте подключение.');
+                    console.error('Ошибка:', e);
                 }
             } else if (btn.classList.contains('fail-potential-btn')) {
                 potentialCache = potentialCache.filter(p => p.phone !== phone || p.status !== 'active');
                 try {
                     await deletePotentialOrder(phone);
                 } catch (e) {
-                    if (row) row.style.display = '';
-                    potentialCache.push(po);
-                    renderPotentialWidget();
-                    alert('Ошибка при сохранении. Проверьте подключение.');
+                    // Даже если удаление не сработало — не показываем ошибку, просто логируем
+                    console.warn('Удаление потенциальной не сработало:', e);
                 }
+                renderPotentialWidget();
             } else if (btn.classList.contains('ndz-potential-btn')) {
                 if (row) row.style.display = '';
                 po.ndzCount = (po.ndzCount || 0) + 1;
@@ -1797,7 +1808,7 @@
                 po.ndzHistory.push(new Date().toISOString());
                 try {
                     await savePotentialOrder(po);
-                } catch(e) { alert('Ошибка при сохранении. Проверьте подключение.'); }
+                } catch(e) { console.warn('Ошибка сохранения НДЗ:', e); }
                 renderPotentialWidget();
             } else if (btn.classList.contains('defer-potential-btn')) {
                 if (row) row.style.display = '';
@@ -1808,17 +1819,18 @@
                 potentialCache = potentialCache.filter(p => p.phone !== phone || p.status !== 'active');
                 try {
                     await addToReserves(po.comment || '', phone);
-                    await deletePotentialOrder(phone);
+                    try { await deletePotentialOrder(phone); } catch(delErr) { console.warn('Удаление потенциальной не сработало:', delErr); }
                 } catch (e) {
                     if (row) row.style.display = '';
                     potentialCache.push(po);
                     renderPotentialWidget();
-                    alert('Ошибка при сохранении. Проверьте подключение.');
+                    console.error('Ошибка:', e);
                 }
+                renderPotentialWidget();
             }
 
-            // Снимаем блокировку через небольшую задержку
-            setTimeout(() => { potentialActionLock.delete(phone); }, 1000);
+            // Снимаем блокировку
+            setTimeout(() => { potentialActionLock.delete(phone); }, 1500);
         });
 
         document.getElementById('potential-table')?.addEventListener('blur', async (e) => {
@@ -2570,14 +2582,16 @@
             } catch (e) { alert('Ошибка загрузки автосохранения'); }
         });
 
-        document.getElementById('settings-toggle-btn')?.addEventListener('click', () => {
+        document.getElementById('settings-toggle-btn')?.addEventListener('click', (e) => {
+            e.stopPropagation();
             const dd = document.getElementById('settings-dropdown');
             dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
         });
 
         window.addEventListener('click', (e) => {
-            if (!e.target.matches('.settings-toggle')) {
-                document.getElementById('settings-dropdown').style.display = 'none';
+            if (!e.target.closest('.settings-dropdown')) {
+                const dd = document.getElementById('settings-dropdown');
+                if (dd) dd.style.display = 'none';
             }
         });
 
