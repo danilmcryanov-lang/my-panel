@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Панель управления лидами v3.219</title>
+    <title>Панель управления лидами v3.220</title>
     <script type="importmap">
         { "imports": { "firebase/app": "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js", "firebase/firestore": "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js" } }
     </script>
@@ -180,7 +180,6 @@
         .current-stats-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding: 6px 10px; background: var(--card-bg); border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); font-size: 12px; }
         .current-stats-row .stat-item { flex: 1; text-align: center; }
         .hide-col-btn { margin-left: 4px; background: none; border: none; color: #ef4444; cursor: pointer; font-weight: bold; font-size: 12px; padding: 0 4px; }
-        .hidden-col { display: none; }
         .show-all-cols-btn { margin-top: 6px; padding: 3px 10px; background: #f1f5f9; border: 1px solid var(--border); border-radius: 4px; cursor: pointer; font-size: 11px; color: var(--text); }
         body.dark .show-all-cols-btn { background: #475569; }
         .sync-indicator { font-size: 9px; color: #10b981; margin-left: 2px; white-space: nowrap; }
@@ -194,7 +193,6 @@
         .settings-dropdown-content button { display: block; width: 100%; padding: 4px 8px; background: transparent; border: none; cursor: pointer; text-align: left; font-size: 11px; color: var(--text); }
         .settings-dropdown-content button:hover { background: var(--btn-hover-bg); }
 
-        /* Единый блок заголовка с кнопками */
         .section-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
         .section-header h3 { margin: 0; white-space: nowrap; }
         .section-header-btns { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -387,6 +385,7 @@
         <div id="current-stats-row" class="current-stats-row"></div>
         <div class="analytics-block">
             <table class="analytics-table" id="overall-stats-table">
+                <colgroup></colgroup>
                 <thead><tr id="overall-header-row"></tr></thead>
                 <tbody id="overall-stats-tbody"></tbody>
             </table>
@@ -569,7 +568,7 @@
             </div>
         </div>
     </div>
-    <script type="module">
+        <script type="module">
         import { initializeApp } from 'firebase/app';
         import { getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, deleteDoc, query, orderBy, where, limit } from 'firebase/firestore';
 
@@ -1112,6 +1111,7 @@
                 tbody.appendChild(row);
             });
         }
+
         function renderOverallStats() {
             const thead = document.getElementById('overall-header-row');
             if(!thead) return;
@@ -1119,22 +1119,25 @@
             if(!tbody) return;
             const colKeys = ['period','leads','orders','cvOL','contracts','cvCO','sum','avgDur','avgCheck','actions'];
             const colNames = { period: 'Период', leads: 'Кол-во лидов', orders: 'Кол-во заявок', cvOL: 'CV (заявки/лиды)', contracts: 'Кол-во контрактов', cvCO: 'CV (контракты/заявки)', sum: 'Сумма контрактов (₽)', avgDur: 'Ср. срок контракта (дней)', avgCheck: 'Ср. чек (₽)', actions: '' };
+
+            // Строим colgroup
+            const table = document.getElementById('overall-stats-table');
+            let colgroupHTML = '<colgroup>';
+            colKeys.forEach(key => {
+                colgroupHTML += `<col class="col-${key}" style="${hiddenColumns.includes(key) ? 'visibility: collapse' : ''}">`;
+            });
+            colgroupHTML += '</colgroup>';
+            const oldColgroup = table.querySelector('colgroup');
+            if (oldColgroup) oldColgroup.remove();
+            table.insertAdjacentHTML('afterBegin', colgroupHTML);
+
             let headerHtml = '';
             colKeys.forEach(key => {
                 if (key === 'actions') headerHtml += '<th></th>';
                 else headerHtml += `<th class="col-${key}">${colNames[key]} <button class="hide-col-btn" data-col="${key}">–</button></th>`;
             });
             thead.innerHTML = headerHtml;
-            colKeys.forEach(key => {
-                const th = thead.querySelector(`.col-${key}`);
-                if (th) { if (hiddenColumns.includes(key)) th.classList.add('hidden-col'); else th.classList.remove('hidden-col'); }
-            });
-            tbody.querySelectorAll('tr').forEach(row => {
-                colKeys.forEach(key => {
-                    const cells = row.querySelectorAll(`.col-${key}`);
-                    cells.forEach(cell => { if (hiddenColumns.includes(key)) cell.classList.add('hidden-col'); else cell.classList.remove('hidden-col'); });
-                });
-            });
+
             const showAllBtn = document.getElementById('show-all-cols-btn');
             if(showAllBtn) showAllBtn.style.display = hiddenColumns.length > 0 ? 'inline-block' : 'none';
             tbody.innerHTML = '';
@@ -1181,10 +1184,9 @@
                 row.addEventListener('drop',async(e)=>{e.preventDefault();const data=JSON.parse(e.dataTransfer.getData('text/plain'));if(data.mode!==mode)return;const fromIndex=data.index;const toIndex=parseInt(row.dataset.index);if(fromIndex!==toIndex&&!isNaN(fromIndex)&&!isNaN(toIndex)){const modeRows=savedStatsRows.filter(r=>r.mode===mode);const moved=modeRows.splice(fromIndex,1)[0];modeRows.splice(toIndex,0,moved);const otherRows=savedStatsRows.filter(r=>r.mode!==mode);savedStatsRows.length=0;savedStatsRows.push(...otherRows,...modeRows);for(let j=0;j<modeRows.length;j++){modeRows[j].order=j;if(modeRows[j].id)await setDoc(doc(savedStatsRef,modeRows[j].id),modeRows[j]);}renderOverallStats();}});
                 tbody.appendChild(row);
             }
-            thead.querySelectorAll('.hide-col-btn').forEach(btn=>{btn.addEventListener('click',(e)=>{e.stopPropagation();const col=btn.dataset.col;if(!hiddenColumns.includes(col))hiddenColumns.push(col);localStorage.setItem('hiddenColumns',JSON.stringify(hiddenColumns));renderOverallStats();});});
+            thead.querySelectorAll('.hide-col-btn').forEach(btn=>{btn.addEventListener('click',(e)=>{e.stopPropagation();const col=btn.dataset.col;if(!hiddenColumns.includes(col))hiddenColumns.push(col);else hiddenColumns=hiddenColumns.filter(c=>c!==col);localStorage.setItem('hiddenColumns',JSON.stringify(hiddenColumns));renderOverallStats();});});
         }
-
-        function calcStats(range,mode) {
+                    function calcStats(range,mode) {
             let totalLeads=0;
             for(const phones of Object.values(columnsCache)) totalLeads+=phones.filter(l=>isDateInRange(l.dateAdded,range)).length;
             const filteredOrders=ordersCache.filter(o=>isDateInRange(o.dateAdded,range));
