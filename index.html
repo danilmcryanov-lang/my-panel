@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Панель управления лидами v3.221</title>
+    <title>Панель управления лидами v3.222</title>
     <script type="importmap">
         { "imports": { "firebase/app": "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js", "firebase/firestore": "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js" } }
     </script>
@@ -927,7 +927,16 @@
                         if (dateFrom && itemDate < dateFrom) return false;
                         if (dateTo && itemDate > dateTo) return false;
                     }
-                    if (statuses.length > 0 && !statuses.includes(item.status || '')) return false;
+                    // Фильтр статусов: если статус "-" в массиве, показываем лиды с пустым статусом
+                    if (statuses.length > 0) {
+                        const hasEmptyFilter = statuses.includes('');
+                        const itemStatus = item.status || '';
+                        if (hasEmptyFilter && itemStatus === '') {
+                            // попадает под фильтр "без статуса"
+                        } else if (!statuses.includes(itemStatus)) {
+                            return false;
+                        }
+                    }
                     return true;
                 });
                 const totalLeads = filteredPhones.length;
@@ -996,12 +1005,12 @@
             const dateTo = document.getElementById('filter-date-to')?.value;
             const checkboxes = document.querySelectorAll('#status-checkboxes input[type="checkbox"]');
             const statuses = [];
-            checkboxes.forEach(cb => { if (cb.checked) statuses.push(cb.value); });
+            checkboxes.forEach(cb => { if (cb.checked) statuses.push(cb.value === '-' ? '' : cb.value); });
             return { dateFrom: dateFrom || null, dateTo: dateTo || null, statuses };
         }
 
         function buildStatusCheckboxes() {
-            const statusSet = new Set(['НДЗ', 'Провал', 'Заявка', '-']);
+            const statusSet = new Set(['-', 'НДЗ', 'Провал', 'Заявка']);
             for (const phones of Object.values(columnsCache)) {
                 for (const item of phones) {
                     if (item.status && item.status !== 'успешные' && item.status !== '-') statusSet.add(item.status);
@@ -1561,16 +1570,6 @@
             const bounds = getMonthBounds(targetDate.getFullYear(), targetDate.getMonth() + 1);
             setElVal(dateFromId, bounds.firstDay);
             setElVal(dateToId, bounds.lastDay);
-        }
-
-        // Переопределяем getActiveFilters для фильтра "-"
-        function getActiveFilters() {
-            const dateFrom = document.getElementById('filter-date-from')?.value;
-            const dateTo = document.getElementById('filter-date-to')?.value;
-            const checkboxes = document.querySelectorAll('#status-checkboxes input[type="checkbox"]');
-            const statuses = [];
-            checkboxes.forEach(cb => { if (cb.checked) statuses.push(cb.value === '-' ? '' : cb.value); });
-            return { dateFrom: dateFrom || null, dateTo: dateTo || null, statuses };
         }
 
         // ========== ОБРАБОТЧИКИ СОБЫТИЙ ==========
