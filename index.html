@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Панель управления лидами v3.220</title>
+    <title>Панель управления лидами v3.221</title>
     <script type="importmap">
         { "imports": { "firebase/app": "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js", "firebase/firestore": "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js" } }
     </script>
@@ -1001,10 +1001,10 @@
         }
 
         function buildStatusCheckboxes() {
-            const statusSet = new Set(['НДЗ', 'Провал', 'Заявка']);
+            const statusSet = new Set(['НДЗ', 'Провал', 'Заявка', '-']);
             for (const phones of Object.values(columnsCache)) {
                 for (const item of phones) {
-                    if (item.status && item.status !== 'успешные') statusSet.add(item.status);
+                    if (item.status && item.status !== 'успешные' && item.status !== '-') statusSet.add(item.status);
                 }
             }
             const container = document.getElementById('status-checkboxes');
@@ -1563,6 +1563,16 @@
             setElVal(dateToId, bounds.lastDay);
         }
 
+        // Переопределяем getActiveFilters для фильтра "-"
+        function getActiveFilters() {
+            const dateFrom = document.getElementById('filter-date-from')?.value;
+            const dateTo = document.getElementById('filter-date-to')?.value;
+            const checkboxes = document.querySelectorAll('#status-checkboxes input[type="checkbox"]');
+            const statuses = [];
+            checkboxes.forEach(cb => { if (cb.checked) statuses.push(cb.value === '-' ? '' : cb.value); });
+            return { dateFrom: dateFrom || null, dateTo: dateTo || null, statuses };
+        }
+
         // ========== ОБРАБОТЧИКИ СОБЫТИЙ ==========
         document.getElementById('refresh-btn')?.addEventListener('click', async () => {
             const activeTab = document.querySelector('.tab.active')?.dataset.tab;
@@ -1672,7 +1682,7 @@
             }
         });
 
-        // Поиск
+        // Поиск с датой
         document.getElementById('search-btn')?.addEventListener('click', async () => {
             const raw = document.getElementById('search-phones').value.trim();
             if (!raw) return;
@@ -1690,7 +1700,7 @@
                     phones.forEach((item, idx) => {
                         const normalizedPhone = normalizePhone(item.phone);
                         if (normalizedPhone.includes(normalizedQ)) {
-                            results.push({ query: q, manager: colName, phone: item.phone, status: item.status || '—', leadIndex: idx, colName });
+                            results.push({ query: q, manager: colName, phone: item.phone, status: item.status || '—', dateAdded: item.dateAdded, leadIndex: idx, colName });
                         }
                     });
                 }
@@ -1701,10 +1711,11 @@
                 const table = document.createElement('table');
                 table.style.width = '100%';
                 table.style.borderCollapse = 'collapse';
-                table.innerHTML = `<tr><th>Запрос</th><th>Менеджер</th><th>Номер</th><th>Статус</th><th>Новый статус</th></tr>`;
+                table.innerHTML = `<tr><th>Запрос</th><th>Менеджер</th><th>Номер</th><th>Статус</th><th>Дата</th><th>Новый статус</th></tr>`;
                 results.forEach(r => {
                     const row = document.createElement('tr');
-                    row.innerHTML = `<td>${escapeHtml(r.query)}</td><td>${escapeHtml(r.manager)}</td><td><a href="tel:${r.phone}" class="phone-link">${escapeHtml(r.phone)}</a></td><td>${escapeHtml(r.status)}</td><td><select class="status-change" data-manager="${escapeHtml(r.manager)}" data-phone="${escapeHtml(r.phone)}"><option value="">—</option><option value="НДЗ">НДЗ</option><option value="Провал">Провал</option><option value="Заявка">Заявка</option></select></td>`;
+                    const dateStr = r.dateAdded ? new Date(r.dateAdded).toLocaleDateString('ru-RU') : '';
+                    row.innerHTML = `<td>${escapeHtml(r.query)}</td><td>${escapeHtml(r.manager)}</td><td><a href="tel:${r.phone}" class="phone-link">${escapeHtml(r.phone)}</a></td><td>${escapeHtml(r.status)}</td><td>${dateStr}</td><td><select class="status-change" data-manager="${escapeHtml(r.manager)}" data-phone="${escapeHtml(r.phone)}"><option value="">—</option><option value="НДЗ">НДЗ</option><option value="Провал">Провал</option><option value="Заявка">Заявка</option></select></td>`;
                     table.appendChild(row);
                 });
                 resultsDiv.appendChild(table);
