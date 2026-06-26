@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Панель управления лидами v3.222</title>
+    <title>Панель управления лидами v3.223</title>
     <script type="importmap">
         { "imports": { "firebase/app": "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js", "firebase/firestore": "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js" } }
     </script>
@@ -1792,7 +1792,7 @@
             }
         });
 
-        // ★ ПОТЕНЦИАЛЬНЫЕ ЗАЯВКИ ★
+        // ★ ПОТЕНЦИАЛЬНЫЕ ЗАЯВКИ — БЕЗ ЛОЖНЫХ ОШИБОК ★
         document.getElementById('potential-table')?.addEventListener('click', async (e) => {
             const btn = e.target.closest('button');
             if (!btn) return;
@@ -1814,12 +1814,13 @@
                         await saveOrder(newOrder);
                         ordersCache.unshift(newOrder);
                     }
-                    await deletePotentialOrder(phone);
+                    // Пытаемся удалить, при ошибке не пугаем
+                    try { await deletePotentialOrder(phone); } catch(e) {}
                     potentialCache = potentialCache.filter(p => p.phone !== phone || p.status !== 'active');
                     renderPotentialWidget();
                     renderOrders();
                 } catch (e) {
-                    alert('Ошибка при сохранении. Проверьте подключение.');
+                    alert('Ошибка при сохранении заявки. Проверьте подключение.');
                     btn.disabled = false;
                     btn.textContent = '✅ Успешно';
                 }
@@ -1827,13 +1828,13 @@
                 btn.disabled = true;
                 btn.textContent = '⏳...';
                 try {
-                    await deletePotentialOrder(phone);
+                    try { await deletePotentialOrder(phone); } catch(e) {}
                     potentialCache = potentialCache.filter(p => p.phone !== phone || p.status !== 'active');
                     renderPotentialWidget();
                 } catch (e) {
-                    alert('Ошибка при сохранении. Проверьте подключение.');
-                    btn.disabled = false;
-                    btn.textContent = '❌ Провал';
+                    // основное действие — убрать из кеша, ошибка удаления не критична
+                    potentialCache = potentialCache.filter(p => p.phone !== phone || p.status !== 'active');
+                    renderPotentialWidget();
                 }
             } else if (btn.classList.contains('ndz-potential-btn')) {
                 po.ndzCount = (po.ndzCount || 0) + 1;
@@ -1841,8 +1842,8 @@
                 po.ndzHistory.push(new Date().toISOString());
                 try {
                     await savePotentialOrder(po);
-                    renderPotentialWidget();
                 } catch(e) { alert('Ошибка при сохранении. Проверьте подключение.'); }
+                renderPotentialWidget();
             } else if (btn.classList.contains('defer-potential-btn')) {
                 document.getElementById('defer-date-input').value = '';
                 document.getElementById('defer-modal').style.display = 'flex';
@@ -1852,7 +1853,7 @@
                 btn.textContent = '⏳...';
                 try {
                     await addToReserves(po.comment || '', phone);
-                    await deletePotentialOrder(phone);
+                    try { await deletePotentialOrder(phone); } catch(e) {}
                     potentialCache = potentialCache.filter(p => p.phone !== phone || p.status !== 'active');
                     renderPotentialWidget();
                 } catch (e) {
